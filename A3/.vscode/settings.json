@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "mbox.h": "c",
+        "framebf.h": "c",
+        "cli.h": "c",
+        "ascii_art.h": "c",
+        "autocomplete.h": "c"
+    }
+}

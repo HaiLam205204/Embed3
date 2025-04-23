@@ -1,0 +1,1 @@
+void autocomplete(char *buffer, int *index);
