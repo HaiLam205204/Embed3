@@ -12,9 +12,16 @@
 // #include "../header/history.h"
 // #include "../header/autocomplete.h"
 
-//CLI cursor position
+// CLI cursor position
 int cursorX = CLI_LEFT + 1;
 int cursorY = CLI_TOP + 1;
+
+// Command history 
+char command_history[MAX_HISTORY][MAX_BUFFER];
+int history_index = -1; // -1 means not browsing history
+char current_input[MAX_BUFFER]; // stores current input when browsing history
+int history_start = 0;  // Index of oldest command
+int history_count = 0;  // Number of commands stored
 
 // Function to initialize CLI window
 void draw_cli_window() {
@@ -144,9 +151,10 @@ void cli_loop() {
         }
 
         if (c == '\r' || c == '\n') { // Enter input
-            add_to_history(input_buffer);
+            
             input_buffer[buffer_index] = '\0';  // End of command
             cli_put_char('\n', WHITE, ZOOM); // go to next line
+            add_to_history(input_buffer); // add to list of commands in history
             handle_command(input_buffer);  // Process the command
             buffer_index = 0;
             // Print prompt again
@@ -185,6 +193,10 @@ void cli_loop() {
         // } else if (c == '\t') { // tab to autocomplete
         //     autocomplete(input_buffer, &buffer_index);
         } else {
+            // If we're typing after recalling a command, mark as modified
+            if (history_index != -1) {
+                history_index = -1;
+            }
             input_buffer[buffer_index++] = c;  // Store character in buffer
             cli_put_char(c, WHITE, ZOOM);  // Display character
         }
@@ -194,11 +206,6 @@ void cli_loop() {
 // ========================
 // Command History
 // ========================
-char command_history[MAX_HISTORY][MAX_BUFFER];
-int history_index = -1; // -1 means not browsing history
-char current_input[MAX_BUFFER]; // stores current input when browsing history
-int history_start = 0;  // Index of oldest command
-int history_count = 0;  // Number of commands stored
 
 /**
  * Add command to history if it's not empty or duplicate
@@ -212,6 +219,14 @@ void add_to_history(char* command) {
         return;
     }
     
+    // If we're currently browsing history and editing a command
+    if (history_index != -1) {
+        // Update the current history entry with the edited command
+        strcpy(command_history[history_index], command);
+        history_index = -1; // Exit history browsing mode
+        return;
+    }
+
     // Make sure not adding duplicate consecutive commands
     if (history_count > 0 && string_compare(command_history[(history_start + history_count - 1) % MAX_HISTORY], command) == 0) {
         return;
