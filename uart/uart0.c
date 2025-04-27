@@ -198,6 +198,24 @@ int string_compare(char *a, char *b) {
 }
 
 /**
+ * Compare two strings up to a specified length
+ * Returns 0 if the first 'len' characters match
+ * Returns non-zero if strings differ within the first 'len' characters
+ */
+int partial_string_compare(const char* a, const char* b, int len) {
+    // compares characters one by one up to 'len' characters
+    // or until a difference or end of string is found
+    while (len > 0 && *a && *b && (*a == *b)) {
+        a++;
+        b++;
+        len--;
+    }
+    // If we've compared all 'len' characters, return 0 (match)
+    // Otherwise return difference like string_compare
+    return (len == 0) ? 0 : (*a - *b);
+}
+
+/**
  * Calculate string length
  */
 uint32_t strlen(const char* str) {

@@ -190,8 +190,8 @@ void cli_loop() {
                 buffer_index = strlen(cmd);
                 cli_put_string(cmd, WHITE, ZOOM);
             }
-        // } else if (c == '\t') { // tab to autocomplete
-        //     autocomplete(input_buffer, &buffer_index);
+        } else if (c == '\t') { // tab to autocomplete
+            autocomplete(input_buffer, &buffer_index);
         } else {
             // If we're typing after recalling a command, mark as modified
             if (history_index != -1) {
@@ -314,6 +314,11 @@ char* get_next_command() {
     /* CASE 1: Reached present (after browsing history) */
     if (next_index == (history_start + history_count) % MAX_HISTORY) {
         history_index = -1;  // Reset browsing state
+
+        // // If current_input is empty, return the most recent command instead
+        // if (current_input[0] == '\0' && history_count > 0) {
+        //     return command_history[(history_start + history_count - 1) % MAX_HISTORY];
+        // }
         return current_input;
     }
     
@@ -331,6 +336,80 @@ char* get_next_command() {
 // ========================
 // Auto-completion
 // ========================
+
+// List of available commands for auto-completion
+static const char* commands[] = {
+    "clear",
+    "showinfo",
+    "baudrate",
+    "handshake"
+};
+
+// Function for auto completion
+void autocomplete(char* cli_buffer, int* index) {
+    
+    // Early return if buffer is empty
+    if (*index == 0) {
+        return;
+    }
+    
+    int last_space_index = -1;
+
+    // Find the last space in the command
+    for (int i = 0; i < *index; i++) {
+        if (cli_buffer[i] == ' ') {
+            last_space_index = i;
+        }
+    }
+
+    char* partial_input = (last_space_index == -1) ? cli_buffer : (cli_buffer + last_space_index + 1);
+    int input_len = *index - (last_space_index + 1);
+    const char* matched_command = NULL;
+    int matched_count = 0;
+
+    // Search for matching commands
+    for (int i = 0; i < NUM_COMMANDS; i++) {
+        if (partial_string_compare(commands[i], partial_input, input_len) == 0) {
+            matched_count++;
+            if (matched_count == 1) {
+                matched_command = commands[i];
+            } else {
+                // Clear current line
+                while (*index > 0) {
+                    cli_put_char('\b', WHITE, ZOOM);
+                    (*index)--;
+                }
+                // Print prompt again
+                for (int i = 0; PROMPT[i] != '\0'; i++) { 
+                    cli_put_char(PROMPT[i], WHITE, ZOOM);
+                }
+                // Print ambiguous message
+                cli_put_string("\nAmbiguous command, type more characters.\n", WHITE, ZOOM);
+                // Reprint prompt
+                for (int i = 0; PROMPT[i] != '\0'; i++) { 
+                    cli_put_char(PROMPT[i], WHITE, ZOOM);
+                }
+                return;
+            }
+        }
+    }
+
+    // If exactly one match found
+    if (matched_count == 1) {
+        // Calculate how many characters we need to add
+        int match_len = strlen(matched_command);
+        int chars_to_add = match_len - input_len;
+        
+        if (chars_to_add > 0) {
+            // Add the remaining characters to buffer
+            for (int i = 0; i < chars_to_add; i++) {
+                cli_buffer[*index] = matched_command[input_len + i];
+                cli_put_char(cli_buffer[*index], WHITE, ZOOM);
+                (*index)++;
+            }
+        }
+    }
+}
 
 // ========================
 // CLI commands
