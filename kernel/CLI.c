@@ -345,7 +345,11 @@ static const char* commands[] = {
     "handshake"
 };
 
-// Function for auto completion
+/**
+ * Auto-completes the current command line input based on available commands
+ * cli_buffer The input buffer containing the current command line
+ * index Pointer to the current cursor position/index in the buffer
+ */
 void autocomplete(char* cli_buffer, int* index) {
     
     // Early return if buffer is empty
@@ -353,35 +357,41 @@ void autocomplete(char* cli_buffer, int* index) {
         return;
     }
     
+    // Initialize to -1 (no space found yet)
     int last_space_index = -1;
 
-    // Find the last space in the command
+    // Scan current input to determine auto-completing a command or not
     for (int i = 0; i < *index; i++) {
         if (cli_buffer[i] == ' ') {
             last_space_index = i;
         }
     }
 
+    // Determine partial input to complete
     char* partial_input = (last_space_index == -1) ? cli_buffer : (cli_buffer + last_space_index + 1);
+
+    // Calculate length of input text 
     int input_len = *index - (last_space_index + 1);
+
+    //Store the matching command
     const char* matched_command = NULL;
+
+    // Count matching commands
     int matched_count = 0;
 
     // Search for matching commands
     for (int i = 0; i < NUM_COMMANDS; i++) {
+        // Check if command starts with our partial input
         if (partial_string_compare(commands[i], partial_input, input_len) == 0) {
             matched_count++;
+            // Store matching commands
             if (matched_count == 1) {
                 matched_command = commands[i];
-            } else {
-                // Clear current line
-                while (*index > 0) {
+            } else { // If multiple matches found
+                // Clear current line until nothing is left
+                while (*index > 0) { 
                     cli_put_char('\b', WHITE, ZOOM);
                     (*index)--;
-                }
-                // Print prompt again
-                for (int i = 0; PROMPT[i] != '\0'; i++) { 
-                    cli_put_char(PROMPT[i], WHITE, ZOOM);
                 }
                 // Print ambiguous message
                 cli_put_string("\nAmbiguous command, type more characters.\n", WHITE, ZOOM);
@@ -398,13 +408,14 @@ void autocomplete(char* cli_buffer, int* index) {
     if (matched_count == 1) {
         // Calculate how many characters we need to add
         int match_len = strlen(matched_command);
-        int chars_to_add = match_len - input_len;
+        int chars_to_add = match_len - input_len; // length of string that need to be auto-completed
         
         if (chars_to_add > 0) {
-            // Add the remaining characters to buffer
+            // Append the remaining characters to buffer
             for (int i = 0; i < chars_to_add; i++) {
                 cli_buffer[*index] = matched_command[input_len + i];
-                cli_put_char(cli_buffer[*index], WHITE, ZOOM);
+                // Display remaining characters
+                cli_put_char(cli_buffer[*index], WHITE, ZOOM); 
                 (*index)++;
             }
         }
