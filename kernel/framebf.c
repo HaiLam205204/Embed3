@@ -203,11 +203,11 @@ void drawLCircle(int center_x, int center_y, int radius, unsigned int attr, int 
     }
 }
 
-void drawImage(const unsigned int pixel_data[], int pos_x, int pos_y, int width, int height) {
-    for (int i = 0; i < width * height; i++) {
-        int x = pos_x + (i % width);
-        int y = pos_y + (i / width);
-        drawPixelARGB32(x, y, pixel_data[i]);
+void drawImage(int x, int y, const unsigned long *image, int image_width, int image_height) {
+    for (int j = 0; j < image_height; j++) {
+        for (int i = 0; i < image_width; i++) {
+            drawPixelARGB32(x + i, y + j, image[j * image_width + i]);
+        }
     }
 }
 

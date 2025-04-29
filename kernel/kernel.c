@@ -4,8 +4,12 @@
 #include "framebf.h"
 #include "utils.h"
 #include "CLI.h"
+#include "welcomeScreen.h"
 
 #define OPEN_CLI 0x14 // CTRL T
+
+int image_x = 0;
+int image_y = 0;
 
 void main()
 {
@@ -20,6 +24,10 @@ void main()
 
 	// echo everything back
 	// Create a basic CLI window popup when a specific key is pressed (e.g., 'C')
+
+    // Draw initial image
+    drawImage(image_x, image_y, welcome_image, WELCOME_WIDTH, WELCOME_HEIGHT);
+
     while(1) {
         // Read character from UART
         char c = uart_getc();
