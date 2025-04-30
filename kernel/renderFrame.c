@@ -3,7 +3,7 @@
 #include "framebf.h"
 #include "utils.h"
 
-void video_playback(const unsigned long** frames, uint32_t frame_count, int x, int y, int width, int height) {
+void video_playback(const unsigned long** frames, uint32_t frame_count, int x, int y, int src_width, int src_height, int max_width, int max_height) {
     uint32_t current_frame = 0;
     
     // Initialize timer for first frame
@@ -11,9 +11,7 @@ void video_playback(const unsigned long** frames, uint32_t frame_count, int x, i
     
     while (current_frame < frame_count) {
         // 1. Display current frame (implement your display function)
-        //display_frame(frames[current_frame]);
-        drawImage(x, y, frames[current_frame], width, height);
-        
+        drawImageScaledAspect(x, y, frames[current_frame], src_width, src_height, max_width, max_height);
         // 2. Wait for next frame time
         set_wait_timer(0, 0); // Uses previously set expiration time
         

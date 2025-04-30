@@ -2,6 +2,7 @@
 #include "mbox.h"
 #include "../uart/uart0.h"
 #include "../uart/uart1.h"
+#include "framebf.h"
 
 //Use RGBA32 (32 bits for each pixel)
 #define COLOR_DEPTH 32
@@ -211,7 +212,85 @@ void drawImage(int x, int y, const unsigned long *image, int image_width, int im
     }
 }
 
+/**
+ * Draws an image with arbitrary scaling using nearest-neighbor interpolation
+ */
+void drawImageScaled(int x, int y, const unsigned long *image, int src_width, int src_height, int dest_width, int dest_height) {
+    // Fixed-point scaling factors (16.16 format)
+    // These represent (src_dimension/dest_dimension) ratio as fixed-point numbers
+    uint32_t x_scale = ((uint32_t)src_width << 16) / dest_width; // value << 16 converts to fixed-point
+    uint32_t y_scale = ((uint32_t)src_height << 16) / dest_height;
 
+    // Loop through every pixel in destination image
+    for (int j = 0; j < dest_height; j++) {
+        // Calculate corresponding Y position in source image (fixed-point to integer)
+        uint32_t src_y = (j * y_scale) >> 16; // value >> 16 converts back to integer
+        for (int i = 0; i < dest_width; i++) {
+            // Calculate corresponding X position in source image (fixed-point to integer)
+            uint32_t src_x = (i * x_scale) >> 16;
+            // Get pixel from source image (nearest-neighbor interpolation)
+            unsigned long pixel = image[src_y * src_width + src_x];
+            drawPixelARGB32(x + i, y + j, pixel); // Draw the pixel at calculated position
+        }
+    }
+}
+
+/**
+ * Draws an image scaled to fit within specified maximum dimensions while maintaining aspect ratio, better for random resolution
+ */
+void drawImageScaledAspect(int x, int y, const unsigned long *image, int src_width, int src_height, int max_width, int max_height) {
+    // Calculate aspect ratio using fixed-point (16.16 format)
+    // Shift left by 16 bits converts to fixed-point, division preserves ratio
+    uint32_t aspect_ratio = ((uint32_t)src_width << 16) / src_height;
+
+    int dest_width, dest_height; // Hold final scaled dimensions
+
+    // Determine if we should scale based on width or height constraints:
+    // Compare (max_width/aspect_ratio) with max_height using fixed-point math
+    if ((max_width << 16) / aspect_ratio <= max_height) {
+        // Width-constrained scaling: use full available width
+        dest_width = max_width;
+        // Calculate proportional height (convert back from fixed-point)
+        dest_height = (max_width << 16) / aspect_ratio;
+    } else {
+        // Height-constrained scaling: use full available height
+        dest_height = max_height;
+        // Calculate proportional width (fixed-point multiply then shift back)
+        dest_width = (max_height * aspect_ratio) >> 16;
+    }
+
+    // Center the image within the available space:
+    // Add half of remaining space to original coordinates
+    x += (max_width - dest_width) >> 1;  // Fast division by 2
+    y += (max_height - dest_height) >> 1;
+
+    // Draw with scaling (using nearest-neighbor for efficiency)
+    drawImageScaled(x, y, image, src_width, src_height, dest_width, dest_height);
+}
+
+// // Draw a portion of the image to framebuffer
+// void draw_viewport(
+//     int src_x, int src_y,      // Top-left in source image
+//     int dest_x, int dest_y,    // Top-left on screen (usually 0,0)
+//     int width, int height       // Dimensions to copy (usually screen size)
+// ) {
+//     // Clamp to source image bounds
+//     src_x = max(0, src_x);
+//     src_y = max(0, src_y);
+//     width = min(width, image_width - src_x);
+//     height = min(height, image_height - src_y);
+    
+//     // Clamp to screen bounds
+//     width = min(width, SCREEN_WIDTH - dest_x);
+//     height = min(height, SCREEN_HEIGHT - dest_y);
+    
+//     // Optimized row-by-row copy
+//     for (int y = 0; y < height; y++) {
+//         uint32_t* src_row = &full_image[(src_y + y) * image_width + src_x];
+//         uint32_t* dest_row = (uint32_t*)&fb[(dest_y + y) * pitch + (dest_x * 4)];
+//         memcpy(dest_row, src_row, width * 4);
+//     }
+// }
 
 
 
