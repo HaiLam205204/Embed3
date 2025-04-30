@@ -129,12 +129,12 @@ unsigned char getUart() {
 /*
  * TIMER UTILITIES
  * ===============
- * wait_msec:
- * - Blocks execution for specified number of milliseconds
+ * wait_us:
+ * - Blocks execution for specified number of microseconds
  * - Uses system counter and frequency registers
  *
  * set_wait_timer:
- * - SET mode: Initializes a timer that will expire in `msVal` ms
+ * - SET mode: Initializes a timer that will expire in `usVal` us
  * - WAIT mode: Blocks until timer expires
  *
  * These functions use ARM system registers:
@@ -144,33 +144,38 @@ unsigned char getUart() {
  * Useful for non-blocking wait loops and precise timing
  */
 
-void wait_msec(unsigned int msVal) {
-    register unsigned long f, t, r, expiredTime;
+ void wait_us(uint64_t usVal) {
+    uint64_t freq, t, r, expiredTime;
 
     // Get counter frequency (ticks per second)
-    asm volatile ("mrs %0, cntfrq_el0" : "=r"(f));
+    asm volatile ("mrs %0, cntfrq_el0" : "=r"(freq));
 
     // Get current timer count
     asm volatile ("mrs %0, cntpct_el0" : "=r"(t));
 
-    // Calculate when we should stop waiting
-    expiredTime = t + f * msVal / 1000;
+    // Calculate expiration time (ticks)
+    expiredTime = t + (freq * usVal) / 1000000ULL;  // us → ticks
 
-    // Busy-wait until target time reached
+    // Busy-wait until target time
     do {
         asm volatile ("mrs %0, cntpct_el0" : "=r"(r));
     } while (r < expiredTime);
 }
 
-void set_wait_timer(int set, unsigned int msVal) {
-    static unsigned long expiredTime = 0;
-    register unsigned long r, f, t;
+
+void set_wait_timer(int set, uint64_t usVal) {
+    static uint64_t expiredTime = 0;
+    uint64_t r, f, t;
 
     if (set) {
+        // Get counter frequency (ticks per second)
         asm volatile ("mrs %0, cntfrq_el0" : "=r"(f));
+        // Get current timer count in ticks
         asm volatile ("mrs %0, cntpct_el0" : "=r"(t));
-        expiredTime = t + f * msVal / 1000;
+        // Calculate expiration time (microseconds → ticks)
+        expiredTime = t + (f * usVal) / 1000000ULL;
     } else {
+        // Busy-wait until target time
         do {
             asm volatile ("mrs %0, cntpct_el0" : "=r"(r));
         } while (r < expiredTime);

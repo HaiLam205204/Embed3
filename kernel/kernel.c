@@ -5,14 +5,16 @@
 #include "utils.h"
 #include "CLI.h"
 #include "welcomeScreen.h"
+#include "video.h"
+#include "renderFrame.h"
 
 #define OPEN_CLI 0x14 // CTRL T
-
-int image_x = 0;
-int image_y = 0;
+#define VIDEO 0x16 // CTRL V
 
 void main()
 {
+    int start_x = 0;
+    int start_y = 0;
     // set up serial console
 	uart_init();
 
@@ -26,7 +28,7 @@ void main()
 	// Create a basic CLI window popup when a specific key is pressed (e.g., 'C')
 
     // Draw initial image
-    drawImage(image_x, image_y, welcome_image, WELCOME_WIDTH, WELCOME_HEIGHT);
+    drawImage(start_x, start_y, welcome_image, WELCOME_WIDTH, WELCOME_HEIGHT);
 
     while(1) {
         // Read character from UART
@@ -37,7 +39,9 @@ void main()
             // Trigger the CLI popup window
             draw_cli_window();
             cli_loop();  // Start handling input in the CLI window
-		} else {
+		} else if (c == VIDEO) {
+            video_playback(video_allArray, video_allArray_LEN, start_x, start_y, VIDEO_WIDTH, VIDEO_HEIGHT);
+        } else {
             // Handle normal character drawing
             drawInputCharacters(c, 0x00FFFFFF, 1);  // Draw regular characters outside CLI popup
         }
