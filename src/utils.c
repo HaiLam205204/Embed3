@@ -3,6 +3,7 @@
 #include "../include/uart0.h" // UART0 definitions (if enabled)
 #include "../include/uart1.h" // UART1 definitions (if enabled)
 
+
 /* 
  * =============================
  * TEXT RENDERING FUNCTIONS
