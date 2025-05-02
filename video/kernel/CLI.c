@@ -339,7 +339,7 @@ char* get_next_command() {
 
 // List of available commands for auto-completion
 static const char* commands[] = {
-    "help"
+    "help",
     "clear",
     "showinfo",
     "baudrate",
@@ -612,14 +612,6 @@ void show_all_help(){
 void show_command_help(char* command_name){
     if(string_compare(command_name, "help") == 0){
         cli_put_string("help - Show brief information of all command", WHITE, ZOOM);
-        cli_put_char('\n', WHITE, ZOOM);
-        cli_put_string("clear - Clear screen", WHITE, ZOOM);
-        cli_put_char('\n', WHITE, ZOOM);
-        cli_put_string("showinfo - Show board revision and MAC address", WHITE, ZOOM);
-        cli_put_char('\n', WHITE, ZOOM);
-        cli_put_string("baudrate - change the baudrate of UART", WHITE, ZOOM);
-        cli_put_char('\n', WHITE, ZOOM);
-        cli_put_string("handshake - turn on/off CTS/RTS handsharking on current UART ", WHITE, ZOOM);
         cli_put_char('\n', WHITE, ZOOM);
     } else if(string_compare(command_name, "clear") == 0){
         cli_put_string("clear - clear the cli screen", WHITE, ZOOM);
