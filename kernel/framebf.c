@@ -20,6 +20,7 @@ unsigned int buffer_size;
 unsigned char *fb; // Always points to currently displayed buffer
 unsigned char *front_buffer;
 unsigned char *back_buffer;
+static int current_buffer = 0; // 0 = front buffer visible, 1 = back buffer visible
 
 #define FRAME_RATE 90                 // e.g., 30 FPS
 #define FRAME_US (1000000/FRAME_RATE) // microseconds per frame
@@ -125,36 +126,102 @@ void framebf_init()
     height = mBuf[6]; // Physical height
     pitch = mBuf[33]; // Bytes per line
 
+    // Verify buffer size is sufficient for double buffering
+    unsigned int min_required_size = pitch * height * 2;
+    if (buffer_size < min_required_size) {
+        uart_puts("Error: Allocated buffer too small for double buffering\n");
+        return;
+    }
+
     // Set up back buffer
     // After mailbox call, check ACTUAL virtual height (mBuf[11])
-    if (mBuf[11] == height*2) {
+    if (mBuf[11] >= height * 2) {
         back_buffer = front_buffer + (pitch * height);
+        uart_puts("Double buffering enabled\n");
+
+        unsigned int expected_buffer_size = pitch * height;
+        if ((back_buffer - front_buffer) != expected_buffer_size) {
+            uart_puts("Warning: Buffer spacing unexpected\n");
+        } else {
+            uart_puts("Buffer spacing is correct\n");
+        }
+
+        // Safety check
+        if ((unsigned long)back_buffer + expected_buffer_size > 
+            (unsigned long)front_buffer + buffer_size) {
+            uart_puts("Error: Back buffer exceeds allocated memory!\n");
+        } else {
+            uart_puts("Back buffer is within allocated memory\n");
+        }
     } else {
         uart_puts("Warning: Couldn't get double height buffer\n");
         back_buffer = front_buffer; // Fallback to single buffer
     }
     fb = front_buffer;  // Display starts with front buffer
 
-    // uart_puts("Front buffer at: ");
-    // uart_hex((unsigned long)front_buffer);
-    // uart_puts("\nBack buffer at: ");
-    // uart_hex((unsigned long)back_buffer);
-    // uart_puts("\nBuffer size: ");
-    // uart_dec(buffer_size);
-    // uart_puts(" bytes\n");
+    uart_puts("FB Init: ");
+    uart_dec(width); 
+    uart_puts("x"); 
+    uart_dec(height);
+    uart_puts(" at "); 
+    uart_hex((unsigned long)front_buffer);
+    uart_puts(", pitch="); 
+    uart_dec(pitch);
+    uart_puts(", size="); 
+    uart_dec(buffer_size);
+    uart_puts("\n");
+    uart_puts("Front buffer at: ");
+    uart_hex((unsigned long)front_buffer);
+    uart_puts("\nBack buffer at: ");
+    uart_hex((unsigned long)back_buffer);
+    uart_puts("\nBuffer size: ");
+    uart_dec(buffer_size);
+    uart_puts(" bytes\n");
+}
+
+void fill_buffer(unsigned char *buffer, uint32_t color) {
+    uint32_t *pixel_buffer = (uint32_t *)buffer;
+    unsigned long total_pixels = (pitch / 4) * height;  // pitch is in bytes, we want 32-bit words
+    
+    for (unsigned long i = 0; i < total_pixels; i++) {
+        pixel_buffer[i] = color;
+    }
+}
+
+void test_double_buffering() {
+    // Test colors (ARGB format)
+    uint32_t colors[2] = {
+        0xFF0000FF,  // Opaque red
+        0xFF00FF00   // Opaque green
+    };
+    
+    uart_puts("Starting double buffering test...\n");
+    
+    for (int i = 0; i < 4; i++) {  // Will swap 4 times
+        // Fill current back buffer with alternating color
+        fill_buffer(back_buffer, colors[i % 2]);
+        
+        uart_puts("Swapping buffers...\n");
+        swap_buffers();
+        
+        // Delay so you can see the change
+        for (volatile int j = 0; j < 10000000; j++);  // Simple delay
+    }
+    
+    // Return to black
+    fill_buffer(front_buffer, 0xFF000000);
+    fill_buffer(back_buffer, 0xFF000000);
+    swap_buffers();
+    
+    uart_puts("Double buffering test complete\n");
 }
 
 /**
  * Swap front and back buffers
  */
 void swap_buffers() {
-    // Memory barrier to ensure all writes complete
-    asm volatile ("dsb sy"); 
 
-    // 2. Use your timer for precise swap timing
-    set_wait_timer(1, FRAME_US / 3);  // Swap early in the frame
-
-    if (front_buffer == back_buffer) {
+    if (back_buffer == front_buffer) {
         uart_puts("Warning: No double buffering available\n");
         return;
     }
@@ -163,9 +230,9 @@ void swap_buffers() {
     mBuf[0] = 7*4;
     mBuf[1] = MBOX_REQUEST;
     mBuf[2] = MBOX_TAG_SETVIRTOFF;
-    mBuf[3] = 8;
-    mBuf[4] = 0;
-    mBuf[5] = 0;  // X offset always 0
+    mBuf[3] = 8; // Value size
+    mBuf[4] = 0; // Request code
+    mBuf[5] = 0; // X offset always 0
     // Toggle between 0 (front) and height (back)
     mBuf[6] = (fb == front_buffer) ? height : 0; // Toggle Y offset
     mBuf[7] = MBOX_TAG_LAST;
@@ -176,8 +243,11 @@ void swap_buffers() {
         uart_puts("Failed to swap buffers!\n");
     }
 
-    // 4. Wait to complete the swap at precise time
-    set_wait_timer(0, 0);
+    current_buffer = !current_buffer; // Toggle buffer flag
+    // Check message
+    uart_puts("Swapped to buffer ");
+    uart_dec(current_buffer);
+    uart_puts("\n");
 }
 
 // Clear entire back buffer

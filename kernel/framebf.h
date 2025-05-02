@@ -1,4 +1,6 @@
 // ----------------------------------- framebf.h -------------------------------------
+#include "gpio.h"
+
 #define SCREEN_WIDTH 1024
 #define SCREEN_HEIGHT 768
 
@@ -14,3 +16,5 @@ void drawImageScaledAspect(int x, int y, const unsigned long *image, int src_wid
 void draw_sprite_transparent(int x, int y, const unsigned long *sprite, int w, int h);
 void drawPixelARGB32_double_buffering(int x, int y, unsigned int attr);
 void drawImage_double_buffering(int x, int y, const unsigned long *image, int image_width, int image_height);
+void fill_buffer(unsigned char *buffer, uint32_t color);
+void test_double_buffering();
