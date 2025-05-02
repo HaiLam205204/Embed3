@@ -1,4 +1,4 @@
-#include "../kernel/gpio.h"
+#include "../include/gpio.h"
 
 /* PL011 UART (UART0) registers */
 #define UART0_BASE	(MMIO_BASE + 0x201000)

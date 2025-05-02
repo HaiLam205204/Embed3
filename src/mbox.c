@@ -1,6 +1,6 @@
 // -----------------------------------mbox.c -------------------------------------
-#include "mbox.h"
-#include "gpio.h"
+#include "../include/mbox.h"
+#include "../include/mbox.h"
 #include "../uart/uart1.h"
 #include "../uart/uart0.h"
 

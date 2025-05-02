@@ -1,12 +1,12 @@
 #include "../uart/uart0.h"
 #include "../uart/uart1.h"
-#include "mbox.h"
-#include "framebf.h"
-#include "utils.h"
-#include "CLI.h"
-#include "welcomeScreen.h"
-#include "video.h"
-#include "renderFrame.h"
+#include "../include/mbox.h"
+#include "../include/framebf.h"
+#include "../include/utils.h"
+#include "../include/CLI.h"
+#include "../include/welcomeScreen.h"
+#include "../include/video.h"
+#include "../include/renderFrame.h"
 
 #define OPEN_CLI 0x14 // CTRL T
 #define VIDEO 0x16 // CTRL V

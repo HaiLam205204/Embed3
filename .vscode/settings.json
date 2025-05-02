@@ -1,6 +1,10 @@
 {
     "files.associations": {
         "mbox.h": "c",
-        "framebf.h": "c"
+        "framebf.h": "c",
+        "gpio.h": "c",
+        "uart1.h": "c",
+        "timer.h": "c",
+        "utils.h": "c"
     }
 }

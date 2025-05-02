@@ -3,11 +3,11 @@
 // Recognize special keys like \n, _, +, \t, and backspace.
 // Handle enter to parse and execute.
 
-#include "CLI.h"
-#include "utils.h"
+#include "../include/CLI.h"
+#include "../include/utils.h"
 #include "../uart/uart0.h"
-#include "framebf.h"
-#include "mbox.h"
+#include "../include/framebf.h"
+#include "../include/mbox.h"
 // #include "../header/commands.h"
 // #include "../header/history.h"
 // #include "../header/autocomplete.h"
