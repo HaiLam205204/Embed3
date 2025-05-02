@@ -181,3 +181,10 @@ void set_wait_timer(int set, uint64_t usVal) {
         } while (r < expiredTime);
     }
 }
+
+// Function to copy memory
+void *memcpy(void *dest, const void *src, unsigned long n) {
+    for (unsigned long i = 0; i < n; i++) {
+        ((char *)dest)[i] = ((char *)src)[i];
+    }
+}
