@@ -339,6 +339,7 @@ char* get_next_command() {
 
 // List of available commands for auto-completion
 static const char* commands[] = {
+    "help"
     "clear",
     "showinfo",
     "baudrate",
@@ -426,7 +427,15 @@ void autocomplete(char* cli_buffer, int* index) {
 // CLI commands
 // ========================
 void handle_command(char *command) {
-    if (string_compare(command, "clear") == 0) { // clear the terminal
+    char* cmd = strtok(command, " ");
+    char* arg = strtok(NULL, " ");
+    if(string_compare(cmd, "help") == 0){
+        if(arg == NULL){
+            show_all_help();
+        } else {
+            show_command_help(arg);
+        }
+    } else if (string_compare(command, "clear") == 0) { // clear the terminal
         // Clear the CLI window contents
         drawRectARGB32(
             CLI_LEFT + 1,
@@ -585,5 +594,45 @@ void print_board_revision_info(unsigned int rev) {
     cli_put_string("PCB Revision: ", WHITE, ZOOM);
     cli_put_hex(rev_num, WHITE, ZOOM);
     cli_put_char('\n', WHITE, ZOOM);
+}
+
+void show_all_help(){
+    cli_put_string("help - Show brief information of all command", WHITE, ZOOM);
+    cli_put_char('\n', WHITE, ZOOM);
+    cli_put_string("clear - Clear screen", WHITE, ZOOM);
+    cli_put_char('\n', WHITE, ZOOM);
+    cli_put_string("showinfo - Show board revision and MAC address", WHITE, ZOOM);
+    cli_put_char('\n', WHITE, ZOOM);
+    cli_put_string("baudrate - change the baudrate of UART", WHITE, ZOOM);
+    cli_put_char('\n', WHITE, ZOOM);
+    cli_put_string("handshake - turn on/off CTS/RTS handsharking on current UART", WHITE, ZOOM);
+    cli_put_char('\n', WHITE, ZOOM);
+}
+
+void show_command_help(char* command_name){
+    if(string_compare(command_name, "help") == 0){
+        cli_put_string("help - Show brief information of all command", WHITE, ZOOM);
+        cli_put_char('\n', WHITE, ZOOM);
+        cli_put_string("clear - Clear screen", WHITE, ZOOM);
+        cli_put_char('\n', WHITE, ZOOM);
+        cli_put_string("showinfo - Show board revision and MAC address", WHITE, ZOOM);
+        cli_put_char('\n', WHITE, ZOOM);
+        cli_put_string("baudrate - change the baudrate of UART", WHITE, ZOOM);
+        cli_put_char('\n', WHITE, ZOOM);
+        cli_put_string("handshake - turn on/off CTS/RTS handsharking on current UART ", WHITE, ZOOM);
+        cli_put_char('\n', WHITE, ZOOM);
+    } else if(string_compare(command_name, "clear") == 0){
+        cli_put_string("clear - clear the cli screen", WHITE, ZOOM);
+        cli_put_char('\n', WHITE, ZOOM);
+    } else if(string_compare(command_name, "showinfo") == 0){
+        cli_put_string("showinfo - Show board revision and MAC address", WHITE, ZOOM);
+        cli_put_char('\n', WHITE, ZOOM);
+    } else if(string_compare(command_name, "baudrate") == 0){
+        cli_put_string("baudrate - change the baudrate of UART", WHITE, ZOOM);
+        cli_put_char('\n', WHITE, ZOOM);
+    } else if(string_compare(command_name, "handshake") == 0){
+        cli_put_string("handshake - turn on/off CTS/RTS handsharking on current UART ", WHITE, ZOOM);
+        cli_put_char('\n', WHITE, ZOOM);
+    }
 }
 
