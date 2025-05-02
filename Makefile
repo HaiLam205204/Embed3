@@ -11,20 +11,20 @@ uart0: clean uart0_build kernel8.img run0
 #./build/uart.o: ./uart/uart1.c
 #	aarch64-none-elf-gcc $(GCCFLAGS) -c ./uart/uart1.c -o ./build/uart.o
 
-uart1_build: ./uart/uart1.c
-	aarch64-none-elf-gcc $(GCCFLAGS) -c ./uart/uart1.c -o ./build/uart.o
+uart1_build: ./src/uart/uart1.c
+	aarch64-none-elf-gcc $(GCCFLAGS) -c ./src/uart/uart1.c -o ./build/uart.o
 
-uart0_build: ./uart/uart0.c
-	aarch64-none-elf-gcc $(GCCFLAGS) -c ./uart/uart0.c -o ./build/uart.o
+uart0_build: ./src/uart/uart0.c
+	aarch64-none-elf-gcc $(GCCFLAGS) -c ./src/uart/uart0.c -o ./build/uart.o
 
-./build/boot.o: ./src/boot.S
-	aarch64-none-elf-gcc $(GCCFLAGS) -c ./src/boot.S -o ./build/boot.o
+./build/boot.o: ./boot/boot.S
+	aarch64-none-elf-gcc $(GCCFLAGS) -c ./boot/boot.S -o ./build/boot.o
 
 ./build/%.o: ./src/%.c
 	aarch64-none-elf-gcc $(GCCFLAGS) -c $< -o $@
 
 kernel8.img: ./build/boot.o ./build/uart.o $(OFILES)
-	aarch64-none-elf-ld -nostdlib ./build/boot.o ./build/uart.o $(OFILES) -T ./src/link.ld -o ./build/kernel8.elf
+	aarch64-none-elf-ld -nostdlib ./build/boot.o ./build/uart.o $(OFILES) -T ./linker/link.ld -o ./build/kernel8.elf
 	aarch64-none-elf-objcopy -O binary ./build/kernel8.elf kernel8.img
 
 clean:

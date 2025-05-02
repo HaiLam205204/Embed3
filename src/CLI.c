@@ -5,7 +5,7 @@
 
 #include "../include/CLI.h"
 #include "../include/utils.h"
-#include "../uart/uart0.h"
+#include "../include/uart0.h"
 #include "../include/framebf.h"
 #include "../include/mbox.h"
 // #include "../header/commands.h"
