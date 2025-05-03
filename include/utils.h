@@ -5,3 +5,4 @@ unsigned int uart_isReadByteReady();
 unsigned char getUart();
 void wait_us(uint64_t usVal);
 void set_wait_timer(int set, uint64_t usVal);
+extern const char* welcome_message;

@@ -18,8 +18,8 @@ void main()
     // set up serial console
 	uart_init();
 
-	// say hello
-	uart_puts("\n\nHello World!\n");
+	//Print welcome message
+	uart_puts((char*)welcome_message);
 
 	// Initialize frame buffer
 	framebf_init();
