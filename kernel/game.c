@@ -7,135 +7,205 @@
 #include "game_map.h"
 #include "protagonist_sprite.h"
 
-#define GAME_FRAME_RATE 10             // e.g., 10 FPS
+#define GAME_FRAME_RATE 30             // e.g., 30 FPS
 #define GAME_FRAME_US (1000000/GAME_FRAME_RATE) // microseconds per frame
 
+#define PIXEL_SIZE 4  // Assuming 32-bit pixels (4 bytes per pixel)
 #define NULL ((void *)0)
 
 int map_x = MAP_START_X;
 int map_y = MAP_START_Y;
 
-// You can adjust this buffer size to suit your maximum sprite dimensions
-static unsigned long sprite_bg_buffer[PROTAG_WIDTH * PROTAG_HEIGHT];
+#define RESTORE_MARGIN 2
+static unsigned long sprite_bg_buffer[(PROTAG_WIDTH + 2*RESTORE_MARGIN) * 
+                                     (PROTAG_HEIGHT + 2*RESTORE_MARGIN)];
 
 void game_loop() {
-    
     int protag_x = PROTAG_START_X;
     int protag_y = PROTAG_START_Y;
     int prev_protag_x = protag_x;
     int prev_protag_y = protag_y;
-
     int first_frame = 1;
+    char input;
+
+    uart_puts("\n[GAME_LOOP] Starting game loop");
+    uart_puts("\n[GAME_LOOP] Initial position: (");
+    uart_hex(protag_x); uart_puts(","); uart_hex(protag_y); uart_puts(")");
 
     while (1) {
         uint64_t start_time = get_arm_system_time();
+        uart_puts("\n[FRAME] ---- NEW FRAME ----");
 
         if (first_frame) {
-            // Full draw on first frame
+            uart_puts("\n[FRAME] Rendering first frame");
             for (int i = 0; i < 3; i++) {
-            // Clear the back buffer
-            clear_screen(0xFFFF0000); // Bright red
-            drawImage_double_buffering(map_x, map_y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
-            drawImage_double_buffering(protag_x, protag_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
-            __asm volatile("dmb ish" ::: "memory");
-            swap_buffers();
-            wait_us(16000);         // ~1 frame at 60Hz in microseconds
+                clear_screen(0xFFFF0000);
+                uart_puts("\n[FRAME] Cleared screen (red)");
+                
+                drawImage_double_buffering(map_x, map_y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
+                uart_puts("\n[FRAME] Drawn map at ("); 
+                uart_hex(map_x); uart_puts(","); uart_hex(map_y); uart_puts(")");
+                
+                drawImage_double_buffering(protag_x, protag_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
+                uart_puts("\n[FRAME] Drawn protagonist at ("); 
+                uart_hex(protag_x); uart_puts(","); uart_hex(protag_y); uart_puts(")");
+                
+                swap_buffers();
+                uart_puts("\n[FRAME] Swapped buffers");
+                wait_us(16000);
             }
             first_frame = !first_frame;
         } else {
-            // Only update changed areas 
+            input = uart_getc();
+            uart_puts("\n[INPUT] Received: "); 
+            uart_sendc(input); // Echo the input character
+            
+            update_protag_position(&protag_x, &protag_y, input);
+            uart_puts("\n[POSITION] New position: ("); 
+            uart_hex(protag_x); uart_puts(","); uart_hex(protag_y); uart_puts(")");
 
-            // 1. Handle input
-            // if (button_pressed(UP)) player_y--;
-            // if (button_pressed(DOWN)) player_y++;
-            // // ... other directions
-
-            // 1. Handle input and update game state
-            // Update previous position
-            prev_protag_x = protag_x;
-            prev_protag_y = protag_y;
-            //update_protag_position(&protag_x, &protag_y)
             if (prev_protag_x != protag_x || prev_protag_y != protag_y) {
-                // Restore background where protagonist *was*
+                uart_puts("\n[MOVEMENT] Position changed - redrawing");
+                // 1. Restore background where sprite WAS (with margins)
                 draw_partial_map(prev_protag_x, prev_protag_y);
-
-                // Draw the sprite at the new position
+                
+                // 2. Draw new sprite position
                 drawImage_double_buffering(protag_x, protag_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
+                uart_puts("\n[MOVEMENT] Redrew protagonist at new position");
+
+                prev_protag_x = protag_x;
+                prev_protag_y = protag_y;
             }
-            __asm volatile("dmb ish" ::: "memory");
-            // Swap buffers to display the new frame
             swap_buffers();
         }
 
-        // Frame timing
         uint64_t end_time = get_arm_system_time();
-
-        uint64_t render_time = end_time - start_time;
-
-        uint64_t render_time_us = ticks_to_us(render_time);
+        uint64_t render_time_us = ticks_to_us(end_time - start_time);
+        uart_puts("\n[TIMING] Frame render time (us): "); 
+        uart_hex(render_time_us);
 
         if (render_time_us < GAME_FRAME_US) {
-            uart_puts("Waiting for frame interval");
-            wait_us(GAME_FRAME_US - render_time_us);
+            uint64_t wait_time = GAME_FRAME_US - render_time_us;
+            uart_puts("\n[TIMING] Waiting (us): "); 
+            uart_hex(wait_time);
+            wait_us(wait_time);
+        } else {
+            uart_puts("\n[WARNING] Frame took too long!");
         }
     }   
 }
 
-void draw_partial_map(int x, int y) {
-    // Calculate local coordinates relative to the map
-    int local_x = x - map_x;
-    int local_y = y - map_y;
+void update_protag_position(int *x, int *y, char direction) {
+    const int step_size = 2;
+    int old_x = *x;
+    int old_y = *y;
 
-    // Extract the part of the map that was covered by the sprite
-    unsigned long* map_section = extract_subimage_static(game_map, map_x, map_y, local_x, local_y, PROTAG_WIDTH, PROTAG_HEIGHT, sprite_bg_buffer);
+    uart_puts("\n[UPDATE_POS] Direction: ");
+    uart_sendc(direction);
+    uart_puts(" Old position: ("); 
+    uart_hex(old_x); uart_puts(","); uart_hex(old_y); uart_puts(")");
 
-    // Only draw if extraction was successful (i.e., bounds were valid)
-    if (map_section) {
-        drawImage_double_buffering(x, y, map_section, PROTAG_WIDTH, PROTAG_HEIGHT);
-        uart_puts("Redraw successfully!");
-    } else {
-        uart_puts("Player out of bounds!");
+    switch (direction) {
+        case UP:
+            *y -= step_size;
+            break;
+        case DOWN:
+            *y += step_size;
+            break;
+        case LEFT:
+            *x -= step_size;
+            break;
+        case RIGHT:
+            *x += step_size;
+            break;
+        default:
+            uart_puts("\n[UPDATE_POS] Invalid direction!");
+            break;
+    }
+
+    uart_puts(" New position: ("); 
+    uart_hex(*x); uart_puts(","); uart_hex(*y); uart_puts(")");
+}
+
+void draw_partial_map(int prev_x, int prev_y) {
+    // Convert screen coords to map coords with safety margins
+    int map_local_x = prev_x - map_x - RESTORE_MARGIN;
+    int map_local_y = prev_y - map_y - RESTORE_MARGIN;
+    
+    // Calculate dimensions with margins
+    int restore_width = PROTAG_WIDTH + 2*RESTORE_MARGIN;
+    int restore_height = PROTAG_HEIGHT + 2*RESTORE_MARGIN;
+
+    // Clamp to map boundaries
+    if(map_local_x < 0) {
+        restore_width += map_local_x; // Reduces width
+        map_local_x = 0;
+    }
+    if(map_local_y < 0) {
+        restore_height += map_local_y;
+        map_local_y = 0;
+    }
+    if(map_local_x + restore_width > GAME_MAP_WIDTH) {
+        restore_width = GAME_MAP_WIDTH - map_local_x;
+    }
+    if(map_local_y + restore_height > GAME_MAP_HEIGHT) {
+        restore_height = GAME_MAP_HEIGHT - map_local_y;
+    }
+
+    // Debug output
+    uart_puts("\n[RESTORE] Prev@("); 
+    uart_hex(prev_x); uart_puts(","); uart_hex(prev_y);
+    uart_puts(") MapLocal@(");
+    uart_hex(map_local_x); uart_puts(","); uart_hex(map_local_y);
+    uart_puts(") Size:");
+    uart_hex(restore_width); uart_puts("x"); uart_hex(restore_height);
+
+    // Extract and restore
+    unsigned long* bg_section = extract_subimage_static(
+        game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT,
+        map_local_x, map_local_y,
+        restore_width, restore_height,
+        sprite_bg_buffer
+    );
+
+    if(bg_section) {
+        // Draw at adjusted screen position
+        int screen_x = map_local_x + map_x;
+        int screen_y = map_local_y + map_y;
+        drawImage_double_buffering(screen_x, screen_y, bg_section, 
+                                 restore_width, restore_height);
     }
 }
 
+unsigned long* extract_subimage_static(const unsigned long* src, int src_w, int src_h,
+    int start_x, int start_y, int w, int h,
+    unsigned long* buffer) {
+// Strict alignment check
+if(((unsigned long)src | (unsigned long)buffer) & 0x3) {
+uart_puts("\n[ALIGN] Misaligned! src:");
+uart_hex((unsigned long)src);
+uart_puts(" buf:");
+uart_hex((unsigned long)buffer);
+return NULL;
+}
 
-/**
- * Extracts a rectangular portion of an image (subimage) from a larger image buffer.
- * 
- * src         Pointer to the full source image buffer (1D array, row-major layout).
- * src_width   Width of the source image in pixels.
- * src_height  Height of the source image in pixels.
- * start_x     X coordinate (column) of the top-left corner of the subimage within the source image.
- * start_y     Y coordinate (row) of the top-left corner of the subimage within the source image.
- * width       Width of the subimage to extract.
- * height      Height of the subimage to extract.
- * out_buffer  Pointer to a pre-allocated buffer where the extracted subimage will be stored.
- *                    This buffer must be at least width * height * sizeof(uint32_t) in size.
- */
-unsigned long* extract_subimage_static(const unsigned long* src, int src_width, int src_height, int start_x, int start_y, int width, int height, unsigned long* out_buffer) {
-    
-    // Bounds check to ensure subimage fits within the source image
-    if (start_x < 0 || start_y < 0 ||
-        start_x + width > src_width || start_y + height > src_height) {
-        // Invalid region — do nothing (or handle error as needed)
-        return NULL;
-    }
+// Validate bounds
+if(start_x < 0 || start_y < 0 || 
+start_x + w > src_w || start_y + h > src_h) {
+uart_puts("\n[BOUNDS] Invalid: X[");
+uart_hex(start_x); uart_puts(".."); uart_hex(start_x + w);
+uart_puts("] Y[");
+uart_hex(start_y); uart_puts(".."); uart_hex(start_y + h);
+uart_puts("]");
+return NULL;
+}
 
-    // Loop over each row of the subimage
-    for (int y = 0; y < height; ++y) {
-        // Compute the starting address of the row in the source image
-        // Formula: (start_y + y) * src_width → gives the starting index of the row in the full image
-        // + start_x → shifts to the desired subimage column
-        const unsigned long* src_row = src + (start_y + y) * src_width + start_x;
+// Row-by-row copy with memcpy
+for(int y = 0; y < h; y++) {
+const unsigned long* src_row = src + (start_y + y) * src_w + start_x;
+unsigned long* dst_row = buffer + y * w;
+memcpy(dst_row, src_row, w * sizeof(unsigned long));
+}
 
-        // Compute the destination row in the output buffer
-        // Since out_buffer is a flat array, each row starts at y * width
-        unsigned long* dst_row = out_buffer + y * width;
-
-        // Copy one row (width pixels) from the source image to the output buffer
-        // This uses memcpy to copy width * 4 bytes (assuming 32-bit pixels)
-        memcpy(dst_row, src_row, width * sizeof(uint32_t));
-
-        return out_buffer;
-    }
+return buffer;
 }
