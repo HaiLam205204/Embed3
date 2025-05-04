@@ -16,9 +16,9 @@
 int map_x = MAP_START_X;
 int map_y = MAP_START_Y;
 
-#define RESTORE_MARGIN 2
-static unsigned long sprite_bg_buffer[(PROTAG_WIDTH + 2*RESTORE_MARGIN) * 
-                                     (PROTAG_HEIGHT + 2*RESTORE_MARGIN)];
+#define RESTORE_MARGIN 10
+// The safety margin (RESTORE_MARGIN) ensures complete coverage of the changed pixels
+static unsigned long sprite_bg_buffer[(PROTAG_WIDTH + 2*RESTORE_MARGIN) * (PROTAG_HEIGHT + 2*RESTORE_MARGIN)];
 
 void game_loop() {
     int protag_x = PROTAG_START_X;
@@ -30,7 +30,7 @@ void game_loop() {
 
     uart_puts("\n[GAME_LOOP] Starting game loop");
     uart_puts("\n[GAME_LOOP] Initial position: (");
-    uart_hex(protag_x); uart_puts(","); uart_hex(protag_y); uart_puts(")");
+    uart_dec(protag_x); uart_puts(","); uart_dec(protag_y); uart_puts(")");
 
     while (1) {
         uint64_t start_time = get_arm_system_time();
@@ -38,17 +38,17 @@ void game_loop() {
 
         if (first_frame) {
             uart_puts("\n[FRAME] Rendering first frame");
-            for (int i = 0; i < 3; i++) {
-                clear_screen(0xFFFF0000);
+            for (int i = 0; i < 2; i++) {
+                clear_screen(0xFFFF0000); // bright red
                 uart_puts("\n[FRAME] Cleared screen (red)");
                 
                 drawImage_double_buffering(map_x, map_y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
                 uart_puts("\n[FRAME] Drawn map at ("); 
-                uart_hex(map_x); uart_puts(","); uart_hex(map_y); uart_puts(")");
+                uart_dec(map_x); uart_puts(","); uart_dec(map_y); uart_puts(")");
                 
                 drawImage_double_buffering(protag_x, protag_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
                 uart_puts("\n[FRAME] Drawn protagonist at ("); 
-                uart_hex(protag_x); uart_puts(","); uart_hex(protag_y); uart_puts(")");
+                uart_dec(protag_x); uart_puts(","); uart_dec(protag_y); uart_puts(")");
                 
                 swap_buffers();
                 uart_puts("\n[FRAME] Swapped buffers");
@@ -62,14 +62,14 @@ void game_loop() {
             
             update_protag_position(&protag_x, &protag_y, input);
             uart_puts("\n[POSITION] New position: ("); 
-            uart_hex(protag_x); uart_puts(","); uart_hex(protag_y); uart_puts(")");
+            uart_dec(protag_x); uart_puts(","); uart_dec(protag_y); uart_puts(")");
 
             if (prev_protag_x != protag_x || prev_protag_y != protag_y) {
                 uart_puts("\n[MOVEMENT] Position changed - redrawing");
-                // 1. Restore background where sprite WAS (with margins)
+                // Restore background where sprite WAS (with margins)
                 draw_partial_map(prev_protag_x, prev_protag_y);
                 
-                // 2. Draw new sprite position
+                // Draw new sprite position
                 drawImage_double_buffering(protag_x, protag_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
                 uart_puts("\n[MOVEMENT] Redrew protagonist at new position");
 
@@ -82,12 +82,12 @@ void game_loop() {
         uint64_t end_time = get_arm_system_time();
         uint64_t render_time_us = ticks_to_us(end_time - start_time);
         uart_puts("\n[TIMING] Frame render time (us): "); 
-        uart_hex(render_time_us);
+        uart_dec(render_time_us);
 
         if (render_time_us < GAME_FRAME_US) {
             uint64_t wait_time = GAME_FRAME_US - render_time_us;
             uart_puts("\n[TIMING] Waiting (us): "); 
-            uart_hex(wait_time);
+            uart_dec(wait_time);
             wait_us(wait_time);
         } else {
             uart_puts("\n[WARNING] Frame took too long!");
@@ -96,14 +96,14 @@ void game_loop() {
 }
 
 void update_protag_position(int *x, int *y, char direction) {
-    const int step_size = 2;
+    const int step_size = RESTORE_MARGIN;
     int old_x = *x;
     int old_y = *y;
 
     uart_puts("\n[UPDATE_POS] Direction: ");
     uart_sendc(direction);
     uart_puts(" Old position: ("); 
-    uart_hex(old_x); uart_puts(","); uart_hex(old_y); uart_puts(")");
+    uart_dec(old_x); uart_puts(","); uart_dec(old_y); uart_puts(")");
 
     switch (direction) {
         case UP:
@@ -124,7 +124,7 @@ void update_protag_position(int *x, int *y, char direction) {
     }
 
     uart_puts(" New position: ("); 
-    uart_hex(*x); uart_puts(","); uart_hex(*y); uart_puts(")");
+    uart_dec(*x); uart_puts(","); uart_dec(*y); uart_puts(")");
 }
 
 void draw_partial_map(int prev_x, int prev_y) {
@@ -153,12 +153,12 @@ void draw_partial_map(int prev_x, int prev_y) {
     }
 
     // Debug output
-    uart_puts("\n[RESTORE] Prev@("); 
-    uart_hex(prev_x); uart_puts(","); uart_hex(prev_y);
-    uart_puts(") MapLocal@(");
-    uart_hex(map_local_x); uart_puts(","); uart_hex(map_local_y);
+    uart_puts("\n[RESTORE] Prev("); 
+    uart_dec(prev_x); uart_puts(","); uart_dec(prev_y);
+    uart_puts(") MapLocal(");
+    uart_dec(map_local_x); uart_puts(","); uart_dec(map_local_y);
     uart_puts(") Size:");
-    uart_hex(restore_width); uart_puts("x"); uart_hex(restore_height);
+    uart_dec(restore_width); uart_puts("x"); uart_dec(restore_height);
 
     // Extract and restore
     unsigned long* bg_section = extract_subimage_static(
@@ -172,40 +172,38 @@ void draw_partial_map(int prev_x, int prev_y) {
         // Draw at adjusted screen position
         int screen_x = map_local_x + map_x;
         int screen_y = map_local_y + map_y;
-        drawImage_double_buffering(screen_x, screen_y, bg_section, 
-                                 restore_width, restore_height);
+        drawImage_double_buffering(screen_x, screen_y, bg_section, restore_width, restore_height);
     }
 }
 
 unsigned long* extract_subimage_static(const unsigned long* src, int src_w, int src_h,
     int start_x, int start_y, int w, int h,
     unsigned long* buffer) {
-// Strict alignment check
-if(((unsigned long)src | (unsigned long)buffer) & 0x3) {
-uart_puts("\n[ALIGN] Misaligned! src:");
-uart_hex((unsigned long)src);
-uart_puts(" buf:");
-uart_hex((unsigned long)buffer);
-return NULL;
-}
+    // Strict alignment check
+    if(((unsigned long)src | (unsigned long)buffer) & 0x3) {
+        uart_puts("\n[ALIGN] Misaligned! src:");
+        uart_hex((unsigned long)src);
+        uart_puts(" buf:");
+        uart_hex((unsigned long)buffer);
+        return NULL;
+    }
 
-// Validate bounds
-if(start_x < 0 || start_y < 0 || 
-start_x + w > src_w || start_y + h > src_h) {
-uart_puts("\n[BOUNDS] Invalid: X[");
-uart_hex(start_x); uart_puts(".."); uart_hex(start_x + w);
-uart_puts("] Y[");
-uart_hex(start_y); uart_puts(".."); uart_hex(start_y + h);
-uart_puts("]");
-return NULL;
-}
+    // Validate bounds
+    if(start_x < 0 || start_y < 0 || start_x + w > src_w || start_y + h > src_h) {
+        uart_puts("\n[BOUNDS] Invalid: X[");
+        uart_dec(start_x); uart_puts(".."); uart_dec(start_x + w);
+        uart_puts("] Y[");
+        uart_dec(start_y); uart_puts(".."); uart_dec(start_y + h);
+        uart_puts("]");
+        return NULL;
+    }
 
-// Row-by-row copy with memcpy
-for(int y = 0; y < h; y++) {
-const unsigned long* src_row = src + (start_y + y) * src_w + start_x;
-unsigned long* dst_row = buffer + y * w;
-memcpy(dst_row, src_row, w * sizeof(unsigned long));
-}
+    // Row-by-row copy with memcpy
+    for(int y = 0; y < h; y++) {
+        const unsigned long* src_row = src + (start_y + y) * src_w + start_x;
+        unsigned long* dst_row = buffer + y * w;
+        memcpy(dst_row, src_row, w * sizeof(unsigned long));
+    }
 
-return buffer;
+    return buffer;
 }
