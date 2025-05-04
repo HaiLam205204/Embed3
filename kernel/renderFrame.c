@@ -56,3 +56,11 @@ uint64_t ticks_to_us(uint64_t ticks) {
     return (ticks / freq) * 1000000ULL // Full seconds in microseconds
             + ((ticks % freq) * 1000000ULL) / freq; // Remeainder in microseconds
 }
+
+// Convert microseconds to ticks
+// This function avoids overflow issues
+uint64_t us_to_ticks(uint64_t microseconds) {
+    uint64_t freq = get_arm_timer_freq();
+    return (microseconds / 1000000ULL) * freq  // Full seconds in ticks
+           + ((microseconds % 1000000ULL) * freq) / 1000000ULL; // Remainder in ticks
+}

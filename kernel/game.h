@@ -1,4 +1,5 @@
 #include "framebf.h"
 
-void game_loop(void);
-void render_game_frame();
+void game_loop();
+void draw_partial_map(int x, int y);
+unsigned long* extract_subimage_static(const unsigned long* src, int src_width, int src_height, int start_x, int start_y, int width, int height, unsigned long* out_buffer);

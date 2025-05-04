@@ -7,3 +7,4 @@ void video_playback(const unsigned long** frames, uint32_t frame_count, int x, i
 uint64_t get_arm_timer_freq();
 uint64_t get_arm_system_time();
 uint64_t ticks_to_us(uint64_t ticks);
+uint64_t us_to_ticks(uint64_t microseconds);

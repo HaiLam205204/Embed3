@@ -48,9 +48,8 @@ int get_mac_address(uint8_t mac[6]);
 //New Tags for Screen Display
 #define MBOX_TAG_SETPHYWH   0x48003 // Set physical width/height
 #define MBOX_TAG_SETVIRTWH  0x48004 // Set virtual width/height
-#define MBOX_TAG_SETVIRTOFF 0x48009 
+#define MBOX_TAG_SETVIRTOFF 0x48009 // Set virtual offset
 #define MBOX_TAG_SETDEPTH   0x48005 // Set color depth (bits per pixel)
 #define MBOX_TAG_SETPXLORDR 0x48006 // Set pixel order (RGB/BGR)
 #define MBOX_TAG_GETFB      0x40001 // Allocate framebuffer
 #define MBOX_TAG_GETPITCH   0x40008 // Get pitch (bytes per line)
-#define MBOX_TAG_SETVSYNC   0x40046 // VSYNC 
