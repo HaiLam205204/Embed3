@@ -197,6 +197,61 @@ int string_compare(char *a, char *b) {
     return *a - *b;
 }
 
+
+char* strtok(char* str, const char* delim) {
+    static char* next_token = 0;
+
+    if (str != 0) {
+        next_token = str;
+    }
+
+    if (next_token == 0 || *next_token == '\0') {
+        return 0;
+    }
+
+    // Skip any leading delimiters
+    char* start = next_token;
+    while (*start && strchr(delim, *start)) {
+        start++;
+    }
+
+    if (*start == '\0') {
+        next_token = 0;
+        return 0;
+    }
+
+    // Find end of token
+    char* end = start;
+    while (*end && !strchr(delim, *end)) {
+        end++;
+    }
+
+    if (*end != '\0') {
+        *end = '\0';       // Null-terminate the token
+        next_token = end + 1;
+    } else {
+        next_token = 0;
+    }
+
+    return start;
+}
+
+char* strchr(const char* str, int ch) {
+    while (*str) {
+        if (*str == (char)ch) {
+            return (char*)str;
+        }
+        str++;
+    }
+
+    // If character is '\0', check that too
+    if (ch == '\0') {
+        return (char*)str;
+    }
+
+    return 0;
+}
+
 /**
  * Compare two strings up to a specified length
  * Returns 0 if the first 'len' characters match

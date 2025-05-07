@@ -8,6 +8,7 @@
 #include "../include/video.h"
 #include "../include/renderFrame.h"
 
+
 #define OPEN_CLI 0x14 // CTRL T
 #define VIDEO 0x16 // CTRL V
 

@@ -158,6 +158,8 @@ void uart_hex(unsigned int num);
 void uart_dec(int num);
 
 int string_compare(char *a, char *b);
+char* strtok(char* str, const char* delim);
+char* strchr(const char* str, int ch);
 int partial_string_compare(const char* a, const char* b, int len);
 uint32_t strlen(const char* str);
 char* strcpy(char *dest, char *src);
