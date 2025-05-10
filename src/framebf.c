@@ -12,11 +12,14 @@
 
 //Screen info
 unsigned int width, height, pitch;
+unsigned int buffer_size;
 
 /* Frame buffer address
  * (declare as pointer of unsigned char to access each byte) */
 unsigned char *fb;
-
+unsigned char *front_buffer;
+unsigned char *back_buffer;
+static int current_buffer = 0; // 0 = front buffer visible, 1 = back buffer visible
 
 /**
  * Set screen resolution to 1024x768
@@ -36,7 +39,7 @@ void framebf_init()
     mBuf[8] = 8;
     mBuf[9] = 0;
     mBuf[10] = 1024;
-    mBuf[11] = 768;
+    mBuf[11] = 768 * 2;
 
     mBuf[12] = MBOX_TAG_SETVIRTOFF; //Set virtual offset
     mBuf[13] = 8;
@@ -67,38 +70,80 @@ void framebf_init()
 
     mBuf[34] = MBOX_TAG_LAST;
 
-    // Call Mailbox
-    if (mbox_call(ADDR(mBuf), MBOX_CH_PROP) //mailbox call is successful ?
-    	&& mBuf[20] == COLOR_DEPTH //got correct color depth ?
-		&& mBuf[24] == PIXEL_ORDER //got correct pixel order ?
-		&& mBuf[28] != 0 //got a valid address for frame buffer ?
-		) {
-
-    	/* Convert GPU address to ARM address (clear higher address bits)
-    	 * Frame Buffer is located in RAM memory, which VideoCore MMU
-    	 * maps it to bus address space starting at 0xC0000000.
-    	 * Software accessing RAM directly use physical addresses
-    	 * (based at 0x00000000)
-    	*/
-    	mBuf[28] &= 0x3FFFFFFF;
-
-        // Access frame buffer as 1 byte per each address
-        fb = (unsigned char *)((unsigned long)mBuf[28]);
-        uart_puts("Got allocated Frame Buffer at RAM physical address: ");
-        uart_hex(mBuf[28]);
-        uart_puts("\n");
-
-        uart_puts("Frame Buffer Size (bytes): ");
-        uart_dec(mBuf[29]);
-        uart_puts("\n");
-
-        width = mBuf[5];     	// Actual physical width
-        height = mBuf[6];     	// Actual physical height
-        pitch = mBuf[33];       // Number of bytes per line
-
-    } else {
-    	uart_puts("Unable to get a frame buffer with provided setting\n");
+    // First buffer allocation
+    if (!mbox_call(ADDR(mBuf), MBOX_CH_PROP) || 
+        mBuf[20] != COLOR_DEPTH || 
+        mBuf[24] != PIXEL_ORDER || 
+        mBuf[28] == 0) {
+        uart_puts("Failed to allocate front buffer!\n");
+        return;
     }
+
+    // Convert GPU address to ARM address
+    mBuf[28] &= 0x3FFFFFFF;
+    front_buffer = (unsigned char *)((unsigned long)mBuf[28]);
+
+    // Get returned parameters
+    buffer_size = mBuf[29]; // Total buffer size
+    width = mBuf[5]; // Physical width
+    height = mBuf[6]; // Physical height
+    pitch = mBuf[33]; // Bytes per line
+
+    // Verify buffer size is sufficient for double buffering
+    unsigned int min_required_size = pitch * height * 2;
+    if (buffer_size < min_required_size) {
+        uart_puts("Error: Allocated buffer too small for double buffering\n");
+        return;
+    }
+
+    // Set up back buffer
+    // After mailbox call, check ACTUAL virtual height (mBuf[11])
+    if (mBuf[11] >= height * 2) {
+        back_buffer = front_buffer + (pitch * height);
+        uart_puts("Double buffering enabled\n");
+
+        unsigned int expected_buffer_size = pitch * height;
+        if ((back_buffer - front_buffer) != expected_buffer_size) {
+            uart_puts("Warning: Buffer spacing unexpected\n");
+        } else {
+            uart_puts("Buffer spacing is correct\n");
+        }
+
+        // Safety check
+        if ((unsigned long)back_buffer + expected_buffer_size > 
+            (unsigned long)front_buffer + buffer_size) {
+            uart_puts("Error: Back buffer exceeds allocated memory!\n");
+        } else {
+            uart_puts("Back buffer is within allocated memory\n");
+        }
+    } else {
+        uart_puts("Warning: Couldn't get double height buffer\n");
+        back_buffer = front_buffer; // Fallback to single buffer
+    }
+    fb = front_buffer;  // Display starts with front buffer
+
+    uart_puts("FB Init: ");
+    uart_dec(width); 
+    uart_puts("x"); 
+    uart_dec(height);
+    uart_puts(" at "); 
+    uart_hex((unsigned long)front_buffer);
+    uart_puts(", width="); 
+    uart_dec(width);
+    uart_puts(", height="); 
+    uart_dec(height);
+    uart_puts(", pitch="); 
+    uart_dec(pitch);
+    uart_puts(", size="); 
+    uart_dec(buffer_size);
+    uart_puts("\n");
+    uart_puts("Front buffer at: ");
+    uart_hex((unsigned long)front_buffer);
+    uart_puts("\nBack buffer at: ");
+    uart_hex((unsigned long)back_buffer);
+    uart_puts("\nBuffer size: ");
+    uart_dec(buffer_size);
+    uart_puts(" bytes\n");
 }
 
 
@@ -268,30 +313,78 @@ void drawImageScaledAspect(int x, int y, const unsigned long *image, int src_wid
     drawImageScaled(x, y, image, src_width, src_height, dest_width, dest_height);
 }
 
-// // Draw a portion of the image to framebuffer
-// void draw_viewport(
-//     int src_x, int src_y,      // Top-left in source image
-//     int dest_x, int dest_y,    // Top-left on screen (usually 0,0)
-//     int width, int height       // Dimensions to copy (usually screen size)
-// ) {
-//     // Clamp to source image bounds
-//     src_x = max(0, src_x);
-//     src_y = max(0, src_y);
-//     width = min(width, image_width - src_x);
-//     height = min(height, image_height - src_y);
-    
-//     // Clamp to screen bounds
-//     width = min(width, SCREEN_WIDTH - dest_x);
-//     height = min(height, SCREEN_HEIGHT - dest_y);
-    
-//     // Optimized row-by-row copy
-//     for (int y = 0; y < height; y++) {
-//         uint32_t* src_row = &full_image[(src_y + y) * image_width + src_x];
-//         uint32_t* dest_row = (uint32_t*)&fb[(dest_y + y) * pitch + (dest_x * 4)];
-//         memcpy(dest_row, src_row, width * 4);
-//     }
-// }
+/**
+ * Swap front and back buffers
+ */
+void swap_buffers() {
 
+    if (back_buffer == front_buffer) {
+        uart_puts("Warning: No double buffering available\n");
+        return;
+    }
+
+    // Update virtual offset to switch buffers
+    mBuf[0] = 7*4;
+    mBuf[1] = MBOX_REQUEST;
+    mBuf[2] = MBOX_TAG_SETVIRTOFF;
+    mBuf[3] = 8; // Tag payload size
+    mBuf[4] = 0; // Request code
+    mBuf[5] = 0; // X offset always 0
+    // Toggle between 0 (front) and height (back)
+    mBuf[6] = (fb == front_buffer) ? height : 0; // Toggle Y offset
+    mBuf[7] = MBOX_TAG_LAST;
+
+    if (mbox_call(ADDR(mBuf), MBOX_CH_PROP)) {
+        fb = (fb == front_buffer) ? back_buffer : front_buffer;
+    } else {
+        uart_puts("Failed to swap buffers!\n");
+    }
+
+    current_buffer = !current_buffer; // Toggle buffer flag
+    // Check message
+    // uart_puts("Swapped to buffer ");
+    // uart_dec(current_buffer);
+    // uart_puts("\n");
+}
+
+// Clear entire back buffer
+void clear_screen(unsigned long color) {
+    unsigned long *buf = (unsigned long*)get_drawing_buffer();
+    for (int i = 0; i < (pitch/4)*height; i++) {
+        buf[i] = color;
+    }
+}
+
+/**
+ * Get pointer to the NOT currently displayed drawing at (back) buffer
+ */
+unsigned char *get_drawing_buffer() {
+    return (fb == front_buffer) ? back_buffer : front_buffer;
+}
+
+/**
+ * Double buffering draw function, writes to back buffer
+ */
+void drawPixelARGB32_double_buffering(int x, int y, unsigned int attr) {
+    // Calculate offset (same as before)
+    int offs = (y * pitch) + (COLOR_DEPTH/8 * x);
+    
+    // Draw to the CURRENTLY ACTIVE back buffer (not the displayed one)
+    unsigned char *draw_buffer = get_drawing_buffer();
+    *((unsigned int*)(draw_buffer + offs)) = attr;
+}
+
+void drawImage_double_buffering(int x, int y, const unsigned long *image, int image_width, int image_height) {
+    for (int j = 0; j < image_height; j++) {
+        for (int i = 0; i < image_width; i++) {
+            unsigned int pixel = image[j * image_width + i];
+            if (pixel != 0xFFFF00FF) { // skip transparent pixels
+                drawPixelARGB32_double_buffering(x + i, y + j, pixel);
+            }
+            //drawPixelARGB32_double_buffering(x + i, y + j, image[j * image_width + i]);
+        }
+    }
+}
 
 
 

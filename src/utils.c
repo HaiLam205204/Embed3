@@ -183,6 +183,18 @@ void set_wait_timer(int set, uint64_t usVal) {
     }
 }
 
+// Function to copy memory
+void* memcpy(void *dest, const void *src, unsigned long n) {
+    char *d = dest;
+    const char *s = src;
+    
+    for (unsigned long i = 0; i < n; i++) {
+        d[i] = s[i];
+    }
+    
+    return dest;  // Add this line
+}
+
 const char* welcome_message = 
 "8888888888 8888888888 8888888888 88888888888 .d8888b.      d8888   .d8888b.   .d8888b.  \n"
 "888        888        888            888    d88P  Y88b    d8P888  d88P  Y88b d88P  Y88b \n"

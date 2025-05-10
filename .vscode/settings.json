@@ -5,6 +5,8 @@
         "gpio.h": "c",
         "uart1.h": "c",
         "timer.h": "c",
-        "utils.h": "c"
+        "utils.h": "c",
+        "renderframe.h": "c",
+        "game_map.h": "c"
     }
 }
