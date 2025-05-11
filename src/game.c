@@ -36,38 +36,46 @@ void game_loop() {
         uint64_t start_time = get_arm_system_time();
         uart_puts("\n[FRAME] ---- NEW FRAME ----");
 
-        if (first_frame) {
+        if (first_frame) { // display first frame
             uart_puts("\n[FRAME] Rendering first frame");
             for (int i = 0; i < 2; i++) {
                 clear_screen(0xFFFF0000); // bright red
                 uart_puts("\n[FRAME] Cleared screen (red)");
                 
+                // draw game map
                 drawImage_double_buffering(map_x, map_y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
                 uart_puts("\n[FRAME] Drawn map at ("); 
                 uart_dec(map_x); uart_puts(","); uart_dec(map_y); uart_puts(")");
                 
+                // draw protagonist
                 drawImage_double_buffering(protag_x, protag_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
                 uart_puts("\n[FRAME] Drawn protagonist at ("); 
                 uart_dec(protag_x); uart_puts(","); uart_dec(protag_y); uart_puts(")");
                 
+                // swap buffer to display frame
                 swap_buffers();
                 uart_puts("\n[FRAME] Swapped buffers");
                 wait_us(16000);
             }
-            first_frame = !first_frame;
-        } else {
-            input = uart_getc();
+            first_frame = !first_frame; // toggle flag
+
+        } else { // display second frame onwards
+
+            // get input from user
+            input = uart_getc(); 
             uart_puts("\n[INPUT] Received: "); 
             uart_sendc(input); // Echo the input character
             
+            // update protagonist position based on input
             update_protag_position(&protag_x, &protag_y, input);
             uart_puts("\n[POSITION] New position: ("); 
             uart_dec(protag_x); uart_puts(","); uart_dec(protag_y); uart_puts(")");
 
+            // check new position compared to old one
             if (prev_protag_x != protag_x || prev_protag_y != protag_y) {
                 uart_puts("\n[MOVEMENT] Position changed - redrawing");
                 // Restore background where sprite WAS (with margins)
-                draw_partial_map(prev_protag_x, prev_protag_y);
+                draw_partial_map(prev_protag_x, prev_protag_y); // replace the old position of protagonist with the map
                 
                 // Draw new sprite position
                 drawImage_double_buffering(protag_x, protag_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
@@ -79,6 +87,7 @@ void game_loop() {
             swap_buffers();
         }
 
+        // keep track rendering time
         uint64_t end_time = get_arm_system_time();
         uint64_t render_time_us = ticks_to_us(end_time - start_time);
         uart_puts("\n[TIMING] Frame render time (us): "); 
@@ -95,6 +104,7 @@ void game_loop() {
     }   
 }
 
+// draw sprite at a new location
 void update_protag_position(int *x, int *y, char direction) {
     const int step_size = RESTORE_MARGIN;
     int old_x = *x;
@@ -127,6 +137,7 @@ void update_protag_position(int *x, int *y, char direction) {
     uart_dec(*x); uart_puts(","); uart_dec(*y); uart_puts(")");
 }
 
+// draw a fraction of the map
 void draw_partial_map(int prev_x, int prev_y) {
     // Convert screen coords to map coords with safety margins
     int map_local_x = prev_x - map_x - RESTORE_MARGIN;
@@ -176,6 +187,7 @@ void draw_partial_map(int prev_x, int prev_y) {
     }
 }
 
+// extract the part of the map that was hidden by the sprite
 unsigned long* extract_subimage_static(const unsigned long* src, int src_w, int src_h,
     int start_x, int start_y, int w, int h,
     unsigned long* buffer) {

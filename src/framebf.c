@@ -378,7 +378,7 @@ void drawImage_double_buffering(int x, int y, const unsigned long *image, int im
     for (int j = 0; j < image_height; j++) {
         for (int i = 0; i < image_width; i++) {
             unsigned int pixel = image[j * image_width + i];
-            if (pixel != 0xFFFF00FF) { // skip transparent pixels
+            if ((pixel & 0x00FFFFFF) != 0) { // skip transparent pixels
                 drawPixelARGB32_double_buffering(x + i, y + j, pixel);
             }
             //drawPixelARGB32_double_buffering(x + i, y + j, image[j * image_width + i]);
