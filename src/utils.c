@@ -1,8 +1,6 @@
 #include "../include/font.h"          // Contains font bitmap and constants like FONT_HEIGHT, FONT_WIDTH
 #include "../include/framebf.h"       // Provides drawPixelARGB32() and framebuffer access
 #include "../include/uart0.h" // UART0 definitions (if enabled)
-#include "../include/uart1.h" // UART1 definitions (if enabled)
-
 
 /* 
  * =============================
