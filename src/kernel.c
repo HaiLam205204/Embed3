@@ -27,7 +27,7 @@ void main()
 	// Initialize frame buffer
 	framebf_init();
 
-    attack_button(); // This will draw the button and enter its own loop
+    action_button(); // This will draw the button and enter its own loop
     // Draw background image
     //drawImage(start_x, start_y, welcome_image, WELCOME_WIDTH, WELCOME_HEIGHT);
 

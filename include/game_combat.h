@@ -7,5 +7,8 @@
 #define RUN 0x72  // 'r'
 
 void draw_attack_button(int is_pressed);
-void attack_button();
-void attack_button_update();
+void draw_item_button(int is_pressed);
+void draw_persona_button(int is_pressed);
+void draw_run_button(int is_pressed);
+void action_button();
+

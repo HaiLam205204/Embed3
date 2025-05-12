@@ -36,7 +36,7 @@ void draw_run_button(int is_pressed)
     drawImage_double_buffering(BUTTON_RUN_X, BUTTON_RUN_Y, img, BUTTON_WIDTH, BUTTON_HEIGHT);
 }
 
-void attack_button() {
+void action_button() {
     int button_pressed_attack = 0;
     int button_pressed_item = 0;
     int button_pressed_persona = 0;
