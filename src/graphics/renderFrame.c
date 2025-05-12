@@ -1,7 +1,7 @@
-#include "../include/renderFrame.h"
-#include "../include/timer.h"
-#include "../include/framebf.h"
-#include "../include/utils.h"
+#include "../../include/renderFrame.h"
+#include "../../include/timer.h"
+#include "../../include/framebf.h"
+#include "../../include/utils.h"
 
 void video_playback(const unsigned long** frames, uint32_t frame_count, int x, int y, int src_width, int src_height, int max_width, int max_height) {
     uint32_t current_frame = 0;
