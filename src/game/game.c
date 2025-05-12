@@ -1,11 +1,11 @@
-#include "../include/game.h"
-#include "../include/framebf.h"
-#include "../include/uart0.h"
-#include "../include/gpio.h"
-#include "../include/utils.h"
-#include "../include/renderFrame.h"
-#include "../include/game_map.h"
-#include "../include/protagonist_sprite.h"
+#include "../../include/game.h"
+#include "../../include/framebf.h"
+#include "../../include/uart0.h"
+#include "../../include/gpio.h"
+#include "../../include/utils.h"
+#include "../../include/renderFrame.h"
+#include "../../include/game_map.h"
+#include "../../include/protagonist_sprite.h"
 
 #define GAME_FRAME_RATE 30                        // e.g., 30 FPS
 #define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per frame
