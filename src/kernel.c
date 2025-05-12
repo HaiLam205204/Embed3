@@ -7,6 +7,7 @@
 #include "../include/video.h"
 #include "../include/renderFrame.h"
 #include "../include/game.h"
+#include "../include/game_combat.h"
 
 
 #define OPEN_CLI 0x14 // CTRL T
@@ -26,6 +27,7 @@ void main()
 	// Initialize frame buffer
 	framebf_init();
 
+    attack_button(); // This will draw the button and enter its own loop
     // Draw background image
     //drawImage(start_x, start_y, welcome_image, WELCOME_WIDTH, WELCOME_HEIGHT);
 

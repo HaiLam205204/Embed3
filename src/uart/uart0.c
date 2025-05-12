@@ -373,3 +373,6 @@ void uart_set_flow_control(int enable) {
     }
 }
 
+int uart_input_available() {
+    return !(UART0_FR & UART0_FR_RXFE);
+}
