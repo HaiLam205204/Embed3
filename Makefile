@@ -17,8 +17,10 @@ kernel8.img: ./build/boot.o $(OFILES)
 	aarch64-none-elf-objcopy -O binary ./build/kernel8.elf kernel8.img
 
 clean:
-	del .\build\kernel8.elf .\build\*.o *.img .\build\game\*.o .\build\cli\*.o .\build\graphics\*.o .\build\uart\*.o
+	@echo [INFO] Start cleaning...
+	@powershell -NoProfile -ExecutionPolicy Bypass -File clean.ps1
+	@echo [INFO] Finish cleaning!
 
-# Run emulation with QEMU
 run0: 
+	@echo [INFO] Run emulation with QEMU...
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
