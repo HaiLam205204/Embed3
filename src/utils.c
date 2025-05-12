@@ -218,4 +218,4 @@ const char* welcome_message =
     "             <UNG XUAN DAT> - <S3932156>\n"
     "             <NGUYEN DUC ANH> - <S3878010>\n"
     "             <NGUYEN TRONG KHOA> - <S3978477>\n"
-    "Ctrl + T to access the CLI, Ctrl + V to run the game\n";                                                  
+    "Ctrl + T to access the CLI, Ctrl + A to run the game\n";                                                  
