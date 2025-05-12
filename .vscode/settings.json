@@ -7,6 +7,8 @@
         "timer.h": "c",
         "utils.h": "c",
         "renderframe.h": "c",
-        "game_map.h": "c"
+        "game_map.h": "c",
+        "protagonist_sprite.h": "c",
+        "uart0.h": "c"
     }
 }
