@@ -8,10 +8,10 @@
 #define MAX_PLACEHOLDERS 4
 
 int placeholder_positions[MAX_PLACEHOLDERS][2] = {
-    {100, 100},
-    {200, 100},
-    {300, 100},
-    {400, 100},
+    {452, 500},
+    {280, 330},
+    {664, 300},
+    {472, 150},
 };
 
 void design_screen_loop()
@@ -29,14 +29,14 @@ void design_screen_loop()
 
                 for (int i = 0; i < MAX_PLACEHOLDERS; ++i)
                 {
-                    int x = placeholder_positions[i][0];
-                    int y = placeholder_positions[i][1];
+                    int pos_x = placeholder_positions[i][0];
+                    int pos_y = placeholder_positions[i][1];
 
-                    drawImage_double_buffering(PROTAG_START_X, PROTAG_START_X, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
+                    drawImage_double_buffering(pos_x, pos_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
                     uart_puts("[DESIGN_SCREEN] Drawn placeholder at (");
-                    uart_dec(x);
+                    uart_dec(pos_x);
                     uart_puts(", ");
-                    uart_dec(y);
+                    uart_dec(pos_y);
                     uart_puts(")\n");
                 }
 
