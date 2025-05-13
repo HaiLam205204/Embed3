@@ -4,7 +4,8 @@
 #include "../../include/gpio.h"
 #include "../../include/utils.h"
 #include "../../include/renderFrame.h"
-#include "../../include/game_map.h"
+//#include "../../include/game_map.h"
+#include "../../include/game_map_2x.h"
 #include "../../include/protagonist_sprite.h"
 
 #define GAME_FRAME_RATE 30                        // e.g., 30 FPS
@@ -61,7 +62,7 @@ void game_loop() {
             for (int i = 0; i < 2; i++) {
                 clear_screen(0x00000000);
                 drawImage_double_buffering(-map_offset_x, -map_offset_y, 
-                                        game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
+                                        extendedMap, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
                 drawImage_double_buffering(screen_center_x, screen_center_y, 
                                         myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
                 swap_buffers();
@@ -99,7 +100,7 @@ void game_loop() {
             // Full redraw (simplest approach)
             clear_screen(0x00000000);
             drawImage_double_buffering(-map_offset_x, -map_offset_y, 
-                                     game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
+                                     extendedMap, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
             drawImage_double_buffering(screen_center_x, screen_center_y, 
                                      myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
         } else if (prev_world_x != protag_world_x || prev_world_y != protag_world_y) {
@@ -317,7 +318,7 @@ void draw_partial_map(int prev_x, int prev_y)
 
     // Extract and restore
     unsigned long *bg_section = extract_subimage_static(
-        game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT,
+        extendedMap, GAME_MAP_WIDTH, GAME_MAP_HEIGHT,
         map_local_x, map_local_y,
         restore_width, restore_height,
         sprite_bg_buffer);
