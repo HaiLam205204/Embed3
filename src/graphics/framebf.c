@@ -37,7 +37,7 @@ void framebf_init()
     mBuf[7] = MBOX_TAG_SETVIRTWH; //Set virtual width-height
     mBuf[8] = 8;
     mBuf[9] = 0;
-    mBuf[10] = 1024;
+    mBuf[10] = 1024 * 2;
     mBuf[11] = 768 * 2;
 
     mBuf[12] = MBOX_TAG_SETVIRTOFF; //Set virtual offset
@@ -385,7 +385,45 @@ void drawImage_double_buffering(int x, int y, const unsigned long *image, int im
     }
 }
 
+/**
+ * Set virtual display offset for smooth scrolling
+ * offset_x Horizontal offset in pixels
+ * offset_y Vertical offset in pixels
+ * 0 on success, -1 on failure
+ */
+int set_virtual_offset(int offset_x, int offset_y) {
+    // Validate offsets are within virtual dimensions
+    if (offset_x < 0 || offset_y < 0 || 
+        offset_x > (int)width || offset_y > (int)height) {
+        uart_puts("\n[FRAMEBF] Invalid offset values");
+        return -1;
+    }
 
+    // Prepare mailbox message
+    mBuf[0] = 7*4; // Message length
+    mBuf[1] = MBOX_REQUEST;
+    mBuf[2] = MBOX_TAG_SETVIRTOFF;
+    mBuf[3] = 8; // Tag payload size
+    mBuf[4] = 0; // Request code
+    mBuf[5] = offset_x; // X offset
+    mBuf[6] = offset_y; // Y offset
+    mBuf[7] = MBOX_TAG_LAST;
+
+    // Make mailbox call
+    if (!mbox_call(ADDR(mBuf), MBOX_CH_PROP)) {
+        uart_puts("\n[FRAMEBF] Failed to set virtual offset");
+        return -1;
+    }
+
+    // Debug output
+    uart_puts("\n[FRAMEBF] Set virtual offset to (");
+    uart_dec(offset_x);
+    uart_puts(",");
+    uart_dec(offset_y);
+    uart_puts(")");
+
+    return 0;
+}
 
 
 
