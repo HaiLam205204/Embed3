@@ -421,3 +421,15 @@ void drawImage_double_buffering(int x, int y, const unsigned long *image, int im
         }
     }
 }
+
+void drawRectARGB32_double_buffering(int x1, int y1, int x2, int y2, unsigned int attr, int fill)
+{
+    for (int y = y1; y <= y2; y++)
+        for (int x = x1; x <= x2; x++)
+        {
+            if ((x == x1 || x == x2) || (y == y1 || y == y2))
+                drawPixelARGB32_double_buffering(x, y, attr);
+            else if (fill)
+                drawPixelARGB32_double_buffering(x, y, attr);
+        }
+}
