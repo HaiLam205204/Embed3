@@ -26,3 +26,12 @@ void draw_hp_bar(int x, int y, int hp)
     uart_puts("\n");
 }
 
+void draw_combat_character(int pos_x, int pos_y, const unsigned long *character_bitmap, int image_width, int image_height)
+{
+    drawImage_double_buffering(pos_x, pos_y, character_bitmap, image_width, image_height);
+    uart_puts("[COMBAT_SCREEN] Drawn character at (");
+    uart_dec(pos_x);
+    uart_puts(", ");
+    uart_dec(pos_y);
+    uart_puts(")\n");
+}
