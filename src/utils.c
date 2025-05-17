@@ -95,7 +95,35 @@ void drawString(int x, int y, char *str, unsigned int attr, int zoom)
         str++;
     }
 }
+void drawChar_double_buffering(unsigned char ch, int x, int y, unsigned int attr, int zoom)
+{
+    unsigned char *glyph = (unsigned char *)&font + (ch < FONT_NUMGLYPHS ? ch : 0) * FONT_BPG;
 
+    for (int i = 1; i <= (FONT_HEIGHT * zoom); i++) {
+        for (int j = 0; j < (FONT_WIDTH * zoom); j++) {
+            unsigned char mask = 1 << (j / zoom);
+            if (*glyph & mask) {
+                drawPixelARGB32_double_buffering(x + j, y + i, attr);
+            }
+        }
+        glyph += (i % zoom) ? 0 : FONT_BPL;
+    }
+}
+void drawString_double_buffering(int x, int y, char *str, unsigned int attr, int zoom)
+{
+    while (*str) {
+        if (*str == '\r') {
+            x = 0;
+        } else if (*str == '\n') {
+            x = 0;
+            y += (FONT_HEIGHT * zoom);
+        } else {
+            drawChar_double_buffering(*str, x, y, attr, zoom);
+            x += (FONT_WIDTH * zoom);
+        }
+        str++;
+    }
+}
 /*
  * UART INPUT FUNCTIONS
  * ====================
@@ -217,3 +245,4 @@ const char* welcome_message =
     "             <NGUYEN DUC ANH> - <S3878010>\n"
     "             <NGUYEN TRONG KHOA> - <S3978477>\n"
     "Ctrl + T to access the CLI, Ctrl + A to run the game\n";                                                  
+

@@ -6,6 +6,7 @@
 #include "../../include/renderFrame.h"
 #include "../../include/game_map.h"
 #include "../../include/protagonist_sprite.h"
+#include "../../include/game_menu.h"
 
 #define GAME_FRAME_RATE 30                        // e.g., 30 FPS
 #define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per frame
@@ -79,6 +80,17 @@ void game_loop()
             input = uart_getc();
             uart_puts("\n[INPUT] Received: ");
             uart_sendc(input); // Echo the input character
+            
+            // Check for 'M' key to jump to lobby screen
+            if (input == 'm' || input == 'M') {
+                uart_puts("\n[INPUT] 'M' pressed - Switching to Lobby Screen...");
+                lobby_screen_loop(); // Call lobby loop
+                // After lobby screen ends, redraw the current game frame again
+                first_frame = 1;
+                continue;  // Continue the loop to redraw the game frame
+            }
+
+
 
             // update protagonist position based on input
             update_protag_position(&protag_x, &protag_y, input);

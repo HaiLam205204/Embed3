@@ -7,6 +7,7 @@
 #include "../include/video.h"
 #include "../include/renderFrame.h"
 #include "../include/game.h"
+#include "../include/game_menu.h"
 
 
 #define OPEN_CLI 0x14 // CTRL T
@@ -41,7 +42,7 @@ void main()
 		} else if (c == VIDEO) {
             video_playback(video_allArray, video_allArray_LEN, start_x, start_y, VIDEO_WIDTH, VIDEO_HEIGHT, DESTINATION_WIDTH, DESTINATION_HEIGHT);
         } else if(c == GAME) {
-            game_loop();
+                game_loop();  
         } else {
             // Handle normal character drawing
             drawInputCharacters(c, 0x00FFFFFF, 1);  // Draw regular characters outside CLI popup
