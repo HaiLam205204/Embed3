@@ -54,6 +54,6 @@
 
 // Function declarations
 void displayLobbyScreen();
-void drawRectARGB32_double_buffering(int x, int y, int width, int height, unsigned int attr, int fill);
+void drawRectARGB32_double_buffering_menu(int x, int y, int width, int height, unsigned int attr, int fill);
 void draw_menu_buttons();
 void lobby_screen_loop();

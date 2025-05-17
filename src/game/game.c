@@ -91,6 +91,15 @@ void game_loop()
         else
         { // display second frame onwards
             input = uart_getc();
+
+            // Check for 'M' key to jump to lobby screen
+            if (input == 'm' || input == 'M') {
+                uart_puts("\n[INPUT] 'M' pressed - Switching to Lobby Screen...");
+                lobby_screen_loop(); // Call lobby loop
+                // After lobby screen ends, redraw the current game frame again
+                first_frame = 1;
+                continue;  // Continue the loop to redraw the game frame
+            }
             update_protag_position(&protag_world_x, &protag_world_y, input);
             
             // Update camera position to follow protagonist

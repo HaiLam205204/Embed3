@@ -8,7 +8,7 @@
 int selected_menu_index = 0;  // Start with the first button selected
 const char* menu_labels[MENU_ITEM_COUNT] = {"Skill", "Item", "Persona", "System"};
 
-void drawRectARGB32_double_buffering(int x, int y, int width, int height, unsigned int attr, int fill)
+void drawRectARGB32_double_buffering_menu(int x, int y, int width, int height, unsigned int attr, int fill)
 {
     for (int j = 0; j < height; j++) {
         for (int i = 0; i < width; i++) {
@@ -23,7 +23,7 @@ void draw_menu_buttons() {
         int y = BUTTON_START_Y + (BUTTON_HEIGHT + BUTTON_SPACING) * i;
 
         if (i == selected_menu_index) {
-            drawRectARGB32_double_buffering(BUTTON_START_X, y, BUTTON_WIDTH, BUTTON_HEIGHT, HIGHLIGHT_COLOR, 1);
+            drawRectARGB32_double_buffering_menu(BUTTON_START_X, y, BUTTON_WIDTH, BUTTON_HEIGHT, HIGHLIGHT_COLOR, 1);
         }
 
         drawString_double_buffering(
@@ -37,11 +37,11 @@ void draw_menu_buttons() {
 }
 void draw_bottom_buttons() {
     // Draw Back button
-    drawRectARGB32_double_buffering(BACK_BTN_X, BACK_BTN_Y, BTN_WIDTH, BTN_HEIGHT, BUTTON_COLOR, 2);
+    drawRectARGB32_double_buffering_menu(BACK_BTN_X, BACK_BTN_Y, BTN_WIDTH, BTN_HEIGHT, BUTTON_COLOR, 2);
     drawString_double_buffering(BACK_BTN_X + 20, BACK_BTN_Y + 8, BACK_BTN_LABEL, TEXT_COLOR, 2);
 
     // Draw Enter button
-    drawRectARGB32_double_buffering(ENTER_BTN_X, ENTER_BTN_Y, BTN_WIDTH, BTN_HEIGHT, BUTTON_COLOR, 1);
+    drawRectARGB32_double_buffering_menu(ENTER_BTN_X, ENTER_BTN_Y, BTN_WIDTH, BTN_HEIGHT, BUTTON_COLOR, 1);
     drawString_double_buffering(ENTER_BTN_X + 20, ENTER_BTN_Y + 8, ENTER_BTN_LABEL, TEXT_COLOR, 2);
 }
 void draw_command_header() {
@@ -65,7 +65,7 @@ void draw_stats_panel() {
     int panel_height = 120;
 
     // Draw blue background
-    drawRectARGB32_double_buffering(panel_x, panel_y, panel_width, panel_height, COLOR_STATS_BG, 1);
+    drawRectARGB32_double_buffering_menu(panel_x, panel_y, panel_width, panel_height, COLOR_STATS_BG, 1);
 
     // Increase font size to 2
     drawString_double_buffering(panel_x + 10, panel_y + 10, (char*)name, COLOR_STATS_TEXT, 2);
