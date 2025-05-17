@@ -8,7 +8,7 @@
 #include "../../include/game_map_4x.h"
 #include "../../include/protagonist_sprite.h"
 
-#define GAME_FRAME_RATE 30                        // e.g., 30 FPS
+#define GAME_FRAME_RATE 15                        // e.g., 30 FPS
 #define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per frame
 
 #define PIXEL_SIZE 4 // Assuming 32-bit pixels (4 bytes per pixel)
@@ -16,8 +16,8 @@
 
 #define VIEWPORT_WIDTH  1024  // Your screen width
 #define VIEWPORT_HEIGHT 768  // Your screen height
-#define WORLD_WIDTH     GAME_MAP_WIDTH_4X  // Example: Map is twice as big as screen
-#define WORLD_HEIGHT    GAME_MAP_HEIGHT_4X// Adjust as needed
+#define WORLD_WIDTH     GAME_MAP_WIDTH_4X  // Map is twice as big as screen
+#define WORLD_HEIGHT    GAME_MAP_HEIGHT_4X 
 
 #define RESTORE_MARGIN 10
 // The safety margin (RESTORE_MARGIN) ensures complete coverage of the changed pixels
@@ -128,8 +128,6 @@ void game_loop()
 }
 
 void render_world_view(int camera_x, int camera_y) {
-    // Clear screen or draw background
-    clear_screen(0x00000000);  // Black background
     
     // Calculate which part of the map to render
     int map_start_x = camera_x;
