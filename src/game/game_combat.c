@@ -228,6 +228,7 @@ void combat_utility_UI() {
                     redraw_combat_screen();
                     redraw_combat_screen();  
                     uart_puts("[DEBUG] Skill Menu Confirmed, returning to combat\n");
+                }
             }
         }
         // Draw button based on state
