@@ -430,6 +430,22 @@ void draw_rect_double_buffering(int x, int y, int width, int height, unsigned in
     }
 }
 
+void drawImage_double_buffering_stride(int x, int y, const unsigned long *image, int image_width, int image_height, int image_stride) {
+    for (int j = 0; j < image_height; j++) {
+        for (int i = 0; i < image_width; i++) {
+            unsigned int pixel = image[j * image_stride + i];
+            if ((pixel & 0x00FFFFFF) != 0) { // skip transparent pixels
+                drawPixelARGB32_double_buffering(x + i, y + j, pixel);
+            }
+        }
+    }
+}
+
+
+
+
+
+
 
 
 
