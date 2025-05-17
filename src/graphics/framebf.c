@@ -403,3 +403,6 @@ void drawImage_double_buffering_stride(int x, int y, const unsigned long *image,
 
 
 
+
+
+

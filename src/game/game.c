@@ -8,7 +8,7 @@
 #include "../../include/game_map_4x.h"
 #include "../../include/protagonist_sprite.h"
 
-#define GAME_FRAME_RATE 15                        // e.g., 30 FPS
+#define GAME_FRAME_RATE 30                        // e.g., 30 FPS
 #define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per frame
 
 #define PIXEL_SIZE 4 // Assuming 32-bit pixels (4 bytes per pixel)
@@ -142,11 +142,6 @@ void render_world_view(int camera_x, int camera_y) {
     if (map_start_y + render_height > GAME_MAP_HEIGHT_4X) {
         render_height = GAME_MAP_HEIGHT_4X - map_start_y;
     }
-    
-    // Draw the visible portion of the map
-    // drawImage_double_buffering(0, 0, 
-    //                          gameMap4x + map_start_y * GAME_MAP_WIDTH_4X + map_start_x,
-    //                          render_width, render_height);
 
     drawImage_double_buffering_stride(0, 0, 
                                 gameMap4x + map_start_y * GAME_MAP_WIDTH_4X + map_start_x,
