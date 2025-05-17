@@ -5,6 +5,7 @@
 #include "../../include/utils.h"
 #include "../../include/renderFrame.h"
 #include "../../include/game_map.h"
+#include "../../include/game_map_2x.h"
 #include "../../include/protagonist_sprite.h"
 
 #define GAME_FRAME_RATE 30                        // e.g., 30 FPS
@@ -15,8 +16,8 @@
 
 #define VIEWPORT_WIDTH  1024  // Your screen width
 #define VIEWPORT_HEIGHT 768  // Your screen height
-#define WORLD_WIDTH     (GAME_MAP_WIDTH * 2)  // Example: Map is twice as big as screen
-#define WORLD_HEIGHT    (GAME_MAP_HEIGHT * 2) // Adjust as needed
+#define WORLD_WIDTH     GAME_MAP_WIDTH_2X  // Example: Map is twice as big as screen
+#define WORLD_HEIGHT    GAME_MAP_HEIGHT_2X// Adjust as needed
 
 #define RESTORE_MARGIN 10
 // The safety margin (RESTORE_MARGIN) ensures complete coverage of the changed pixels
@@ -64,7 +65,7 @@ void game_loop()
                 uart_puts("\n[FRAME] Cleared screen (red)");
 
                 // draw game map
-                drawImage_double_buffering(map_x, map_y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
+                drawImage_double_buffering(map_x, map_y, gameMap2x, GAME_MAP_WIDTH_2X, GAME_MAP_HEIGHT_2X);
                 uart_puts("\n[FRAME] Drawn map at (");
                 uart_dec(map_x);
                 uart_puts(",");
@@ -167,16 +168,16 @@ void render_world_view(int camera_x, int camera_y) {
     int render_height = VIEWPORT_HEIGHT;
     
     // Clamp to map boundaries if needed
-    if (map_start_x + render_width > GAME_MAP_WIDTH) {
-        render_width = GAME_MAP_WIDTH - map_start_x;
+    if (map_start_x + render_width > GAME_MAP_WIDTH_2X) {
+        render_width = GAME_MAP_WIDTH_2X - map_start_x;
     }
-    if (map_start_y + render_height > GAME_MAP_HEIGHT) {
-        render_height = GAME_MAP_HEIGHT - map_start_y;
+    if (map_start_y + render_height > GAME_MAP_HEIGHT_2X) {
+        render_height = GAME_MAP_HEIGHT_2X - map_start_y;
     }
     
     // Draw the visible portion of the map
     drawImage_double_buffering(0, 0, 
-                             game_map + map_start_y * GAME_MAP_WIDTH + map_start_x,
+                             gameMap2x + map_start_y * GAME_MAP_WIDTH_2X + map_start_x,
                              render_width, render_height);
 }
 
@@ -306,13 +307,13 @@ void draw_partial_map(int prev_x, int prev_y)
         restore_height += map_local_y;
         map_local_y = 0;
     }
-    if (map_local_x + restore_width > GAME_MAP_WIDTH)
+    if (map_local_x + restore_width > GAME_MAP_WIDTH_2X)
     {
-        restore_width = GAME_MAP_WIDTH - map_local_x;
+        restore_width = GAME_MAP_WIDTH_2X - map_local_x;
     }
-    if (map_local_y + restore_height > GAME_MAP_HEIGHT)
+    if (map_local_y + restore_height > GAME_MAP_HEIGHT_2X)
     {
-        restore_height = GAME_MAP_HEIGHT - map_local_y;
+        restore_height = GAME_MAP_HEIGHT_2X - map_local_y;
     }
 
     // Debug output
@@ -331,7 +332,7 @@ void draw_partial_map(int prev_x, int prev_y)
 
     // Extract and restore
     unsigned long *bg_section = extract_subimage_static(
-        game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT,
+        gameMap2x, GAME_MAP_WIDTH_2X, GAME_MAP_HEIGHT_2X,
         map_local_x, map_local_y,
         restore_width, restore_height,
         sprite_bg_buffer);
