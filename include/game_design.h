@@ -1,0 +1,2 @@
+void design_screen_loop();
+void redraw_combat_screen();

@@ -7,9 +7,13 @@
 #include "../include/video.h"
 #include "../include/renderFrame.h"
 #include "../include/game.h"
+#include "../include/game_combat.h"
+#include "../include/game_design.h"
+// #include "../include/Orpheus_Skill_Option.h"
 #include "../include/game_menu.h"
 
 
+#define DESIGN 0x18 //CTRL X
 #define OPEN_CLI 0x14 // CTRL T
 #define VIDEO 0x16 // CTRL V
 #define GAME 0x01 // CTRL A
@@ -27,6 +31,14 @@ void main()
 	// Initialize frame buffer
 	framebf_init();
 
+    // draw_skill_option_screen(0, 1);
+    // drawImage_double_buffering(
+    //             ORPHEUS_SKILL_OPTION_SCRREN_X,
+    //             ORPHEUS_SKILL_OPTION_SCRREN_Y,
+    //             orpheus_skill_bitmap_allArray[0],
+    //             ORPHEUS_SKILL_OPTION_WIDTH,
+    //             ORPHEUS_SKILL_OPTION_HEIGHT
+    //         );
     // Draw background image
     //drawImage(start_x, start_y, welcome_image, WELCOME_WIDTH, WELCOME_HEIGHT);
 
@@ -42,7 +54,9 @@ void main()
 		} else if (c == VIDEO) {
             video_playback(video_allArray, video_allArray_LEN, start_x, start_y, VIDEO_WIDTH, VIDEO_HEIGHT, DESTINATION_WIDTH, DESTINATION_HEIGHT);
         } else if(c == GAME) {
-                game_loop();  
+            game_loop();
+        } else if(c == DESIGN) {
+            design_screen_loop();
         } else {
             // Handle normal character drawing
             drawInputCharacters(c, 0x00FFFFFF, 1);  // Draw regular characters outside CLI popup

@@ -12,6 +12,8 @@
         "uart0.h": "c",
         "game.h": "c",
         "cli.h": "c",
+        "battle_action_box.h": "c",
+        "combat_interface.h": "c"
         "lobbyscreen.h": "c",
         "game_menu.h": "c",
         "protagonist_menu.h": "c"

@@ -5,6 +5,7 @@
 #include "../../include/utils.h"
 #include "../../include/renderFrame.h"
 #include "../../include/game_map.h"
+#include "../../include/game_map_4x.h"
 #include "../../include/protagonist_sprite.h"
 #include "../../include/game_menu.h"
 
@@ -14,19 +15,33 @@
 #define PIXEL_SIZE 4 // Assuming 32-bit pixels (4 bytes per pixel)
 #define NULL ((void *)0)
 
-int map_x = MAP_START_X;
-int map_y = MAP_START_Y;
+#define VIEWPORT_WIDTH  1024  // Your screen width
+#define VIEWPORT_HEIGHT 768  // Your screen height
+#define WORLD_WIDTH     GAME_MAP_WIDTH_4X  // Map is twice as big as screen
+#define WORLD_HEIGHT    GAME_MAP_HEIGHT_4X 
 
 #define RESTORE_MARGIN 10
 // The safety margin (RESTORE_MARGIN) ensures complete coverage of the changed pixels
 static unsigned long sprite_bg_buffer[(PROTAG_WIDTH + 2 * RESTORE_MARGIN) * (PROTAG_HEIGHT + 2 * RESTORE_MARGIN)];
 
+// map starting coordinates
+int map_x = MAP_4X_START_X;
+int map_y = MAP_4X_START_Y;
+
+// Camera offset
+int camera_x = 0;
+int camera_y = 0;
+
+// World coordinates of sprite
+int protag_world_x = PROTAG_START_X;  
+int protag_world_y = PROTAG_START_Y;
+
 void game_loop()
 {
     int protag_x = PROTAG_START_X;
     int protag_y = PROTAG_START_Y;
-    int prev_protag_x = protag_x;
-    int prev_protag_y = protag_y;
+    // int prev_protag_x = protag_x;
+    // int prev_protag_y = protag_y;
     int first_frame = 1;
     char input;
 
@@ -51,7 +66,7 @@ void game_loop()
                 uart_puts("\n[FRAME] Cleared screen (red)");
 
                 // draw game map
-                drawImage_double_buffering(map_x, map_y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
+                drawImage_double_buffering(map_x, map_y, gameMap4x, GAME_MAP_WIDTH_4X, GAME_MAP_HEIGHT_4X);
                 uart_puts("\n[FRAME] Drawn map at (");
                 uart_dec(map_x);
                 uart_puts(",");
@@ -75,38 +90,21 @@ void game_loop()
         }
         else
         { // display second frame onwards
-
-            // get input from user
             input = uart_getc();
-            uart_puts("\n[INPUT] Received: ");
-            uart_sendc(input); // Echo the input character
+            update_protag_position(&protag_world_x, &protag_world_y, input);
             
-
-
-
-
-            // update protagonist position based on input
-            update_protag_position(&protag_x, &protag_y, input);
-            uart_puts("\n[POSITION] New position: (");
-            uart_dec(protag_x);
-            uart_puts(",");
-            uart_dec(protag_y);
-            uart_puts(")");
-
-            // check new position compared to old one
-            if (prev_protag_x != protag_x || prev_protag_y != protag_y)
-            {
-                uart_puts("\n[MOVEMENT] Position changed - redrawing");
-                // Restore background where sprite WAS (with margins)
-                draw_partial_map(prev_protag_x, prev_protag_y); // replace the old position of protagonist with the map
-
-                // Draw new sprite position
-                drawImage_double_buffering(protag_x, protag_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
-                uart_puts("\n[MOVEMENT] Redrew protagonist at new position");
-
-                prev_protag_x = protag_x;
-                prev_protag_y = protag_y;
-            }
+            // Update camera position to follow protagonist
+            update_camera_position(protag_world_x, protag_world_y, &camera_x, &camera_y);
+            
+            // Render the visible portion of the world
+            render_world_view(camera_x, camera_y);
+            
+            // Render protagonist relative to camera
+            int protag_screen_x = protag_world_x - camera_x;
+            int protag_screen_y = protag_world_y - camera_y;
+            drawImage_double_buffering(protag_screen_x, protag_screen_y, 
+                                    myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
+            
             swap_buffers();
         }
 
@@ -130,45 +128,60 @@ void game_loop()
     }
 }
 
-// draw sprite at a new location
-void update_protag_position(int *x, int *y, char direction)
-{
-    const int step_size = RESTORE_MARGIN;
-    int old_x = *x;
-    int old_y = *y;
-
-    uart_puts("\n[UPDATE_POS] Direction: ");
-    uart_sendc(direction);
-    uart_puts(" Old position: (");
-    uart_dec(old_x);
-    uart_puts(",");
-    uart_dec(old_y);
-    uart_puts(")");
-
-    switch (direction)
-    {
-    case UP:
-        *y -= step_size;
-        break;
-    case DOWN:
-        *y += step_size;
-        break;
-    case LEFT:
-        *x -= step_size;
-        break;
-    case RIGHT:
-        *x += step_size;
-        break;
-    default:
-        uart_puts("\n[UPDATE_POS] Invalid direction!");
-        break;
+void render_world_view(int camera_x, int camera_y) {
+    
+    // Calculate which part of the map to render
+    int map_start_x = camera_x;
+    int map_start_y = camera_y;
+    int render_width = VIEWPORT_WIDTH;
+    int render_height = VIEWPORT_HEIGHT;
+    
+    // Clamp to map boundaries if needed
+    if (map_start_x + render_width > GAME_MAP_WIDTH_4X) {
+        render_width = GAME_MAP_WIDTH_4X - map_start_x;
+    }
+    if (map_start_y + render_height > GAME_MAP_HEIGHT_4X) {
+        render_height = GAME_MAP_HEIGHT_4X - map_start_y;
     }
 
-    uart_puts(" New position: (");
-    uart_dec(*x);
-    uart_puts(",");
-    uart_dec(*y);
-    uart_puts(")");
+    drawImage_double_buffering_stride(0, 0, 
+                                gameMap4x + map_start_y * GAME_MAP_WIDTH_4X + map_start_x,
+                                render_width, render_height,
+                                GAME_MAP_WIDTH_4X);  // STRIDE
+}
+
+void update_camera_position(int protag_x, int protag_y, int *camera_x, int *camera_y) {
+    // Center camera on protagonist
+    int target_x = protag_x - VIEWPORT_WIDTH/2 + PROTAG_WIDTH/2;
+    int target_y = protag_y - VIEWPORT_HEIGHT/2 + PROTAG_HEIGHT/2;
+    
+    // Clamp camera to world boundaries
+    *camera_x = target_x;
+    *camera_y = target_y;
+    
+    if (*camera_x < 0) *camera_x = 0;
+    if (*camera_y < 0) *camera_y = 0;
+    if (*camera_x > WORLD_WIDTH - VIEWPORT_WIDTH) 
+        *camera_x = WORLD_WIDTH - VIEWPORT_WIDTH;
+    if (*camera_y > WORLD_HEIGHT - VIEWPORT_HEIGHT) 
+        *camera_y = WORLD_HEIGHT - VIEWPORT_HEIGHT;
+}
+
+void update_protag_position(int *x, int *y, char direction) {
+    const int step_size = RESTORE_MARGIN;
+    
+    switch (direction) {
+        case UP:    *y -= step_size; break;
+        case DOWN:  *y += step_size; break;
+        case LEFT:  *x -= step_size; break;
+        case RIGHT: *x += step_size; break;
+    }
+    
+    // Clamp to world boundaries
+    if (*x < 0) *x = 0;
+    if (*y < 0) *y = 0;
+    if (*x > WORLD_WIDTH - PROTAG_WIDTH) *x = WORLD_WIDTH - PROTAG_WIDTH;
+    if (*y > WORLD_HEIGHT - PROTAG_HEIGHT) *y = WORLD_HEIGHT - PROTAG_HEIGHT;
 }
 
 // draw a fraction of the map
@@ -193,13 +206,13 @@ void draw_partial_map(int prev_x, int prev_y)
         restore_height += map_local_y;
         map_local_y = 0;
     }
-    if (map_local_x + restore_width > GAME_MAP_WIDTH)
+    if (map_local_x + restore_width > GAME_MAP_WIDTH_4X)
     {
-        restore_width = GAME_MAP_WIDTH - map_local_x;
+        restore_width = GAME_MAP_WIDTH_4X - map_local_x;
     }
-    if (map_local_y + restore_height > GAME_MAP_HEIGHT)
+    if (map_local_y + restore_height > GAME_MAP_HEIGHT_4X)
     {
-        restore_height = GAME_MAP_HEIGHT - map_local_y;
+        restore_height = GAME_MAP_HEIGHT_4X - map_local_y;
     }
 
     // Debug output
@@ -218,7 +231,7 @@ void draw_partial_map(int prev_x, int prev_y)
 
     // Extract and restore
     unsigned long *bg_section = extract_subimage_static(
-        game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT,
+        gameMap4x, GAME_MAP_WIDTH_4X, GAME_MAP_HEIGHT_4X,
         map_local_x, map_local_y,
         restore_width, restore_height,
         sprite_bg_buffer);
