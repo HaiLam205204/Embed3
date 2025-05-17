@@ -4,8 +4,8 @@
 #include "../../include/game_map.h"
 #include "../../include/protagonist_sprite.h"
 #include "../../include/game_combat.h"
+#include "../../include/combat_interface.h"
 
-#define PLACEHOLDER_COLOR 0xFFFFFFFF // White placeholder color
 #define MAX_PLACEHOLDERS 4
 
 int placeholder_positions[MAX_PLACEHOLDERS][2] = {
@@ -14,6 +14,8 @@ int placeholder_positions[MAX_PLACEHOLDERS][2] = {
     {664, 300},
     {472, 150},
 };
+
+int character_hp[MAX_PLACEHOLDERS] = {100, 80, 50, 20};
 
 void design_screen_loop()
 {
@@ -33,12 +35,14 @@ void design_screen_loop()
                     int pos_x = placeholder_positions[i][0];
                     int pos_y = placeholder_positions[i][1];
 
-                    drawImage_double_buffering(pos_x, pos_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
-                    uart_puts("[DESIGN_SCREEN] Drawn placeholder at (");
-                    uart_dec(pos_x);
-                    uart_puts(", ");
-                    uart_dec(pos_y);
-                    uart_puts(")\n");
+                    draw_combat_character(pos_x, pos_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
+                }
+
+                for (int i = 0; i < MAX_PLACEHOLDERS; ++i)
+                {
+                    int pos_x = placeholder_positions[i][0];
+                    int pos_y = placeholder_positions[i][1];
+                    draw_hp_bar(pos_x, pos_y, character_hp[i]);
                 }
 
                 swap_buffers();
