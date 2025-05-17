@@ -13,3 +13,4 @@ void clear_screen(unsigned long color);
 unsigned char *get_drawing_buffer();
 void drawPixelARGB32_double_buffering(int x, int y, unsigned int attr);
 void drawImage_double_buffering(int x, int y, const unsigned long *image, int image_width, int image_height);
+void draw_rect_double_buffering(int x, int y, int width, int height, unsigned int color);

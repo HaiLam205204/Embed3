@@ -385,6 +385,17 @@ void drawImage_double_buffering(int x, int y, const unsigned long *image, int im
     }
 }
 
+void draw_rect_double_buffering(int x, int y, int width, int height, unsigned int color) {
+    for (int j = 0; j < height; j++) {
+        for (int i = 0; i < width; i++) {
+            drawPixelARGB32_double_buffering(x + i, y + j, color);
+        }
+    }
+}
+
+
+
+
 
 
 
