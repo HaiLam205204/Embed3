@@ -10,12 +10,17 @@
 #include "../../include/framebf.h"
 #include "../../include/game_design.h"
 #include "../../include/game_map.h"
+#include "../../include/Orpheus_Skill_Option.h"
+#include "../../include/Pixie_Skill_Option.h"
 
 #define GAME_FRAME_RATE 30                        // e.g., 30 FPS
 #define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per frame
 
 GameScreen current_screen = SCREEN_COMBAT;
 int persona_option = 0;
+int selected_persona = 0; // 0 for Orpheus, 1 for Pixie
+int skill_option = 0;
+
 // Draws the button in "off" or "on" state
 void draw_attack_button(int is_pressed)
 {
@@ -69,6 +74,48 @@ void draw_persona_option_screen(int selected_option) {
     // swap_buffers();
 }
 
+void draw_skill_option_screen(int persona, int option) {
+    if (persona == 0) { // Orpheus
+        if (option >= 0 && option < orpheus_skill_bitmap_allArray_LEN) {
+            const unsigned long* img = orpheus_skill_bitmap_allArray[option];
+            if (img == 0) {
+                uart_puts("[ERROR] Orpheus skill bitmap is NULL\n");
+            }
+            draw_rect_double_buffering(ORPHEUS_SKILL_OPTION_SCRREN_X,
+                ORPHEUS_SKILL_OPTION_SCRREN_Y,
+                ORPHEUS_SKILL_OPTION_WIDTH,
+                ORPHEUS_SKILL_OPTION_HEIGHT, 0xFFDDEEFF);
+
+            drawImage_double_buffering(
+                ORPHEUS_SKILL_OPTION_SCRREN_X,
+                ORPHEUS_SKILL_OPTION_SCRREN_Y,
+                img,
+                ORPHEUS_SKILL_OPTION_WIDTH,
+                ORPHEUS_SKILL_OPTION_HEIGHT
+            );
+        } 
+    } else if (persona == 1) { // Pixie
+        if (option >= 0 && option < pixie_skill_bitmap_allArray_LEN) {
+            const unsigned long* img = pixie_skill_bitmap_allArray[option];
+            if (img == 0) {
+                uart_puts("[ERROR] Pixie skill bitmap is NULL\n");
+            }
+
+            draw_rect_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
+            PIXIE_SKILL_OPTION_SCRREN_Y,
+            PIXIE_SKILL_OPTION_WIDTH,
+            PIXIE_SKILL_OPTION_HEIGHT, 0xFFDDEEFF);
+
+            drawImage_double_buffering(
+                PIXIE_SKILL_OPTION_SCRREN_X,
+                PIXIE_SKILL_OPTION_SCRREN_Y,
+                img,
+                PIXIE_SKILL_OPTION_WIDTH,
+                PIXIE_SKILL_OPTION_HEIGHT
+            );
+        } 
+    } 
+}
 
 void combat_utility_UI() {
     int button_pressed_attack = 0;
@@ -127,13 +174,10 @@ void combat_utility_UI() {
                 if (input == SKILL) { 
                     button_pressed_skill = 1;
                     button_pressed_time = start_time;
+                    skill_option = 0; // Start at top
+                    draw_skill_option_screen(selected_persona, skill_option);
+                    current_screen = SCREEN_SKILL_MENU;
                     uart_puts("SKILL\n");
-                }
-
-                if (input == 'z') {
-                    uart_puts("[DEBUG] FORCED: Reset to Combat Screen\n");
-                    current_screen = SCREEN_COMBAT;
-                    redraw_combat_screen();
                 }
             }
             else if (current_screen == SCREEN_PERSONA_MENU){
@@ -146,6 +190,7 @@ void combat_utility_UI() {
                     persona_option++;
                     draw_persona_option_screen(persona_option);
                 } else if (input == KEY_ENTER) {  // Enter
+                    selected_persona = persona_option; // <-- Save selected persona
                     // Select persona
                     current_screen = SCREEN_COMBAT;
                     button_pressed_persona = 0; // <-- ensure button state is reset 
@@ -161,8 +206,30 @@ void combat_utility_UI() {
                     uart_puts("[DEBUG] Persona Cancelled, returning to combat\n");
                 }
             }
-        }
+            else if (current_screen == SCREEN_SKILL_MENU) {
+                int max_skills = (selected_persona == 0) ? orpheus_skill_bitmap_allArray_LEN : pixie_skill_bitmap_allArray_LEN;
 
+                if (input == 'o' && skill_option > 0) {
+                    skill_option = (skill_option - 1 + max_skills) % max_skills;
+                    draw_skill_option_screen(selected_persona, skill_option);
+                } else if (input == 'l' && skill_option < max_skills - 1) {
+                    skill_option = (skill_option + 1) % max_skills;
+                    draw_skill_option_screen(selected_persona, skill_option);
+                } else if (input == KEY_ESC) {
+                    current_screen = SCREEN_COMBAT;
+                    button_pressed_skill = 0;
+                    redraw_combat_screen();
+                    redraw_combat_screen();
+                    uart_puts("[DEBUG] Skill Menu Cancelled, returning to combat\n");
+                } else if (input == KEY_ENTER) {  // Enter
+                    // selected_persona = persona_option; // <-- Save selected persona
+                    current_screen = SCREEN_COMBAT;
+                    button_pressed_persona = 0; // <-- ensure button state is reset 
+                    redraw_combat_screen();
+                    redraw_combat_screen();  
+                    uart_puts("[DEBUG] Skill Menu Confirmed, returning to combat\n");
+            }
+        }
         // Draw button based on state
         if (button_pressed_attack) {
             draw_attack_button(1); // Show "on"
@@ -207,6 +274,10 @@ void combat_utility_UI() {
             draw_persona_option_screen(persona_option);
         }
 
+        if (current_screen == SCREEN_SKILL_MENU) {
+            draw_skill_option_screen(selected_persona, skill_option);
+        }
+
         swap_buffers();
         wait_us(16000);
 
@@ -219,15 +290,15 @@ void combat_utility_UI() {
     }
 }
 
-void clear_persona_option_screen() {
-    draw_rect_double_buffering(
-        PERSONA_OPTION_SCRREN_X,
-        PERSONA_OPTION_SCRREN_Y,
-        PERSONA_OPTION_WIDTH,
-        PERSONA_OPTION_HEIGHT,
-        0xFF000000
-    );
-}
+// void clear_persona_option_screen() {
+//     draw_rect_double_buffering(
+//         PERSONA_OPTION_SCRREN_X,
+//         PERSONA_OPTION_SCRREN_Y,
+//         PERSONA_OPTION_WIDTH,
+//         PERSONA_OPTION_HEIGHT,
+//         0xFF000000
+//     );
+// }
 
 
 

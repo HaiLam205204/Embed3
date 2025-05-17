@@ -9,6 +9,7 @@
 #include "../include/game.h"
 #include "../include/game_combat.h"
 #include "../include/game_design.h"
+// #include "../include/Orpheus_Skill_Option.h"
 
 
 #define DESIGN 0x18 //CTRL X
@@ -29,7 +30,14 @@ void main()
 	// Initialize frame buffer
 	framebf_init();
 
-
+    // draw_skill_option_screen(0, 1);
+    // drawImage_double_buffering(
+    //             ORPHEUS_SKILL_OPTION_SCRREN_X,
+    //             ORPHEUS_SKILL_OPTION_SCRREN_Y,
+    //             orpheus_skill_bitmap_allArray[0],
+    //             ORPHEUS_SKILL_OPTION_WIDTH,
+    //             ORPHEUS_SKILL_OPTION_HEIGHT
+    //         );
     // Draw background image
     //drawImage(start_x, start_y, welcome_image, WELCOME_WIDTH, WELCOME_HEIGHT);
 

@@ -24,9 +24,12 @@ void draw_all_buttons();
 void combat_utility_UI();
 void clear_persona_option_screen(); 
 
+void draw_skill_option_screen(int persona, int option);
+
 typedef enum {
     SCREEN_COMBAT,
-    SCREEN_PERSONA_MENU
+    SCREEN_PERSONA_MENU,
+    SCREEN_SKILL_MENU
 } GameScreen;
 
 
