@@ -128,36 +128,65 @@ void game_loop()
 // draw sprite at a new location
 void update_protag_position(int *x, int *y, char direction)
 {
+    // const int step_size = RESTORE_MARGIN;
+    // int old_x = *x;
+    // int old_y = *y;
+
+    // uart_puts("\n[UPDATE_POS] Direction: ");
+    // uart_sendc(direction);
+    // uart_puts(" Old position: (");
+    // uart_dec(old_x);
+    // uart_puts(",");
+    // uart_dec(old_y);
+    // uart_puts(")");
+
+    // switch (direction)
+    // {
+    // case UP:
+    //     *y -= step_size;
+    //     break;
+    // case DOWN:
+    //     *y += step_size;
+    //     break;
+    // case LEFT:
+    //     *x -= step_size;
+    //     break;
+    // case RIGHT:
+    //     *x += step_size;
+    //     break;
+    // default:
+    //     uart_puts("\n[UPDATE_POS] Invalid direction!");
+    //     break;
+    // }
+
     const int step_size = RESTORE_MARGIN;
-    int old_x = *x;
-    int old_y = *y;
+    int new_x = *x;
+    int new_y = *y;
 
-    uart_puts("\n[UPDATE_POS] Direction: ");
-    uart_sendc(direction);
-    uart_puts(" Old position: (");
-    uart_dec(old_x);
-    uart_puts(",");
-    uart_dec(old_y);
-    uart_puts(")");
-
-    switch (direction)
-    {
-    case UP:
-        *y -= step_size;
-        break;
-    case DOWN:
-        *y += step_size;
-        break;
-    case LEFT:
-        *x -= step_size;
-        break;
-    case RIGHT:
-        *x += step_size;
-        break;
-    default:
-        uart_puts("\n[UPDATE_POS] Invalid direction!");
-        break;
+    switch (direction) {
+        case UP:    new_y -= step_size; break;
+        case DOWN:  new_y += step_size; break;
+        case LEFT:  new_x -= step_size; break;
+        case RIGHT: new_x += step_size; break;
+        default: uart_puts("\n[UPDATE_POS] Invalid direction!"); return; // Invalid input
     }
+
+    // Clamp to screen boundaries (assuming SCREEN_WIDTH/HEIGHT are defined)
+    if (new_x < 0) new_x = 0;
+    if (new_y < 0) new_y = 0;
+    if (new_x + PROTAG_WIDTH > SCREEN_WIDTH) new_x = SCREEN_WIDTH - PROTAG_WIDTH;
+    if (new_y + PROTAG_HEIGHT > SCREEN_HEIGHT) new_y = SCREEN_HEIGHT - PROTAG_HEIGHT;
+
+    // Optional: Clamp to map boundaries (if map is smaller than screen)
+    if (new_x < map_x) new_x = map_x;
+    if (new_y < map_y) new_y = map_y;
+    if (new_x + PROTAG_WIDTH > map_x + GAME_MAP_WIDTH) 
+        new_x = map_x + GAME_MAP_WIDTH - PROTAG_WIDTH;
+    if (new_y + PROTAG_HEIGHT > map_y + GAME_MAP_HEIGHT) 
+        new_y = map_y + GAME_MAP_HEIGHT - PROTAG_HEIGHT;
+
+    *x = new_x;
+    *y = new_y;
 
     uart_puts(" New position: (");
     uart_dec(*x);
