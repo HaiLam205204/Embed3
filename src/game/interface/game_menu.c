@@ -1,10 +1,10 @@
-#include "../../include/lobbyScreen.h"
-#include "../../include/framebf.h"
-#include "../../include/uart0.h"
-#include "../../include/gpio.h"
-#include "../../include/utils.h"
-#include "../../include/game_menu.h"
-#include "../../include/protagonist_menu.h"
+#include "../../../include/lobbyScreen.h"
+#include "../../../include/framebf.h"
+#include "../../../include/uart0.h"
+#include "../../../include/gpio.h"
+#include "../../../include/utils.h"
+#include "../../../include/game_menu.h"
+#include "../../../include/protagonist_menu.h"
 int selected_menu_index = 0;  // Start with the first button selected
 const char* menu_labels[MENU_ITEM_COUNT] = {"Skill", "Item", "Persona", "System"};
 
