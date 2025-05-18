@@ -1,17 +1,17 @@
 // Draw UI for game combat here
-#include "../../../include/battle_action_box.h"
+#include "../../../include/bitmaps/battle_action_box.h"
 #include "../../../include/gpio.h"
 #include "../../../include/game_combat.h"
 #include "../../../include/renderFrame.h"
 #include "../../../include/uart0.h"
 #include "../../../include/utils.h"
 #include "../../../include/display_skill.h"
-#include "../../../include/display_persona.h"
+#include "../../../include/bitmaps/display_persona.h"
 #include "../../../include/framebf.h"
 #include "../../../include/game_design.h"
-#include "../../../include/game_map.h"
-#include "../../../include/Orpheus_Skill_Option.h"
-#include "../../../include/Pixie_Skill_Option.h"
+#include "../../../include/bitmaps/game_map.h"
+#include "../../../include/bitmaps/Orpheus_Skill_Option.h"
+#include "../../../include/bitmaps/Pixie_Skill_Option.h"
 
 #define GAME_FRAME_RATE 30                        // e.g., 30 FPS
 #define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per frame

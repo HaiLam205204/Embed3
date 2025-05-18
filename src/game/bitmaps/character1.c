@@ -1,4 +1,4 @@
-#include "../../../include/character1.h"
+#include "../../../include/bitmaps/character1.h"
 
 // 'char1', 68x88px
 const unsigned long char1 [] = {
