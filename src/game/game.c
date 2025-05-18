@@ -8,11 +8,12 @@
 #include "../../include/game_map_4x.h"
 #include "../../include/protagonist_sprite.h"
 #include "../../include/game_menu.h"
+#include "../../include/enemy1.h"
+#include "../../include/enemy2.h"
 
 #define GAME_FRAME_RATE 30                        // 30 FPS
-#define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per frame
+#define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per 
 
-#define PIXEL_SIZE 4 // Assuming 32-bit pixels (4 bytes per pixel)
 #define NULL ((void *)0)
 
 #define VIEWPORT_WIDTH  1024  // Physical screen width
@@ -35,6 +36,14 @@ int camera_y = 0;
 // World coordinates of sprite
 int protag_world_x = PROTAG_START_X;  
 int protag_world_y = PROTAG_START_Y;
+
+#define MAX_ENEMIES 10
+
+Enemy enemies[MAX_ENEMIES] = {
+    {1300, 1000, shadow1, 136, 88, 1},  // Example enemy at (500,300)
+    {1800, 450, shadow2, 68, 100, 1},
+    // Add more enemies as needed
+};
 
 void game_loop()
 {
@@ -152,6 +161,27 @@ void render_world_view(int camera_x, int camera_y) {
                                 gameMap4x + map_start_y * GAME_MAP_WIDTH_4X + map_start_x,
                                 render_width, render_height,
                                 GAME_MAP_WIDTH_4X);  // STRIDE
+
+    // Render enemies that are in view
+    for (int i = 0; i < MAX_ENEMIES; i++) {
+        if (!enemies[i].active) continue;
+        
+        // Calculate screen coordinates
+        int screen_x = enemies[i].world_x - camera_x;
+        int screen_y = enemies[i].world_y - camera_y;
+        
+        // Check if enemy is in viewport
+        if (screen_x + enemies[i].width > 0 && 
+            screen_x < VIEWPORT_WIDTH &&
+            screen_y + enemies[i].height > 0 && 
+            screen_y < VIEWPORT_HEIGHT) {
+            
+            drawImage_double_buffering(screen_x, screen_y, 
+                enemies[i].sprite, 
+                enemies[i].width, 
+                enemies[i].height);
+        }
+    }
 }
 
 void update_camera_position(int protag_x, int protag_y, int *camera_x, int *camera_y) {
