@@ -4,7 +4,6 @@
 
 // Constants
 #define MAX_NAME_LENGTH 32
-#define MAX_ITEM_NAME_LENGTH 32
 #define MAX_SKILLS_PER_PERSONA 6
 #define MAX_SKILLS_PER_ENEMY 2
 
@@ -33,7 +32,7 @@ typedef struct {
 // Item structure
 typedef struct {
     int item_quantitty;
-    char name[MAX_ITEM_NAME_LENGTH];
+    char name[MAX_NAME_LENGTH];
 } Item;
 
 
