@@ -69,7 +69,7 @@ void design_screen_loop()
         // Move to the next character, looping around
         turn_index = (turn_index + 1) % MAX_PLACEHOLDERS;
 
-        // Wait for input to continue to next turn (simple simulation)
+        // Bỏ mấy cái action logic vào
         uart_puts("Press any key to proceed to the next turn...\n");
         uart_getc();
     }
@@ -83,6 +83,7 @@ void take_turn(int character_index)
     uart_puts("[ACTION] ");
     uart_puts(character->name);
     uart_puts(" takes a simple action.\n");
+    //làm thêm logic ở đây nè Khoa ơi
 }
 
 void init_protagonists()
