@@ -76,7 +76,6 @@ void draw_stats_panel() {
 
 void displayLobbyScreen(){
 
-    clear_screen(0xFFFF0000);
     drawImage_double_buffering(IMG_START_X, IMG_START_Y, lobbyScreen, LOBBY_WIDTH,LOBBY_HEIGHT);
     draw_command_header();
     draw_menu_buttons();

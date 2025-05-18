@@ -9,14 +9,14 @@
 #include "../../include/protagonist_sprite.h"
 #include "../../include/game_menu.h"
 
-#define GAME_FRAME_RATE 30                        // e.g., 30 FPS
+#define GAME_FRAME_RATE 30                        // 30 FPS
 #define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per frame
 
 #define PIXEL_SIZE 4 // Assuming 32-bit pixels (4 bytes per pixel)
 #define NULL ((void *)0)
 
-#define VIEWPORT_WIDTH  1024  // Your screen width
-#define VIEWPORT_HEIGHT 768  // Your screen height
+#define VIEWPORT_WIDTH  1024  // Physical screen width
+#define VIEWPORT_HEIGHT 768  // Physical screen height
 #define WORLD_WIDTH     GAME_MAP_WIDTH_4X  // Map is twice as big as screen
 #define WORLD_HEIGHT    GAME_MAP_HEIGHT_4X 
 
@@ -40,8 +40,6 @@ void game_loop()
 {
     int protag_x = PROTAG_START_X;
     int protag_y = PROTAG_START_Y;
-    // int prev_protag_x = protag_x;
-    // int prev_protag_y = protag_y;
     int first_frame = 1;
     char input;
 
@@ -62,7 +60,6 @@ void game_loop()
             uart_puts("\n[FRAME] Rendering first frame");
             for (int i = 0; i < 2; i++)
             {
-                clear_screen(0xFFFF0000); // bright red
                 uart_puts("\n[FRAME] Cleared screen (red)");
 
                 // draw game map
@@ -86,7 +83,7 @@ void game_loop()
                 uart_puts("\n[FRAME] Swapped buffers");
                 wait_us(16000);
             }
-            first_frame = !first_frame; // toggle flag
+            first_frame = 0; // toggle flag
         }
         else
         { // display second frame onwards
