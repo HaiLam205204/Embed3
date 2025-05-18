@@ -22,10 +22,15 @@ int positions[MAX_PLACEHOLDERS][2] = {
 
 Character protagonists[MAX_PLACEHOLDERS];
 
+// Function prototypes
+void init_protagonists();
+void take_turn(int character_index);
+
 void design_screen_loop()
 {
     uart_puts("[DESIGN_SCREEN] Entering Design Screen...\n");
     static int first_frame = 1;
+    int turn_index = 0; // Track whose turn it is
 
     init_protagonists();
 
@@ -33,58 +38,55 @@ void design_screen_loop()
         {&protagonists[0], myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT, 452, 500},
         {&protagonists[1], char1, PROTAG_WIDTH, PROTAG_HEIGHT, 280, 330},
         {&protagonists[2], char2, 80, 88, 664, 300},
-        {&protagonists[3], char3, PROTAG_WIDTH, PROTAG_HEIGHT, 472, 150}
-    };
+        {&protagonists[3], char3, PROTAG_WIDTH, PROTAG_HEIGHT, 472, 150}};
 
     while (1)
     {
         if (first_frame)
         {
-            uart_puts("[FRAME] Draw background");
+            uart_puts("[FRAME] Draw background\n");
             for (int i = 0; i < 2; i++)
             {
                 drawImage_double_buffering(MAP_START_X, MAP_START_Y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
 
-                // === Draw All Character Sprites ===
-                for (int i = 0; i < MAX_PLACEHOLDERS; ++i) {
+                for (int i = 0; i < MAX_PLACEHOLDERS; ++i)
+                {
                     draw_character_sprite(&sprites[i]);
                 }
 
                 swap_buffers();
             }
-            first_frame = !first_frame;
+            first_frame = 0;
         }
 
-        combat_utility_UI();
+        // Simple turn iteration
+        uart_puts("[TURN] It's ");
+        uart_puts(protagonists[turn_index].name);
+        uart_puts("'s turn!\n");
+
+        take_turn(turn_index);
+
+        // Move to the next character, looping around
+        turn_index = (turn_index + 1) % MAX_PLACEHOLDERS;
+
+        // Wait for input to continue to next turn (simple simulation)
+        uart_puts("Press any key to proceed to the next turn...\n");
+        uart_getc();
     }
 
     uart_puts("[DESIGN_SCREEN] Design Screen Render Complete.\n");
 }
 
-void redraw_combat_screen() {
-    uart_puts("[REDRAW_COMBAT_UI] Redrawing combat screen...\n");
-    // Redraw map background
-    drawImage_double_buffering(MAP_START_X, MAP_START_Y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
-
-    // Redraw all placeholder characters
-    for (int i = 0; i < MAX_PLACEHOLDERS; ++i) {
-        int pos_x = positions[i][0];
-        int pos_y = positions[i][1];
-        drawImage_double_buffering(pos_x, pos_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
-    }
-
-    // Redraw buttons (off-state by default)
-    draw_attack_button(0);
-    draw_item_button(0);
-    draw_persona_button(0);
-    draw_run_button(0);
-    draw_skill_button(0);
-
-    // Swap to make the changes visible
-    swap_buffers();
+void take_turn(int character_index)
+{
+    Character *character = &protagonists[character_index];
+    uart_puts("[ACTION] ");
+    uart_puts(character->name);
+    uart_puts(" takes a simple action.\n");
 }
 
-void init_protagonists() {
+void init_protagonists()
+{
     strcpy(protagonists[0].name, "Hero");
     protagonists[0].is_main_character = 1;
     protagonists[0].current_hp = 100;
@@ -104,4 +106,29 @@ void init_protagonists() {
     protagonists[3].is_main_character = 0;
     protagonists[3].current_hp = 20;
     protagonists[3].max_hp = 100;
+}
+
+void redraw_combat_screen()
+{
+    uart_puts("[REDRAW_COMBAT_UI] Redrawing combat screen...\n");
+    // Redraw map background
+    drawImage_double_buffering(MAP_START_X, MAP_START_Y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
+
+    // Redraw all placeholder characters
+    for (int i = 0; i < MAX_PLACEHOLDERS; ++i)
+    {
+        int pos_x = positions[i][0];
+        int pos_y = positions[i][1];
+        drawImage_double_buffering(pos_x, pos_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
+    }
+
+    // Redraw buttons (off-state by default)
+    draw_attack_button(0);
+    draw_item_button(0);
+    draw_persona_button(0);
+    draw_run_button(0);
+    draw_skill_button(0);
+
+    // Swap to make the changes visible
+    swap_buffers();
 }
