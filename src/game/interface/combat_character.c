@@ -29,7 +29,7 @@ void draw_hp_bar(int x, int y, int hp)
 
 void draw_combat_character(int pos_x, int pos_y, const unsigned long *character_bitmap, int image_width, int image_height)
 {
-    const int MAX_WIDTH = 68;
+    const int MAX_WIDTH = 80;
     const int MAX_HEIGHT = 88;
     int error_flag = 0;
 
