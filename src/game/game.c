@@ -38,16 +38,14 @@ int protag_world_y = PROTAG_START_Y;
 
 void game_loop()
 {
-    int protag_x = PROTAG_START_X;
-    int protag_y = PROTAG_START_Y;
     int first_frame = 1;
     char input;
 
     uart_puts("\n[GAME_LOOP] Starting game loop");
     uart_puts("\n[GAME_LOOP] Initial position: (");
-    uart_dec(protag_x);
+    uart_dec(protag_world_x);
     uart_puts(",");
-    uart_dec(protag_y);
+    uart_dec(protag_world_y);
     uart_puts(")");
 
     while (1)
@@ -71,11 +69,11 @@ void game_loop()
                 uart_puts(")");
 
                 // draw protagonist
-                drawImage_double_buffering(protag_x, protag_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
+                drawImage_double_buffering(protag_world_x, protag_world_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
                 uart_puts("\n[FRAME] Drawn protagonist at (");
-                uart_dec(protag_x);
+                uart_dec(protag_world_x);
                 uart_puts(",");
-                uart_dec(protag_y);
+                uart_dec(protag_world_y);
                 uart_puts(")");
 
                 // swap buffer to display frame
