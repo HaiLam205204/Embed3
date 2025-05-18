@@ -3,8 +3,13 @@
 #include "../../include/game_design.h"
 #include "../../include/bitmaps/game_map.h"
 #include "../../include/bitmaps/protagonist_sprite.h"
+#include "../../include/bitmaps/character1.h"
+#include "../../include/bitmaps/character2.h"
+#include "../../include/bitmaps/character3.h"
 #include "../../include/game_combat.h"
 #include "../../include/combat_character.h"
+#include "../../include/models/character.h"
+#include "../../include/models/character_sprite.h"
 
 #define MAX_PLACEHOLDERS 4
 
@@ -15,12 +20,22 @@ int placeholder_positions[MAX_PLACEHOLDERS][2] = {
     {472, 150},
 };
 
-int character_hp[MAX_PLACEHOLDERS] = {100, 80, 50, 20};
+Character protagonists[MAX_PLACEHOLDERS];
 
 void design_screen_loop()
 {
     uart_puts("[DESIGN_SCREEN] Entering Design Screen...\n");
     static int first_frame = 1;
+
+    init_protagonists();
+
+    CharacterSprite sprites[MAX_PLACEHOLDERS] = {
+        {&protagonists[0], myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT, 452, 500},
+        {&protagonists[1], char1, PROTAG_WIDTH, PROTAG_HEIGHT, 280, 330},
+        {&protagonists[2], char2, PROTAG_WIDTH, PROTAG_HEIGHT, 664, 300},
+        {&protagonists[3], char3, PROTAG_WIDTH, PROTAG_HEIGHT, 472, 150}
+    };
+
     while (1)
     {
         if (first_frame)
@@ -30,19 +45,9 @@ void design_screen_loop()
             {
                 drawImage_double_buffering(MAP_START_X, MAP_START_Y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
 
-                for (int i = 0; i < MAX_PLACEHOLDERS; ++i)
-                {
-                    int pos_x = placeholder_positions[i][0];
-                    int pos_y = placeholder_positions[i][1];
-
-                    draw_combat_character(pos_x, pos_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
-                }
-
-                for (int i = 0; i < MAX_PLACEHOLDERS; ++i)
-                {
-                    int pos_x = placeholder_positions[i][0];
-                    int pos_y = placeholder_positions[i][1];
-                    draw_hp_bar(pos_x, pos_y, character_hp[i]);
+                // === Draw All Character Sprites ===
+                for (int i = 0; i < MAX_PLACEHOLDERS; ++i) {
+                    draw_character_sprite(&sprites[i]);
                 }
 
                 swap_buffers();
@@ -50,8 +55,7 @@ void design_screen_loop()
             first_frame = !first_frame;
         }
 
-        combat_utility_UI(); 
-        
+        combat_utility_UI();
     }
 
     uart_puts("[DESIGN_SCREEN] Design Screen Render Complete.\n");
@@ -78,4 +82,26 @@ void redraw_combat_screen() {
 
     // Swap to make the changes visible
     swap_buffers();
+}
+
+void init_protagonists() {
+    strcpy(protagonists[0].name, "Hero");
+    protagonists[0].is_main_character = 1;
+    protagonists[0].current_hp = 100;
+    protagonists[0].max_hp = 100;
+
+    strcpy(protagonists[1].name, "Ally1");
+    protagonists[1].is_main_character = 0;
+    protagonists[1].current_hp = 80;
+    protagonists[1].max_hp = 100;
+
+    strcpy(protagonists[2].name, "Ally2");
+    protagonists[2].is_main_character = 0;
+    protagonists[2].current_hp = 50;
+    protagonists[2].max_hp = 100;
+
+    strcpy(protagonists[3].name, "Ally3");
+    protagonists[3].is_main_character = 0;
+    protagonists[3].current_hp = 20;
+    protagonists[3].max_hp = 100;
 }

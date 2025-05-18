@@ -18,6 +18,8 @@
         "game_menu.h": "c",
         "protagonist_menu.h": "c",
         "enemy1.h": "c",
-        "combat_character.h": "c"
+        "combat_character.h": "c",
+        "character.h": "c",
+        "game_combat.h": "c"
     }
 }
