@@ -1,10 +1,10 @@
 #include "../../include/framebf.h"
 #include "../../include/uart0.h"
 #include "../../include/game_design.h"
-#include "../../include/game_map.h"
-#include "../../include/protagonist_sprite.h"
+#include "../../include/bitmaps/game_map.h"
+#include "../../include/bitmaps/protagonist_sprite.h"
 #include "../../include/game_combat.h"
-#include "../../include/combat_interface.h"
+#include "../../include/combat_character.h"
 
 #define MAX_PLACEHOLDERS 4
 

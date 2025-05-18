@@ -4,13 +4,13 @@
 #include "../../include/gpio.h"
 #include "../../include/utils.h"
 #include "../../include/renderFrame.h"
-#include "../../include/game_map.h"
-#include "../../include/game_map_4x.h"
-#include "../../include/protagonist_sprite.h"
+#include "../../include/bitmaps/game_map.h"
+#include "../../include/bitmaps/game_map_4x.h"
+#include "../../include/bitmaps/protagonist_sprite.h"
 #include "../../include/game_menu.h"
-#include "../../include/enemy1.h"
-#include "../../include/enemy2.h"
-#include "../../include/maze1.h"
+#include "../../include/bitmaps/enemy1.h"
+#include "../../include/bitmaps/enemy2.h"
+#include "../../include/bitmaps/maze1.h"
 
 #define GAME_FRAME_RATE 30                        // 30 FPS
 #define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per 

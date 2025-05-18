@@ -1,4 +1,4 @@
-#include "../../../include/protagonist_sprite.h"
+#include "../../../include/bitmaps/protagonist_sprite.h"
 
 // 'protag', 68x88px
 const unsigned long myBitmapprotag [] = {
