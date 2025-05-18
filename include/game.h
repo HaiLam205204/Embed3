@@ -13,6 +13,9 @@ typedef struct {
     int width;          // Sprite width
     int height;         // Sprite height
     int active;         // 1 if enemy is active/alive
+    int collision_offset_x; // Fine-tune hitbox
+    int collision_offset_y;
+    int enemy_type; // For battle screen variety
 } Enemy;
 
 typedef struct {

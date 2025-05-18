@@ -41,8 +41,12 @@ int protag_world_y = PROTAG_START_Y;
 #define MAX_ENEMIES 10
 
 Enemy enemies[MAX_ENEMIES] = {
-    {1300, 1000, shadow1, 136, 88, 1},  // Example enemy at (500,300)
-    {1800, 450, shadow2, 68, 100, 1},
+    {1300, 1000, shadow1, 136, 88, 1, 4, 4, 
+        //1 //enemy type
+    },  
+    {1800, 450, shadow2, 68, 100, 1, 4, 4, 
+        //1 //enemy type
+    },
     // Add more enemies as needed
 };
 
@@ -72,26 +76,13 @@ void game_loop()
 
         if (first_frame)
         { // display first frame
-            uart_puts("\n[FRAME] Rendering first frame");
             for (int i = 0; i < 2; i++)
             {
-                uart_puts("\n[FRAME] Cleared screen (red)");
-
                 // draw game map
                 drawImage_double_buffering(map_x, map_y, gameMap4x, GAME_MAP_WIDTH_4X, GAME_MAP_HEIGHT_4X);
-                uart_puts("\n[FRAME] Drawn map at (");
-                uart_dec(map_x);
-                uart_puts(",");
-                uart_dec(map_y);
-                uart_puts(")");
 
                 // draw protagonist
                 drawImage_double_buffering(protag_world_x, protag_world_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
-                uart_puts("\n[FRAME] Drawn protagonist at (");
-                uart_dec(protag_world_x);
-                uart_puts(",");
-                uart_dec(protag_world_y);
-                uart_puts(")");
 
                 // swap buffer to display frame
                 swap_buffers();
@@ -112,7 +103,29 @@ void game_loop()
                 first_frame = 1;
                 continue;  // Continue the loop to redraw the game frame
             }
+
+            // Update player position on the map
             update_protag_position(&protag_world_x, &protag_world_y, input);
+
+            // Check for enemies encounters
+            for (int i = 0; i < MAX_ENEMIES; i++) {
+                if (!enemies[i].active) continue;
+                
+                if (check_collision(
+                    protag_world_x, protag_world_y, PROTAG_WIDTH, PROTAG_HEIGHT,
+                    enemies[i].world_x + enemies[i].collision_offset_x,
+                    enemies[i].world_y + enemies[i].collision_offset_y,
+                    enemies[i].width - 2*enemies[i].collision_offset_x,
+                    enemies[i].height - 2*enemies[i].collision_offset_y
+                )) {
+                    uart_puts("\n[COMBAT] Enemy contact!");
+
+                    // Transition to battle
+                    battle_screen_loop(enemies[i].enemy_type);
+                    first_frame = 1; // Reset game frame after battle
+                    break; // Exit combat loop
+                }
+            }
             
             // Update camera position to follow protagonist
             update_camera_position(protag_world_x, protag_world_y, &camera_x, &camera_y);
@@ -147,6 +160,28 @@ void game_loop()
             uart_puts("\n[WARNING] Frame took too long!");
         }
     }
+}
+
+void battle_screen_loop(int enemy_type) {
+    uart_puts("\n[BATTLE] Starting battle screen");
+    
+    // DRAW HERE
+    //drawString(300, 300, "BATTLE MODE!", 0xFFFFFF);
+    swap_buffers();
+    
+    // Simple battle loop
+    while (1) {
+        char input = uart_getc();
+        if (input == 'q' || input == 'Q') {
+            uart_puts("\n[BATTLE] Exiting battle");
+            return;
+        }
+    }
+}
+
+int check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2) {
+    return (x1 < x2 + w2) && (x1 + w1 > x2) &&
+           (y1 < y2 + h2) && (y1 + h1 > y2);
 }
 
 void render_world_view(int camera_x, int camera_y) {
