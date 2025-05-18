@@ -1,6 +1,7 @@
-#include "../../../include/combat_interface.h"
+#include "../../../include/combat_character.h"
 #include "../../../include/framebf.h"
 #include "../../../include/uart0.h"
+#include "../../../include/models/character_sprite.h"
 
 #define HP_BAR_WIDTH 50
 #define HP_BAR_HEIGHT 5
@@ -63,5 +64,25 @@ void draw_combat_character(int pos_x, int pos_y, const unsigned long *character_
     uart_dec(pos_x);
     uart_puts(", ");
     uart_dec(pos_y);
+    uart_puts(")\n");
+}
+
+void draw_character_sprite(CharacterSprite *sprite)
+{
+    if (!sprite || !sprite->bitmap)
+    {
+        uart_puts("[COMBAT_SCREEN] [ERROR] Invalid character sprite!\n");
+        return;
+    }
+
+    draw_combat_character(sprite->pos_x, sprite->pos_y, sprite->bitmap, sprite->width, sprite->height);
+    draw_hp_bar(sprite->pos_x, sprite->pos_y, (sprite->character->current_hp * 100) / sprite->character->max_hp);
+
+    uart_puts("[COMBAT_SCREEN] Drawn character '");
+    uart_puts(sprite->character->name);
+    uart_puts("' at (");
+    uart_dec(sprite->pos_x);
+    uart_puts(", ");
+    uart_dec(sprite->pos_y);
     uart_puts(")\n");
 }

@@ -1,0 +1,11 @@
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
+
+#define TRUE 1
+#define FALSE 0
+#define MAX_NAME_LENGTH 32
+#define MAX_ITEM_NAME_LENGTH 32
+#define MAX_SKILLS_PER_PERSONA 4
+#define MAX_SKILLS_PER_ENEMY 2
+
+#endif
