@@ -57,8 +57,9 @@ void design_screen_loop()
                 swap_buffers();
             }
             first_frame = 0;
-        }
+        } 
 
+        combat_utility_UI();
         // Simple turn iteration
         uart_puts("[TURN] It's ");
         uart_puts(protagonists[turn_index].name);

@@ -121,6 +121,7 @@ void game_loop()
                     uart_puts("\n[COMBAT] Enemy contact!");
 
                     // Transition to battle
+                    //clear_screen(0xFFFF0000);
                     battle_screen_loop(enemies[i].enemy_type);
                     first_frame = 1; // Reset game frame after battle
                     break; // Exit combat loop
