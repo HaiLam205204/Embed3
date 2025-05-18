@@ -18,10 +18,10 @@ foreach ($dir in $subDirs) {
 foreach ($pattern in $patterns) {
     $files = Get-ChildItem -Path $pattern -ErrorAction SilentlyContinue
     if ($files) {
-        Write-Host "[INFO] Files found matching pattern: [$pattern] -> Delete"
+        Write-Host "[MAKE] Files found matching pattern: [$pattern] -> Delete"
         Remove-Item $files.FullName -Force
     } else {
-        Write-Host "[INFO] No files found matching pattern: [$pattern] -> Skip"
+        Write-Host "[MAKE] No files found matching pattern: [$pattern] -> Skip"
     }
 }
 

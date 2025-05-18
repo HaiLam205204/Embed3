@@ -1,4 +1,4 @@
-CFILES = $(wildcard ./src/*.c ./src/*/*.c)
+CFILES = $(wildcard ./src/*.c ./src/*/*.c ./src/*/*/*.c)
 OFILES = $(CFILES:./src/%.c=./build/%.o)
 
 GCCFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib
@@ -17,10 +17,10 @@ kernel8.img: ./build/boot.o $(OFILES)
 	aarch64-none-elf-objcopy -O binary ./build/kernel8.elf kernel8.img
 
 clean:
-	@echo [INFO] Start cleaning...
+	@echo [MAKE] Start cleaning...
 	@powershell -NoProfile -ExecutionPolicy Bypass -File clean.ps1
-	@echo [INFO] Finish cleaning!
+	@echo [MAKE] Finish cleaning!
 
 run0: 
-	@echo [INFO] Run emulation with QEMU...
+	@echo [MAKE] Run emulation with QEMU...
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio

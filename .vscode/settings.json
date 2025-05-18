@@ -16,6 +16,7 @@
         "combat_interface.h": "c",
         "lobbyscreen.h": "c",
         "game_menu.h": "c",
-        "protagonist_menu.h": "c"
+        "protagonist_menu.h": "c",
+        "enemy1.h": "c"
     }
 }
