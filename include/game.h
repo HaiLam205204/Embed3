@@ -15,6 +15,15 @@ typedef struct {
     int active;         // 1 if enemy is active/alive
 } Enemy;
 
+typedef struct {
+    int world_x;             // World X position (top-left)
+    int world_y;             // World Y position (top-left)
+    const unsigned long* bitmap; // Wall sprite data
+    int width;               // Wall width
+    int height;              // Wall height
+    int is_solid;            // 1 if collision enabled
+} Wall;
+
 void game_loop();
 void render_world_view(int camera_x, int camera_y);
 void update_camera_position(int protag_x, int protag_y, int *camera_x, int *camera_y);

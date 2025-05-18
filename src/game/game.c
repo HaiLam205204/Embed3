@@ -10,6 +10,7 @@
 #include "../../include/game_menu.h"
 #include "../../include/enemy1.h"
 #include "../../include/enemy2.h"
+#include "../../include/maze1.h"
 
 #define GAME_FRAME_RATE 30                        // 30 FPS
 #define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per 
@@ -43,6 +44,13 @@ Enemy enemies[MAX_ENEMIES] = {
     {1300, 1000, shadow1, 136, 88, 1},  // Example enemy at (500,300)
     {1800, 450, shadow2, 68, 100, 1},
     // Add more enemies as needed
+};
+
+#define MAX_WALLS 20
+
+Wall walls[MAX_WALLS] = {
+    {MAZE1_START_X, MAZE1_START_Y, maze1, MAZE1_WIDTH, MAZE1_HEIGHT, 1},  // First maze
+    // Add more walls...
 };
 
 void game_loop()
@@ -162,6 +170,24 @@ void render_world_view(int camera_x, int camera_y) {
                                 render_width, render_height,
                                 GAME_MAP_WIDTH_4X);  // STRIDE
 
+    // // Render walls in viewport
+    // for (int i = 0; i < MAX_WALLS; i++) {
+    //     int screen_x = walls[i].world_x - camera_x;
+    //     int screen_y = walls[i].world_y - camera_y;
+
+    //     // Check if wall intersects viewport
+    //     if (screen_x + walls[i].width > 0 && 
+    //         screen_x < VIEWPORT_WIDTH &&
+    //         screen_y + walls[i].height > 0 && 
+    //         screen_y < VIEWPORT_HEIGHT) {
+            
+    //         drawImage_double_buffering(screen_x, screen_y, 
+    //             walls[i].bitmap, 
+    //             walls[i].width, 
+    //             walls[i].height);
+    //     }
+    // }
+
     // Render enemies that are in view
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!enemies[i].active) continue;
@@ -203,6 +229,7 @@ void update_camera_position(int protag_x, int protag_y, int *camera_x, int *came
 
 void update_protag_position(int *x, int *y, char direction) {
     const int step_size = RESTORE_MARGIN;
+    // int new_x = *x, new_y = *y;
     
     switch (direction) {
         case UP:    *y -= step_size; break;
@@ -211,6 +238,22 @@ void update_protag_position(int *x, int *y, char direction) {
         case RIGHT: *x += step_size; break;
     }
     
+    // // Check wall collisions
+    // for (int i = 0; i < MAX_WALLS; i++) {
+    //     if (!walls[i].is_solid) continue;
+        
+    //     if (new_x < walls[i].world_x + walls[i].width &&
+    //         new_x + PROTAG_WIDTH > walls[i].world_x &&
+    //         new_y < walls[i].world_y + walls[i].height &&
+    //         new_y + PROTAG_HEIGHT > walls[i].world_y) {
+    //         return; // Cancel movement if collision
+    //     }
+    // }
+
+    // // Update position if no collision
+    // *x = new_x;
+    // *y = new_y;
+
     // Clamp to world boundaries
     if (*x < 0) *x = 0;
     if (*y < 0) *y = 0;
