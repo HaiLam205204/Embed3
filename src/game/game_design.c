@@ -13,7 +13,7 @@
 
 #define MAX_PLACEHOLDERS 4
 
-int placeholder_positions[MAX_PLACEHOLDERS][2] = {
+int positions[MAX_PLACEHOLDERS][2] = {
     {452, 500},
     {280, 330},
     {664, 300},
@@ -32,7 +32,7 @@ void design_screen_loop()
     CharacterSprite sprites[MAX_PLACEHOLDERS] = {
         {&protagonists[0], myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT, 452, 500},
         {&protagonists[1], char1, PROTAG_WIDTH, PROTAG_HEIGHT, 280, 330},
-        {&protagonists[2], char2, PROTAG_WIDTH, PROTAG_HEIGHT, 664, 300},
+        {&protagonists[2], char2, 80, 88, 664, 300},
         {&protagonists[3], char3, PROTAG_WIDTH, PROTAG_HEIGHT, 472, 150}
     };
 
@@ -68,8 +68,8 @@ void redraw_combat_screen() {
 
     // Redraw all placeholder characters
     for (int i = 0; i < MAX_PLACEHOLDERS; ++i) {
-        int pos_x = placeholder_positions[i][0];
-        int pos_y = placeholder_positions[i][1];
+        int pos_x = positions[i][0];
+        int pos_y = positions[i][1];
         drawImage_double_buffering(pos_x, pos_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
     }
 
