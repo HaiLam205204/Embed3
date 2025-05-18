@@ -1,4 +1,4 @@
-CFILES = $(wildcard ./src/*.c ./src/*/*.c)
+CFILES = $(wildcard ./src/*.c ./src/*/*.c ./src/*/*/*.c)
 OFILES = $(CFILES:./src/%.c=./build/%.o)
 
 GCCFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib
