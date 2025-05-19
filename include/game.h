@@ -33,3 +33,5 @@ void update_camera_position(int protag_x, int protag_y, int *camera_x, int *came
 void update_protag_position(int *x, int *y, char direction);
 void draw_partial_map(int x, int y);
 unsigned long* extract_subimage_static(const unsigned long* src, int src_width, int src_height, int start_x, int start_y, int width, int height, unsigned long* out_buffer);
+int check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
+void battle_screen_loop(int enemy_type);

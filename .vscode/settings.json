@@ -20,6 +20,9 @@
         "enemy1.h": "c",
         "combat_character.h": "c",
         "character.h": "c",
-        "game_combat.h": "c"
+        "game_combat.h": "c",
+        "enemy2.h": "c",
+        "enemy.h": "c",
+        "character_sprite.h": "c"
     }
 }

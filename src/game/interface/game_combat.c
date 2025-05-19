@@ -21,6 +21,15 @@ int persona_option = 0;
 int selected_persona = 0; // 0 for Orpheus, 1 for Pixie
 int skill_option = 0;
 
+// int button_pressed_attack = 0;
+// int button_pressed_item = 0;
+// int button_pressed_persona = 0;
+// int button_pressed_run = 0;
+// int button_pressed_skill = 0;
+
+// // Time the last button was pressed
+// uint64_t button_pressed_time = 0;
+
 // Draws the button in "off" or "on" state
 void draw_attack_button(int is_pressed)
 {
@@ -123,8 +132,9 @@ void combat_utility_UI() {
     int button_pressed_persona = 0;
     int button_pressed_run = 0;
     int button_pressed_skill = 0;
+    // Time the last button was pressed
     uint64_t button_pressed_time = 0;
-    // int first_frame = 1;  // Flag to show initial button once
+    int exit_ui = 0;  // <-- Flag to exit loop
 
     uart_puts("[DEBUG] Current screen: ");
     uart_dec(current_screen);
@@ -149,14 +159,16 @@ void combat_utility_UI() {
             if (current_screen == SCREEN_COMBAT){
                 uart_puts("[DEBUG] Switched to SCREEN_COMBAT\n");
                 if (input == ATTACK) {
-                button_pressed_attack = 1;
-                button_pressed_time = start_time;
-                uart_puts("ATTACK\n");
+                    button_pressed_attack = 1;
+                    button_pressed_time = start_time;
+                    uart_puts("ATTACK\n");
+                    exit_ui = 1;
                 }
                 if (input == ITEM) {
                     button_pressed_item = 1;
                     button_pressed_time = start_time;
                     uart_puts("ITEM\n");
+                    // exit_ui = 1;
                 }
                 if (input == PERSONA) {
                     button_pressed_persona = 1;
@@ -165,11 +177,13 @@ void combat_utility_UI() {
                     draw_persona_option_screen(persona_option);
                     current_screen = SCREEN_PERSONA_MENU;
                     uart_puts("PERSONA\n");
+                    // exit_ui = 1;
                 }
                 if (input == RUN) {
                     button_pressed_run = 1;
                     button_pressed_time = start_time;
                     uart_puts("RUN\n");
+                    // exit_ui = 1;
                 }
                 if (input == SKILL) { 
                     button_pressed_skill = 1;
@@ -178,6 +192,7 @@ void combat_utility_UI() {
                     draw_skill_option_screen(selected_persona, skill_option);
                     current_screen = SCREEN_SKILL_MENU;
                     uart_puts("SKILL\n");
+                    // exit_ui = 1;
                 }
             }
             else if (current_screen == SCREEN_PERSONA_MENU){
@@ -236,6 +251,8 @@ void combat_utility_UI() {
             draw_attack_button(1); // Show "on"
         } else {
             draw_attack_button(0); // Show "off"
+            // draw_attack_button(0); // Show "off"
+            // draw_attack_button(0); // Show "off"
         }
 
         if (button_pressed_item) {
@@ -262,14 +279,14 @@ void combat_utility_UI() {
             draw_skill_button(0);
         }
 
-        if (ticks_to_us(start_time - button_pressed_time) > 2000000) {
-            // Reset buttons after timeout
-            button_pressed_attack = 0;
-            button_pressed_item = 0;
-            button_pressed_persona = 0;
-            button_pressed_run = 0;
-            button_pressed_skill = 0;
-        }
+        // if (ticks_to_us(start_time - button_pressed_time) > 500000) {
+        //     // Reset buttons after timeout
+        //     button_pressed_attack = 0;
+        //     button_pressed_item = 0;
+        //     button_pressed_persona = 0;
+        //     button_pressed_run = 0;
+        //     button_pressed_skill = 0;
+        // }
 
         if (current_screen == SCREEN_PERSONA_MENU) {
             draw_persona_option_screen(persona_option);
@@ -287,6 +304,9 @@ void combat_utility_UI() {
         uint64_t render_time = ticks_to_us(end_time - start_time);
         if (render_time < GAME_FRAME_US) {
             wait_us(GAME_FRAME_US - render_time);
+        }
+        if (exit_ui) {
+            break;
         }
     }
 }

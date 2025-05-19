@@ -2,6 +2,7 @@
 #include "../../../include/framebf.h"
 #include "../../../include/uart0.h"
 #include "../../../include/models/character_sprite.h"
+#include "../../../include/models/enemy_sprite.h"
 
 #define HP_BAR_WIDTH 50
 #define HP_BAR_HEIGHT 5
@@ -67,6 +68,86 @@ void draw_combat_character(int pos_x, int pos_y, const unsigned long *character_
     uart_puts(")\n");
 }
 
+void draw_combat_enemies1(int pos_x, int pos_y, const unsigned long *character_bitmap, int image_width, int image_height)
+{
+    const int MAX_WIDTH = 136;
+    const int MAX_HEIGHT = 88;
+    int error_flag = 0;
+
+    if (image_width > MAX_WIDTH)
+    {
+        uart_puts("[COMBAT_SCREEN] [ERROR] Width: ");
+        uart_dec(image_width);
+        uart_puts(" exceeds maximum of ");
+        uart_dec(MAX_WIDTH);
+        uart_puts("\n");
+        error_flag = 1;
+    }
+
+    if (image_height > MAX_HEIGHT)
+    {
+        uart_puts("[COMBAT_SCREEN] [ERROR] Height: ");
+        uart_dec(image_height);
+        uart_puts(" exceeds maximum of ");
+        uart_dec(MAX_HEIGHT);
+        uart_puts("\n");
+        error_flag = 1;
+    }
+
+    if (error_flag)
+    {
+        uart_puts("[COMBAT_SCREEN] Character not drawn due to size constraints.\n");
+        return;
+    }
+
+    drawImage_double_buffering(pos_x, pos_y, character_bitmap, image_width, image_height);
+    uart_puts("[COMBAT_SCREEN] Drawn character at (");
+    uart_dec(pos_x);
+    uart_puts(", ");
+    uart_dec(pos_y);
+    uart_puts(")\n");
+}
+
+void draw_combat_enemies2(int pos_x, int pos_y, const unsigned long *character_bitmap, int image_width, int image_height)
+{
+    const int MAX_WIDTH = 68;
+    const int MAX_HEIGHT = 100;
+    int error_flag = 0;
+
+    if (image_width > MAX_WIDTH)
+    {
+        uart_puts("[COMBAT_SCREEN] [ERROR] Width: ");
+        uart_dec(image_width);
+        uart_puts(" exceeds maximum of ");
+        uart_dec(MAX_WIDTH);
+        uart_puts("\n");
+        error_flag = 1;
+    }
+
+    if (image_height > MAX_HEIGHT)
+    {
+        uart_puts("[COMBAT_SCREEN] [ERROR] Height: ");
+        uart_dec(image_height);
+        uart_puts(" exceeds maximum of ");
+        uart_dec(MAX_HEIGHT);
+        uart_puts("\n");
+        error_flag = 1;
+    }
+
+    if (error_flag)
+    {
+        uart_puts("[COMBAT_SCREEN] Character not drawn due to size constraints.\n");
+        return;
+    }
+
+    drawImage_double_buffering(pos_x, pos_y, character_bitmap, image_width, image_height);
+    uart_puts("[COMBAT_SCREEN] Drawn character at (");
+    uart_dec(pos_x);
+    uart_puts(", ");
+    uart_dec(pos_y);
+    uart_puts(")\n");
+}
+
 void draw_character_sprite(CharacterSprite *sprite)
 {
     if (!sprite || !sprite->bitmap)
@@ -85,4 +166,26 @@ void draw_character_sprite(CharacterSprite *sprite)
     uart_puts(", ");
     uart_dec(sprite->pos_y);
     uart_puts(")\n");
+}
+
+void draw_enemy_sprite(EnemySprite *sprite)
+{
+    if (!sprite || !sprite->enemy || !sprite->bitmap) return;
+
+    uart_puts("[DEBUG] Enemy type: ");
+    uart_dec(sprite->enemy->enemy_type);
+    uart_puts("\n");
+
+    if (sprite->enemy->enemy_type == 1) {
+        draw_combat_enemies1(sprite->pos_x, sprite->pos_y, sprite->bitmap, sprite->width, sprite->height);
+    } 
+    else if (sprite->enemy->enemy_type == 2) {
+        draw_combat_enemies2(sprite->pos_x, sprite->pos_y, sprite->bitmap, sprite->width, sprite->height);
+    } 
+    else {
+        uart_puts("[COMBAT_SCREEN] [ERROR] Unknown enemy type.\n");
+        return;
+    }
+
+    draw_hp_bar(sprite->pos_x, sprite->pos_y, (sprite->enemy->current_hp * 100) / sprite->enemy->max_hp);
 }

@@ -26,6 +26,8 @@ void clear_persona_option_screen();
 
 void draw_skill_option_screen(int persona, int option);
 
+void wait_for_button_release_animation();
+
 typedef enum {
     SCREEN_COMBAT,
     SCREEN_PERSONA_MENU,
