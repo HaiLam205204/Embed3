@@ -22,10 +22,6 @@
 #define WORLD_WIDTH     GAME_MAP_WIDTH_4X  // Map is twice as big as screen
 #define WORLD_HEIGHT    GAME_MAP_HEIGHT_4X 
 
-#define RESTORE_MARGIN 10
-// The safety margin (RESTORE_MARGIN) ensures complete coverage of the changed pixels
-static unsigned long sprite_bg_buffer[(PROTAG_WIDTH + 2 * RESTORE_MARGIN) * (PROTAG_HEIGHT + 2 * RESTORE_MARGIN)];
-
 // map starting coordinates
 int map_x = MAP_4X_START_X;
 int map_y = MAP_4X_START_Y;
@@ -281,7 +277,7 @@ void update_camera_position(int protag_x, int protag_y, int *camera_x, int *came
 }
 
 void update_protag_position(int *x, int *y, char direction) {
-    const int step_size = RESTORE_MARGIN;
+    const int step_size = 10;
     int new_x = *x;
     int new_y = *y;
     
@@ -315,106 +311,4 @@ void update_protag_position(int *x, int *y, char direction) {
     // Update only if no collision
     *x = new_x;
     *y = new_y;
-}
-
-// draw a fraction of the map
-void draw_partial_map(int prev_x, int prev_y)
-{
-    // Convert screen coords to map coords with safety margins
-    int map_local_x = prev_x - map_x - RESTORE_MARGIN;
-    int map_local_y = prev_y - map_y - RESTORE_MARGIN;
-
-    // Calculate dimensions with margins
-    int restore_width = PROTAG_WIDTH + 2 * RESTORE_MARGIN;
-    int restore_height = PROTAG_HEIGHT + 2 * RESTORE_MARGIN;
-
-    // Clamp to map boundaries
-    if (map_local_x < 0)
-    {
-        restore_width += map_local_x; // Reduces width
-        map_local_x = 0;
-    }
-    if (map_local_y < 0)
-    {
-        restore_height += map_local_y;
-        map_local_y = 0;
-    }
-    if (map_local_x + restore_width > GAME_MAP_WIDTH_4X)
-    {
-        restore_width = GAME_MAP_WIDTH_4X - map_local_x;
-    }
-    if (map_local_y + restore_height > GAME_MAP_HEIGHT_4X)
-    {
-        restore_height = GAME_MAP_HEIGHT_4X - map_local_y;
-    }
-
-    // Debug output
-    uart_puts("\n[RESTORE] Prev(");
-    uart_dec(prev_x);
-    uart_puts(",");
-    uart_dec(prev_y);
-    uart_puts(") MapLocal(");
-    uart_dec(map_local_x);
-    uart_puts(",");
-    uart_dec(map_local_y);
-    uart_puts(") Size:");
-    uart_dec(restore_width);
-    uart_puts("x");
-    uart_dec(restore_height);
-
-    // Extract and restore
-    unsigned long *bg_section = extract_subimage_static(
-        gameMap4x, GAME_MAP_WIDTH_4X, GAME_MAP_HEIGHT_4X,
-        map_local_x, map_local_y,
-        restore_width, restore_height,
-        sprite_bg_buffer);
-
-    if (bg_section)
-    {
-        // Draw at adjusted screen position
-        int screen_x = map_local_x + map_x;
-        int screen_y = map_local_y + map_y;
-        drawImage_double_buffering(screen_x, screen_y, bg_section, restore_width, restore_height);
-    }
-}
-
-// extract the part of the map that was hidden by the sprite
-unsigned long *extract_subimage_static(const unsigned long *src, int src_w, int src_h,
-                                       int start_x, int start_y, int w, int h,
-                                       unsigned long *buffer)
-{
-    // Strict alignment check
-    if (((unsigned long)src | (unsigned long)buffer) & 0x3)
-    {
-        uart_puts("\n[ALIGN] Misaligned! src:");
-        uart_hex((unsigned long)src);
-        uart_puts(" buf:");
-        uart_hex((unsigned long)buffer);
-        return NULL;
-    }
-
-    // Validate bounds
-    if (start_x < 0 || start_y < 0 || start_x + w > src_w || start_y + h > src_h)
-    {
-        uart_puts("\n[BOUNDS] Invalid: X[");
-        uart_dec(start_x);
-        uart_puts("..");
-        uart_dec(start_x + w);
-        uart_puts("] Y[");
-        uart_dec(start_y);
-        uart_puts("..");
-        uart_dec(start_y + h);
-        uart_puts("]");
-        return NULL;
-    }
-
-    // Row-by-row copy with memcpy
-    for (int y = 0; y < h; y++)
-    {
-        const unsigned long *src_row = src + (start_y + y) * src_w + start_x;
-        unsigned long *dst_row = buffer + y * w;
-        memcpy(dst_row, src_row, w * sizeof(unsigned long));
-    }
-
-    return buffer;
 }
