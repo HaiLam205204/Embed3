@@ -12,6 +12,10 @@
 #include "../../../include/bitmaps/game_map.h"
 #include "../../../include/bitmaps/Orpheus_Skill_Option.h"
 #include "../../../include/bitmaps/Pixie_Skill_Option.h"
+#include "../../../include/models/character.h"
+#include "../../../include/models/enemy.h"
+#include "../../../include/game_design.h"
+#include "../../../include/combat.h"
 
 #define GAME_FRAME_RATE 30                        // e.g., 30 FPS
 #define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per frame
@@ -20,15 +24,6 @@ GameScreen current_screen = SCREEN_COMBAT;
 int persona_option = 0;
 int selected_persona = 0; // 0 for Orpheus, 1 for Pixie
 int skill_option = 0;
-
-// int button_pressed_attack = 0;
-// int button_pressed_item = 0;
-// int button_pressed_persona = 0;
-// int button_pressed_run = 0;
-// int button_pressed_skill = 0;
-
-// // Time the last button was pressed
-// uint64_t button_pressed_time = 0;
 
 // Draws the button in "off" or "on" state
 void draw_attack_button(int is_pressed)
@@ -126,7 +121,9 @@ void draw_skill_option_screen(int persona, int option) {
     } 
 }
 
-void combat_utility_UI() {
+int turn_index = 0; // Track whose turn it is
+
+void combat_utility_UI(Character protagonists[], int num_protagonists, Enemy enemy[], int num_enemies) {
     int button_pressed_attack = 0;
     int button_pressed_item = 0;
     int button_pressed_persona = 0;
@@ -135,6 +132,30 @@ void combat_utility_UI() {
     // Time the last button was pressed
     uint64_t button_pressed_time = 0;
     int exit_ui = 0;  // <-- Flag to exit loop
+
+    turn_index = (turn_index + 1) % num_enemies;
+
+    uart_puts("[PLAYERS]\n");
+    for (int i = 0; i < num_protagonists; ++i) {
+        uart_puts(" - ");
+        uart_puts(protagonists[i].name);
+        uart_puts(": ");
+        uart_putint(protagonists[i].current_hp);
+        uart_puts("/");
+        uart_putint(protagonists[i].max_hp);
+        uart_puts(" HP\n");
+    }
+
+    uart_puts("[ENEMIES]\n");
+    for (int i = 0; i < num_enemies; ++i) {
+        uart_puts(" - ");
+        uart_puts(enemy[i].name);
+        uart_puts(": ");
+        uart_putint(enemy[i].current_hp);
+        uart_puts("/");
+        uart_putint(enemy[i].max_hp);
+        uart_puts(" HP\n");
+    }
 
     uart_puts("[DEBUG] Current screen: ");
     uart_dec(current_screen);
@@ -162,7 +183,7 @@ void combat_utility_UI() {
                     button_pressed_attack = 1;
                     button_pressed_time = start_time;
                     uart_puts("ATTACK\n");
-                    exit_ui = 1;
+                    // exit_ui = 1;
                 }
                 if (input == ITEM) {
                     button_pressed_item = 1;
@@ -227,9 +248,23 @@ void combat_utility_UI() {
                 if (input == 'o' && skill_option > 0) {
                     skill_option = (skill_option - 1 + max_skills) % max_skills;
                     draw_skill_option_screen(selected_persona, skill_option);
+
+                    // SkillSelectionResult result = handle_skill_selection();
+                    // apply_skill_effect(result);
+                    // // Then call take_turn() to pass to next player
+                    // take_turn(turn_index);
+                    // redraw_combat_screen(); 
+                    // redraw_combat_screen(); 
                 } else if (input == 'l' && skill_option < max_skills - 1) {
                     skill_option = (skill_option + 1) % max_skills;
                     draw_skill_option_screen(selected_persona, skill_option);
+
+                    // SkillSelectionResult result = handle_skill_selection();
+                    // apply_skill_effect(result);
+                    // // Then call take_turn() to pass to next player
+                    // take_turn(turn_index);
+                    // redraw_combat_screen(); 
+                    // redraw_combat_screen(); 
                 } else if (input == KEY_ESC) {
                     current_screen = SCREEN_COMBAT;
                     button_pressed_skill = 0;
@@ -251,8 +286,6 @@ void combat_utility_UI() {
             draw_attack_button(1); // Show "on"
         } else {
             draw_attack_button(0); // Show "off"
-            // draw_attack_button(0); // Show "off"
-            // draw_attack_button(0); // Show "off"
         }
 
         if (button_pressed_item) {
@@ -279,14 +312,14 @@ void combat_utility_UI() {
             draw_skill_button(0);
         }
 
-        // if (ticks_to_us(start_time - button_pressed_time) > 500000) {
-        //     // Reset buttons after timeout
-        //     button_pressed_attack = 0;
-        //     button_pressed_item = 0;
-        //     button_pressed_persona = 0;
-        //     button_pressed_run = 0;
-        //     button_pressed_skill = 0;
-        // }
+        if (ticks_to_us(start_time - button_pressed_time) > 500000) {
+            // Reset buttons after timeout
+            button_pressed_attack = 0;
+            button_pressed_item = 0;
+            button_pressed_persona = 0;
+            button_pressed_run = 0;
+            button_pressed_skill = 0;
+        }
 
         if (current_screen == SCREEN_PERSONA_MENU) {
             draw_persona_option_screen(persona_option);

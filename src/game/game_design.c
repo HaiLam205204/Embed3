@@ -14,9 +14,11 @@
 #include "../../include/models/enemy.h"
 #include "../../include/models/character_sprite.h"
 #include "../../include/models/enemy_sprite.h"
+#include "../../include/models/skill.h"
 
 #define MAX_PROTAGONISTS 4
 #define MAX_ENEMIES 3
+
 
 int positions[MAX_PROTAGONISTS][2] = {
     {452, 500},
@@ -43,7 +45,7 @@ void design_screen_loop()
 {
     uart_puts("[DESIGN_SCREEN] Entering Design Screen...\n");
     static int first_frame = 1;
-    int turn_index = 0; // Track whose turn it is
+    // int turn_index = 0; // Track whose turn it is
 
     init_protagonists();
     init_enemies();
@@ -83,78 +85,32 @@ void design_screen_loop()
             first_frame = 0;
         } 
 
-        combat_utility_UI();
+        combat_utility_UI(protagonists, MAX_PROTAGONISTS, enemy, MAX_ENEMIES);
         // Simple turn iteration
-        uart_puts("[TURN] It's ");
-        uart_puts(protagonists[turn_index].name);
-        uart_puts("'s turn!\n");
+        // uart_puts("[TURN] It's ");
+        // uart_puts(protagonists[turn_index].name);
+        // uart_puts("'s turn!\n");
 
-        take_turn(turn_index);
+        // take_turn(turn_index);
 
-        // Move to the next character, looping around
-        turn_index = (turn_index + 1) % MAX_PROTAGONISTS;
+        // // Move to the next character, looping around
+        // turn_index = (turn_index + 1) % MAX_PROTAGONISTS;
 
-        // Bỏ mấy cái action logic vào
-        uart_puts("Press any key to proceed to the next turn...\n");
-        uart_getc();
+        // // Bỏ mấy cái action logic vào
+        // uart_puts("Press any key to proceed to the next turn...\n");
+        // uart_getc();
     }
 
     uart_puts("[DESIGN_SCREEN] Design Screen Render Complete.\n");
 }
 
-void take_turn(int character_index)
-{
-    Character *character = &protagonists[character_index];
-    uart_puts("[ACTION] ");
-    uart_puts(character->name);
-    uart_puts(" takes a simple action.\n");
-    int selected_enemy = 0;
-
-    // Display enemy names
-    uart_puts("[SELECT TARGET] Use 'y' to go left, 'u' to go right. Press Enter to confirm.\n");
-    while (1)
-    {
-        uart_puts("[SELECTED ENEMY] ");
-        uart_puts(enemy[selected_enemy].name);
-        uart_puts("\n");
-
-        char input = uart_getc();
-        if (input == '\r' || input == '\n')  // Confirm selection with Enter
-            break;
-
-        if (input == 'y') // Left
-        {
-            selected_enemy = (selected_enemy - 1 + MAX_ENEMIES) % MAX_ENEMIES;
-        }
-        else if (input == 'u') // Right
-        {
-            selected_enemy = (selected_enemy + 1) % MAX_ENEMIES;
-        }
-    }
-
-    // Apply base damage
-    int base_damage = 30;
-    Enemy *target = &enemy[selected_enemy];
-
-    uart_puts("[ATTACK] ");
-    uart_puts(character->name);
-    uart_puts(" attacks ");
-    uart_puts(target->name);
-    uart_puts(" for 30 damage!\n");
-
-    target->current_hp -= base_damage;
-    if (target->current_hp < 0)
-        target->current_hp = 0;
-
-    // Log enemy HP after attack
-    uart_puts("[RESULT] ");
-    uart_puts(target->name);
-    uart_puts(" HP is now ");
-    uart_puts(target->current_hp);
-    uart_puts(" / ");
-    uart_puts(target->max_hp);
-    uart_puts("\n");
-}
+// void take_turn(int character_index)
+// {
+//     Character *character = &protagonists[character_index];
+//     uart_puts("[ACTION] ");
+//     uart_puts(character->name);
+//     uart_puts(" takes a simple action.\n");
+// }
 
 void init_protagonists()
 {

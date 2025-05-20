@@ -376,3 +376,40 @@ void uart_set_flow_control(int enable) {
 int uart_input_available() {
     return !(UART0_FR & UART0_FR_RXFE);
 }
+
+void uart_putint(int num) {
+    char buffer[12]; // Enough for -2,147,483,648 + '\0'
+    int i = 0;
+    int is_negative = 0;
+
+    if (num == 0) {
+        uart_puts("0");
+        return;
+    }
+
+    if (num < 0) {
+        is_negative = 1;
+        num = -num;
+    }
+
+    // Build the string in reverse
+    while (num > 0) {
+        buffer[i++] = (num % 10) + '0';
+        num /= 10;
+    }
+
+    if (is_negative) {
+        buffer[i++] = '-';
+    }
+
+    buffer[i] = '\0';
+
+    // Reverse the string
+    for (int j = 0; j < i / 2; ++j) {
+        char temp = buffer[j];
+        buffer[j] = buffer[i - j - 1];
+        buffer[i - j - 1] = temp;
+    }
+
+    uart_puts(buffer);
+}

@@ -1,0 +1,1 @@
+void take_turn(int character_index);

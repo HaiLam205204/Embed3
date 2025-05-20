@@ -4,6 +4,8 @@
 #include "action.h"
 #include "constants.h"
 
+#define MAX_PROTAGONISTS 4
+
 typedef struct {
     char name[MAX_NAME_LENGTH];
     int is_main_character;
@@ -11,5 +13,7 @@ typedef struct {
     int max_hp;
     Action current_action;
 } Character;
+
+extern Character protagonists[MAX_PROTAGONISTS];
 
 #endif
