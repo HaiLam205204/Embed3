@@ -53,7 +53,7 @@ Enemy enemies[MAX_ENEMIES] = {
 #define MAX_WALLS 20
 
 Wall walls[MAX_WALLS] = {
-    {MAZE1_START_X, MAZE1_START_Y, maze1, MAZE1_WIDTH, MAZE1_HEIGHT, 1},  // First maze
+    {WALL1_START_X, WALL1_START_Y, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1},  // First maze
     // Add more walls...
 };
 
@@ -206,23 +206,23 @@ void render_world_view(int camera_x, int camera_y) {
                                 render_width, render_height,
                                 GAME_MAP_WIDTH_4X);  // STRIDE
 
-    // // Render walls in viewport
-    // for (int i = 0; i < MAX_WALLS; i++) {
-    //     int screen_x = walls[i].world_x - camera_x;
-    //     int screen_y = walls[i].world_y - camera_y;
+    // Render walls in viewport
+    for (int i = 0; i < MAX_WALLS; i++) {
+        int screen_x = walls[i].world_x - camera_x;
+        int screen_y = walls[i].world_y - camera_y;
 
-    //     // Check if wall intersects viewport
-    //     if (screen_x + walls[i].width > 0 && 
-    //         screen_x < VIEWPORT_WIDTH &&
-    //         screen_y + walls[i].height > 0 && 
-    //         screen_y < VIEWPORT_HEIGHT) {
+        // Check if wall intersects viewport
+        if (screen_x + walls[i].width > 0 && 
+            screen_x < VIEWPORT_WIDTH &&
+            screen_y + walls[i].height > 0 && 
+            screen_y < VIEWPORT_HEIGHT) {
             
-    //         drawImage_double_buffering(screen_x, screen_y, 
-    //             walls[i].bitmap, 
-    //             walls[i].width, 
-    //             walls[i].height);
-    //     }
-    // }
+            drawImage_double_buffering(screen_x, screen_y, 
+                walls[i].bitmap, 
+                walls[i].width, 
+                walls[i].height);
+        }
+    }
 
     // Render enemies that are in view
     for (int i = 0; i < MAX_ENEMIES; i++) {
@@ -265,36 +265,39 @@ void update_camera_position(int protag_x, int protag_y, int *camera_x, int *came
 
 void update_protag_position(int *x, int *y, char direction) {
     const int step_size = RESTORE_MARGIN;
-    // int new_x = *x, new_y = *y;
+    int new_x = *x;
+    int new_y = *y;
     
+    // Apply movement to the temporary variables
     switch (direction) {
-        case UP:    *y -= step_size; break;
-        case DOWN:  *y += step_size; break;
-        case LEFT:  *x -= step_size; break;
-        case RIGHT: *x += step_size; break;
+        case UP:    new_y -= step_size; break;
+        case DOWN:  new_y += step_size; break;
+        case LEFT:  new_x -= step_size; break;
+        case RIGHT: new_x += step_size; break;
     }
-    
-    // // Check wall collisions
-    // for (int i = 0; i < MAX_WALLS; i++) {
-    //     if (!walls[i].is_solid) continue;
-        
-    //     if (new_x < walls[i].world_x + walls[i].width &&
-    //         new_x + PROTAG_WIDTH > walls[i].world_x &&
-    //         new_y < walls[i].world_y + walls[i].height &&
-    //         new_y + PROTAG_HEIGHT > walls[i].world_y) {
-    //         return; // Cancel movement if collision
-    //     }
-    // }
 
-    // // Update position if no collision
-    // *x = new_x;
-    // *y = new_y;
+    // Clamp proposed new position
+    if (new_x < 0) new_x = 0;
+    if (new_y < 0) new_y = 0;
+    if (new_x > WORLD_WIDTH - PROTAG_WIDTH) new_x = WORLD_WIDTH - PROTAG_WIDTH;
+    if (new_y > WORLD_HEIGHT - PROTAG_HEIGHT) new_y = WORLD_HEIGHT - PROTAG_HEIGHT;
 
-    // Clamp to world boundaries
-    if (*x < 0) *x = 0;
-    if (*y < 0) *y = 0;
-    if (*x > WORLD_WIDTH - PROTAG_WIDTH) *x = WORLD_WIDTH - PROTAG_WIDTH;
-    if (*y > WORLD_HEIGHT - PROTAG_HEIGHT) *y = WORLD_HEIGHT - PROTAG_HEIGHT;
+    // Check wall collisions with the proposed new position
+    for (int i = 0; i < MAX_WALLS; i++) {
+        if (!walls[i].is_solid) continue;
+
+        if (new_x < walls[i].world_x + walls[i].width &&
+            new_x + PROTAG_WIDTH > walls[i].world_x &&
+            new_y < walls[i].world_y + walls[i].height &&
+            new_y + PROTAG_HEIGHT > walls[i].world_y) {
+            uart_puts("\n[COLLISION] Blocked by wall");
+            return; // Cancel movement
+        }
+    }
+
+    // Update only if no collision
+    *x = new_x;
+    *y = new_y;
 }
 
 // draw a fraction of the map

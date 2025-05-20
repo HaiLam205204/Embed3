@@ -16,3 +16,4 @@ void drawImage_double_buffering(int x, int y, const unsigned long *image, int im
 void draw_rect_double_buffering(int x, int y, int width, int height, unsigned int color);
 void drawRectARGB32_double_buffering(int x1, int y1, int x2, int y2, unsigned int attr, int fill);
 void drawImage_double_buffering_stride(int x, int y, const unsigned long *image, int image_width, int image_height, int image_stride);
+void drawImage_double_buffering_no_skip_black(int x, int y, const unsigned long *image, int image_width, int image_height);
