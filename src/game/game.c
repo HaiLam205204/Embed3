@@ -84,6 +84,23 @@ void game_loop()
                 // draw protagonist
                 drawImage_double_buffering(protag_world_x, protag_world_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
 
+                // Render walls in viewport
+                for (int i = 0; i < MAX_WALLS; i++) {
+                    int screen_x = walls[i].world_x - camera_x;
+                    int screen_y = walls[i].world_y - camera_y;
+
+                    // Check if wall intersects viewport
+                    if (screen_x + walls[i].width > 0 && 
+                        screen_x < VIEWPORT_WIDTH &&
+                        screen_y + walls[i].height > 0 && 
+                        screen_y < VIEWPORT_HEIGHT) {
+                        
+                        drawImage_double_buffering(screen_x, screen_y, 
+                            walls[i].bitmap, 
+                            walls[i].width, 
+                            walls[i].height);
+                    }
+                }
                 // swap buffer to display frame
                 swap_buffers();
                 uart_puts("\n[FRAME] Swapped buffers");
