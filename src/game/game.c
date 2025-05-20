@@ -116,8 +116,10 @@ void game_loop()
             first_frame = 0; // toggle flag
         }
         else
-        { // display second frame onwards
+        { // update second frame onwards
             input = uart_getc();
+            uart_puts("\n[INPUT]: ");
+            uart_sendc(input);
 
             // Check for 'M' key to jump to lobby screen
             if (input == 'm' || input == 'M') {
