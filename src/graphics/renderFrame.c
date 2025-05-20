@@ -2,14 +2,24 @@
 #include "../../include/timer.h"
 #include "../../include/framebf.h"
 #include "../../include/utils.h"
+#include "../../include/uart0.h"
+#include "../../include/bitmaps/welcomeScreen.h"
+
+#define ESCAPE 0x1B // ESC
 
 void video_playback(const unsigned long** frames, uint32_t frame_count, int x, int y, int src_width, int src_height, int max_width, int max_height) {
     uint32_t current_frame = 0;
     
     // Initialize timer for first frame
     set_wait_timer(1, FRAME_US);
-    
+
     while (current_frame < frame_count) {
+        
+        // detect non-blocking input 
+        if(getUart() == ESCAPE){ 
+            drawImage(WELCOME_SCREEN_HEIGHT, WELCOME_SCREEN_START_Y, background, WELCOME_SCREEN_WIDTH, WELCOME_SCREEN_HEIGHT);
+            break;
+        }
         // 1. Display current frame (implement your display function)
         drawImageScaledAspect(x, y, frames[current_frame], src_width, src_height, max_width, max_height);
         // 2. Wait for next frame time

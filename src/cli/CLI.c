@@ -8,6 +8,7 @@
 #include "../../include/uart0.h"
 #include "../../include/framebf.h"
 #include "../../include/mbox.h"
+#include "../../include/bitmaps/welcomeScreen.h"
 // #include "../header/commands.h"
 // #include "../header/history.h"
 // #include "../header/autocomplete.h"
@@ -124,8 +125,8 @@ void cli_put_hex8(uint8_t byte, unsigned int attr, int zoom) {
 
 // Function to clear (close) the CLI window by drawing over it
 void clear_cli_window() {
-    // Fill the entire CLI window area with the background color (black)
-    drawRectARGB32(CLI_LEFT, CLI_TOP, CLI_RIGHT, CLI_BOTTOM, BLACK, 1); 
+    // Fill the entire CLI window area with the background image
+    drawImage(WELCOME_SCREEN_HEIGHT, WELCOME_SCREEN_START_Y, background, WELCOME_SCREEN_WIDTH, WELCOME_SCREEN_HEIGHT);
 }
 
 // Function to handle CLI loop inside the popup window

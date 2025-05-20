@@ -3,6 +3,7 @@
 #include "../include/framebf.h"
 #include "../include/utils.h"
 #include "../include/CLI.h"
+#include "../include/bitmaps/welcomeScreen.h"
 #include "../include/bitmaps/video.h"
 #include "../include/renderFrame.h"
 #include "../include/game.h"
@@ -16,6 +17,7 @@
 #define OPEN_CLI 0x14 // CTRL T
 #define VIDEO 0x16 // CTRL V
 #define GAME 0x01 // CTRL A
+#define ESCAPE 0x1B // ESC
 
 void main()
 {
@@ -38,8 +40,9 @@ void main()
     //             ORPHEUS_SKILL_OPTION_WIDTH,
     //             ORPHEUS_SKILL_OPTION_HEIGHT
     //         );
-    // Draw background image
-    //drawImage(start_x, start_y, welcome_image, WELCOME_WIDTH, WELCOME_HEIGHT);
+
+    //Draw background image
+    drawImage(start_x, start_y, background, 1024, 768);
 
     while(1) {
         // Read character from UART
@@ -56,9 +59,10 @@ void main()
             game_loop();
         } else if(c == DESIGN) {
             design_screen_loop();
-        } else {
+        } else if(c == ESCAPE){
             // Handle normal character drawing
-            drawInputCharacters(c, 0x00FFFFFF, 1);  // Draw regular characters outside CLI popup
+            //drawInputCharacters(c, 0x00FFFFFF, 1);  // Draw regular characters outside CLI popup
+            drawImage(start_x, start_y, background, 1024, 768);
         }
     }
 }
