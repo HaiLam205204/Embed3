@@ -43,13 +43,16 @@ Enemy enemies[MAX_ENEMIES] = {
     {1800, 450, shadow2, 68, 100, 1, 4, 4, 
         //1 //enemy type
     },
-    // Add more enemies as needed
+    // Add more enemies...
 };
 
 #define MAX_WALLS 20
 
 Wall walls[MAX_WALLS] = {
-    {WALL1_START_X, WALL1_START_Y, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1},  // First maze
+    {WALL1_START_X, WALL1_START_Y, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1}, 
+    {WALL2_START_X, WALL2_START_Y, wall2, WALL2_WIDTH, WALL2_HEIGHT, 1}, 
+    {WALL1_START_X, WALL1_START_Y + 768*2 - 63, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1}, 
+    {WALL2_START_X + 1024*2 - 63, WALL2_START_Y, wall2, WALL2_WIDTH, WALL2_HEIGHT, 1},
     // Add more walls...
 };
 

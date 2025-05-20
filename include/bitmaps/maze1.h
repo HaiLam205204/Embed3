@@ -5,8 +5,13 @@
 #define WALL1_START_Y 0
 #define WALL1_WIDTH 2048
 #define WALL1_HEIGHT 63
+#define WALL2_START_X 0
+#define WALL2_START_Y 64
+#define WALL2_WIDTH 63
+#define WALL2_HEIGHT 1473
 
 extern const unsigned long wall1[];
+extern const unsigned long wall2[];
 extern const int maze1_allArray_LEN;
 extern const unsigned long* maze1_allArray[];
 
