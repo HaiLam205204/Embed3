@@ -11,6 +11,7 @@
 #include "../../include/bitmaps/enemy1.h"
 #include "../../include/bitmaps/enemy2.h"
 #include "../../include/bitmaps/maze1.h"
+#include "../../include/bitmaps/protagonist_animation.h"
 
 #define GAME_FRAME_RATE 30                        // 30 FPS
 #define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per 
@@ -33,6 +34,11 @@ int camera_y = 0;
 // World coordinates of sprite
 int protag_world_x = PROTAG_START_X;  
 int protag_world_y = PROTAG_START_Y;
+
+// Static state variables
+static uint32_t animation_frame = 0;
+static uint64_t last_anim_time = 0;
+static int playing_animation = 0;
 
 #define MAX_ENEMIES 10
 
@@ -108,16 +114,19 @@ void game_loop()
                             walls[i].height);
                     }
                 }
+
                 // swap buffer to display frame
                 swap_buffers();
-                uart_puts("\n[FRAME] Swapped buffers");
                 wait_us(16000);
             }
-            first_frame = 0; // toggle flag
+            first_frame = 0; // toggle flag                  
         }
         else
         { // update second frame onwards
             input = uart_getc();
+            if (input) {
+                playing_animation = 1;
+            }
             uart_puts("\n[INPUT]: ");
             uart_sendc(input);
 
@@ -161,10 +170,42 @@ void game_loop()
             render_world_view(camera_x, camera_y);
             
             // Render protagonist relative to camera
+            // At the start of the frame
+            uint64_t now = get_arm_system_time();
             int protag_screen_x = protag_world_x - camera_x;
             int protag_screen_y = protag_world_y - camera_y;
-            drawImage_double_buffering(protag_screen_x, protag_screen_y, 
-                                    myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
+            //drawImage_double_buffering(protag_screen_x, protag_screen_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
+
+            // ✅ Only draw one version of protagonist
+            if (playing_animation) {
+                if (now - last_anim_time >= GAME_FRAME_US) {
+                    drawImage_double_buffering(
+                        protag_screen_x, protag_screen_y,
+                        protagAllArray[animation_frame],
+                        PROTAG_WIDTH, PROTAG_HEIGHT
+                    );
+                    animation_frame++;
+                    last_anim_time = now;
+
+                    if (animation_frame >= protagAllArray_LEN) {
+                        animation_frame = 0;
+                        playing_animation = 0;
+                    }
+                } else {
+                    // Optionally draw last frame again or skip
+                    drawImage_double_buffering(
+                        protag_screen_x, protag_screen_y,
+                        protagAllArray[animation_frame],
+                        PROTAG_WIDTH, PROTAG_HEIGHT
+                    );
+                }
+            } else {
+                drawImage_double_buffering(
+                    protag_screen_x, protag_screen_y,
+                    myBitmapprotag,
+                    PROTAG_WIDTH, PROTAG_HEIGHT
+                );
+            }
             
             swap_buffers();
         }
