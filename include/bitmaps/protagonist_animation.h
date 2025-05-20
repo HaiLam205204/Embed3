@@ -8,6 +8,12 @@
 
 extern const unsigned long protag1[];
 extern const unsigned long protag2[];
+extern const unsigned long protag3[];
+extern const unsigned long protag4[];
+extern const unsigned long protag5[];
+extern const unsigned long protag6[];
+extern const unsigned long protag7[];
+extern const unsigned long protag8[];
 extern const int protagAllArray_LEN;
 extern const unsigned long* protagAllArray[];
 

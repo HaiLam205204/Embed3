@@ -35,7 +35,7 @@ int camera_y = 0;
 int protag_world_x = PROTAG_START_X;  
 int protag_world_y = PROTAG_START_Y;
 
-// Static state variables
+// Static walking animation state
 static uint32_t animation_frame = 0;
 static uint64_t last_anim_time = 0;
 static int playing_animation = 0;
