@@ -15,10 +15,12 @@
 #include "../../include/models/character_sprite.h"
 #include "../../include/models/enemy_sprite.h"
 #include "../../include/models/skill.h"
+//#include "../../include/bitmaps/yellow_triangle.h"
 
 #define MAX_PROTAGONISTS 4
 #define MAX_ENEMIES 3
 
+extern int current_player_turn;
 
 int positions[MAX_PROTAGONISTS][2] = {
     {452, 500},
@@ -41,6 +43,19 @@ void init_protagonists();
 void init_enemies();
 void take_turn(int character_index);
 
+CharacterSprite sprites[MAX_PROTAGONISTS] = {
+        {&protagonists[0], myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT, 452, 500},
+        {&protagonists[1], char1, PROTAG_WIDTH, PROTAG_HEIGHT, 280, 330},
+        {&protagonists[2], char2, 80, 88, 664, 300},
+        {&protagonists[3], char3, PROTAG_WIDTH, PROTAG_HEIGHT, 472, 150}
+    };
+
+EnemySprite enemies_sprites[MAX_ENEMIES] = {
+    {&enemy[0], shadow1, ENEMY1_WIDTH, ENEMY1_HEIGHT, 370, 320 },
+    {&enemy[1], shadow2, ENEMY2_WIDTH, ENEMY2_HEIGHT, 445, 370 },
+    {&enemy[2], shadow1, ENEMY1_WIDTH, ENEMY1_HEIGHT, 520, 320 },
+};
+
 void design_screen_loop()
 {
     uart_puts("[DESIGN_SCREEN] Entering Design Screen...\n");
@@ -49,19 +64,6 @@ void design_screen_loop()
 
     init_protagonists();
     init_enemies();
-    CharacterSprite sprites[MAX_PROTAGONISTS] = {
-        {&protagonists[0], myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT, 452, 500},
-        {&protagonists[1], char1, PROTAG_WIDTH, PROTAG_HEIGHT, 280, 330},
-        {&protagonists[2], char2, 80, 88, 664, 300},
-        {&protagonists[3], char3, PROTAG_WIDTH, PROTAG_HEIGHT, 472, 150}
-    };
-
-    EnemySprite enemies_sprites[MAX_ENEMIES] = {
-        {&enemy[0], shadow1, ENEMY1_WIDTH, ENEMY1_HEIGHT, 370, 320 },
-        {&enemy[1], shadow2, ENEMY2_WIDTH, ENEMY2_HEIGHT, 445, 370 },
-        {&enemy[2], shadow1, ENEMY1_WIDTH, ENEMY1_HEIGHT, 520, 320 },
-    };
-
     while (1)
     {
         if (first_frame)
@@ -74,6 +76,7 @@ void design_screen_loop()
                 for (int i = 0; i < MAX_PROTAGONISTS; ++i)
                 {
                     draw_character_sprite(&sprites[i]);
+                    draw_turn_indicator(&sprites[current_player_turn], 20 ,20);
                 }
 
                 for (int i = 0; i < MAX_ENEMIES; ++i) {
@@ -86,31 +89,10 @@ void design_screen_loop()
         } 
 
         combat_utility_UI(protagonists, MAX_PROTAGONISTS, enemy, MAX_ENEMIES);
-        // Simple turn iteration
-        // uart_puts("[TURN] It's ");
-        // uart_puts(protagonists[turn_index].name);
-        // uart_puts("'s turn!\n");
-
-        // take_turn(turn_index);
-
-        // // Move to the next character, looping around
-        // turn_index = (turn_index + 1) % MAX_PROTAGONISTS;
-
-        // // Bỏ mấy cái action logic vào
-        // uart_puts("Press any key to proceed to the next turn...\n");
-        // uart_getc();
     }
 
     uart_puts("[DESIGN_SCREEN] Design Screen Render Complete.\n");
 }
-
-// void take_turn(int character_index)
-// {
-//     Character *character = &protagonists[character_index];
-//     uart_puts("[ACTION] ");
-//     uart_puts(character->name);
-//     uart_puts(" takes a simple action.\n");
-// }
 
 void init_protagonists()
 {
@@ -153,31 +135,33 @@ void init_enemies()
     enemy[2].enemy_type = 1; // shadow1 reused
 }
 
-void redraw_combat_screen()
+void redraw_combat_screen(int current_player_turn)
 {
     uart_puts("[REDRAW_COMBAT_UI] Redrawing combat screen...\n");
-
+    uart_puts("Current player turn: ");
+    uart_putint(current_player_turn);
+    uart_puts("\n");
     // Draw background
     drawImage_double_buffering(MAP_START_X, MAP_START_Y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
 
     // Redraw protagonists with correct sprites and HP bars
-    CharacterSprite sprites[MAX_PROTAGONISTS] = {
-        {&protagonists[0], myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT, 452, 500},
-        {&protagonists[1], char1, PROTAG_WIDTH, PROTAG_HEIGHT, 280, 330},
-        {&protagonists[2], char2, 80, 88, 664, 300},
-        {&protagonists[3], char3, PROTAG_WIDTH, PROTAG_HEIGHT, 472, 150}
-    };
+    // CharacterSprite sprites[MAX_PROTAGONISTS] = {
+    //     {&protagonists[0], myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT, 452, 500},
+    //     {&protagonists[1], char1, PROTAG_WIDTH, PROTAG_HEIGHT, 280, 330},
+    //     {&protagonists[2], char2, 80, 88, 664, 300},
+    //     {&protagonists[3], char3, PROTAG_WIDTH, PROTAG_HEIGHT, 472, 150}
+    // };
 
     for (int i = 0; i < MAX_PROTAGONISTS; ++i) {
         draw_character_sprite(&sprites[i]);
     }
 
     // Redraw enemies with correct sprites and HP bars
-    EnemySprite enemies_sprites[MAX_ENEMIES] = {
-        {&enemy[0], shadow1, ENEMY1_WIDTH, ENEMY1_HEIGHT, 370, 320 },
-        {&enemy[1], shadow2, ENEMY2_WIDTH, ENEMY2_HEIGHT, 445, 370 },
-        {&enemy[2], shadow1, ENEMY1_WIDTH, ENEMY1_HEIGHT, 520, 320 }
-    };
+    // EnemySprite enemies_sprites[MAX_ENEMIES] = {
+    //     {&enemy[0], shadow1, ENEMY1_WIDTH, ENEMY1_HEIGHT, 370, 320 },
+    //     {&enemy[1], shadow2, ENEMY2_WIDTH, ENEMY2_HEIGHT, 445, 370 },
+    //     {&enemy[2], shadow1, ENEMY1_WIDTH, ENEMY1_HEIGHT, 520, 320 }
+    // };
 
     for (int i = 0; i < MAX_ENEMIES; ++i) {
         draw_enemy_sprite(&enemies_sprites[i]);
@@ -190,6 +174,14 @@ void redraw_combat_screen()
     draw_run_button(0);
     draw_skill_button(0);
 
+
+    // === Yellow triangle turn indicator ===
+    CharacterSprite *current_sprite = &sprites[current_player_turn];
+
+    int triangle_x = current_sprite->pos_x + (current_sprite->width / 2) - (40 / 2);
+    int triangle_y = current_sprite->pos_y + current_sprite->height + 5; // Just below the sprite
+
+    draw_turn_indicator(current_sprite, triangle_x, triangle_y);
     // Show updated buffer
     swap_buffers();
 }

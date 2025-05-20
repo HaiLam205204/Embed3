@@ -13,9 +13,11 @@
 #include "../../../include/bitmaps/Orpheus_Skill_Option.h"
 #include "../../../include/bitmaps/Pixie_Skill_Option.h"
 #include "../../../include/models/character.h"
+#include "../../../include/models/character_sprite.h"
 #include "../../../include/models/enemy.h"
 #include "../../../include/game_design.h"
 #include "../../../include/combat.h"
+#include "../../../include/bitmaps/yellow_triangle.h"
 
 #define GAME_FRAME_RATE 30                        // e.g., 30 FPS
 #define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per frame
@@ -121,7 +123,25 @@ void draw_skill_option_screen(int persona, int option) {
     } 
 }
 
+void draw_turn_indicator(CharacterSprite* sprite, int triangle_x, int triangle_y ) {
+
+    if (triangle_x == 0 && triangle_y == 0) {
+        triangle_x = sprite->pos_x + (sprite->width / 2) - (TRIANGLE_WIDTH / 2);
+        triangle_y = sprite->pos_y + sprite->height + 5;
+    }
+     // 5px below the sprite
+    drawImage_double_buffering(
+        triangle_x,
+        triangle_y,
+        epd_bitmap_triangle_turn_indicator,
+        TRIANGLE_WIDTH,
+        TRIANGLE_HEIGHT
+    );
+}
+
 int turn_index = 0; // Track whose turn it is
+extern int current_player_turn = 0; // 0 to 3 for 4 characters
+int selected_enemy_index = 0;
 
 void combat_utility_UI(Character protagonists[], int num_protagonists, Enemy enemy[], int num_enemies) {
     int button_pressed_attack = 0;
@@ -133,7 +153,8 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, Enemy ene
     uint64_t button_pressed_time = 0;
     int exit_ui = 0;  // <-- Flag to exit loop
 
-    turn_index = (turn_index + 1) % num_enemies;
+    // turn_index = (turn_index + 1) % num_enemies;
+    current_player_turn = (current_player_turn + 1) % 4;
 
     uart_puts("[PLAYERS]\n");
     for (int i = 0; i < num_protagonists; ++i) {
@@ -183,7 +204,11 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, Enemy ene
                     button_pressed_attack = 1;
                     button_pressed_time = start_time;
                     uart_puts("ATTACK\n");
-                    // exit_ui = 1;
+                    // Set current action
+                    protagonists[current_player_turn].current_action.type = ACTION_ATTACK;
+                    redraw_combat_screen(current_player_turn);
+                    redraw_combat_screen(current_player_turn);
+                    exit_ui = 1;  
                 }
                 if (input == ITEM) {
                     button_pressed_item = 1;
@@ -230,15 +255,15 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, Enemy ene
                     // Select persona
                     current_screen = SCREEN_COMBAT;
                     button_pressed_persona = 0; // <-- ensure button state is reset 
-                    redraw_combat_screen();
-                    redraw_combat_screen();  
+                    redraw_combat_screen(current_player_turn);
+                    redraw_combat_screen(current_player_turn);  
                     uart_puts("[DEBUG] Persona Confirmed, returning to combat\n");
                 } 
                 else if (input == KEY_ESC) {  // ESC to cancel
                     current_screen = SCREEN_COMBAT;
                     button_pressed_persona = 0; // <-- reset state
-                    redraw_combat_screen(); 
-                    redraw_combat_screen(); 
+                    redraw_combat_screen(current_player_turn); 
+                    redraw_combat_screen(current_player_turn); 
                     uart_puts("[DEBUG] Persona Cancelled, returning to combat\n");
                 }
             }
@@ -268,15 +293,15 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, Enemy ene
                 } else if (input == KEY_ESC) {
                     current_screen = SCREEN_COMBAT;
                     button_pressed_skill = 0;
-                    redraw_combat_screen();
-                    redraw_combat_screen();
+                    redraw_combat_screen(current_player_turn);
+                    redraw_combat_screen(current_player_turn);
                     uart_puts("[DEBUG] Skill Menu Cancelled, returning to combat\n");
                 } else if (input == KEY_ENTER) {  // Enter
                     // selected_persona = persona_option; // <-- Save selected persona
                     current_screen = SCREEN_COMBAT;
                     button_pressed_persona = 0; // <-- ensure button state is reset 
-                    redraw_combat_screen();
-                    redraw_combat_screen();  
+                    redraw_combat_screen(current_player_turn);
+                    redraw_combat_screen(current_player_turn);  
                     uart_puts("[DEBUG] Skill Menu Confirmed, returning to combat\n");
                 }
             }
