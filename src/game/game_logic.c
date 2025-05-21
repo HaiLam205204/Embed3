@@ -5,6 +5,7 @@
 #include "../../include/bitmaps/enemy2.h"
 #include "../../include/uart0.h"
 #include "../../include/utils.h"
+#include "../../include/game_design.h"
 
 int num_enemies = 3;  // <- THIS IS THE DEFINITION
 
@@ -104,6 +105,9 @@ void enemy_turn(Character *protagonists, int num_protagonists) {
                     protagonists[j].current_hp = 0;
             }
         }
+
+        redraw_combat_screen(0, 0);
+        redraw_combat_screen(0, 0);
 
         // print_number(attack_type);
         wait_us(2000000ULL);  // wait 2,000,000 microseconds = 2 seconds

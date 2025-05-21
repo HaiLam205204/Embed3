@@ -360,8 +360,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                             if (all_characters_have_acted(protagonists, num_protagonists)) {
                                 current_screen = SCREEN_ENEMY_COUNTER_ATTACK;
                             }
-
-
+                            
                             // Redraw the screen
                             redraw_combat_screen(current_player_turn, 0);
                             redraw_combat_screen(current_player_turn, 0);
