@@ -140,6 +140,8 @@ void cli_loop() {
             // Reset cursor position
             cursorX = CLI_LEFT + 1;
             cursorY = CLI_TOP + 1;
+            // Draw background image
+            drawImage(0, 0, background, 1024, 768);
             return;              // Exit CLI mode
         }
 

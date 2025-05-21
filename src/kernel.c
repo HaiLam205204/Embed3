@@ -46,7 +46,7 @@ void main()
 
     while(1) {
         // Read character from UART
-        char c = uart_getc();
+        char c = getUart();
         uart_sendc(c);  // Echo character back
 
         if (c == OPEN_CLI) {
@@ -59,10 +59,6 @@ void main()
             game_loop();
         } else if(c == DESIGN) {
             design_screen_loop();
-        } else if(c == ESCAPE){
-            // Handle normal character drawing
-            //drawInputCharacters(c, 0x00FFFFFF, 1);  // Draw regular characters outside CLI popup
-            drawImage(start_x, start_y, background, 1024, 768);
-        }
+        } 
     }
 }

@@ -4,6 +4,7 @@
 #include "../../include/gpio.h"
 #include "../../include/utils.h"
 #include "../../include/renderFrame.h"
+#include "../../include/bitmaps/welcomeScreen.h"
 #include "../../include/bitmaps/game_map.h"
 #include "../../include/bitmaps/game_map_4x.h"
 #include "../../include/bitmaps/protagonist_sprite.h"
@@ -94,6 +95,7 @@ void game_loop() {
             input = uart_getc();
             // detect non-blocking input 
             if(input == ESCAPE){ 
+                drawImage(0, 0, background, 1024, 768);
                 break;
             }
 
