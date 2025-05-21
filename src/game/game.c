@@ -42,7 +42,9 @@ int anim_playing = 0;
 
 Enemy enemies[MAX_ENEMIES] = {
     
-    {1300, 1000, shadow1, 136, 88, 1, 4, 4, 
+    {1300, 1000, shadow1, 136, 88, 
+        1, // active
+        4, 4, // hitbox 
         //1 //enemy type
     },
     {1800, 450, shadow2, 68, 100, 1, 4, 4, 
