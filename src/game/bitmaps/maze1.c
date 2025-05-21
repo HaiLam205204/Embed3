@@ -1870,8 +1870,8 @@ const unsigned long wall4 [] = {
 };
 
 // Array of all bitmaps for convenience. (Total bytes used to store images in PROGMEM = 496)
-const int maze1_allArray_LEN = 2;
-const unsigned long* maze1_allArray[2] = {
+const int maze1_allArray_LEN = 4;
+const unsigned long* maze1_allArray[4] = {
 	wall1,
 	wall2,
 	wall3,
