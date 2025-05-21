@@ -13,6 +13,7 @@
 #include "../../include/bitmaps/enemy2.h"
 #include "../../include/bitmaps/maze1.h"
 #include "../../include/bitmaps/protagonist_animation.h"
+#include "../../include/game_design.h"
 
 // --- Constants ---
 #define STEP 10
@@ -128,7 +129,8 @@ void game_loop() {
                     enemies[i].height - 2*enemies[i].collision_offset_y
                 )) {
                     uart_puts("\n[COMBAT] Enemy contact!");
-                    battle_screen_loop(enemies[i].enemy_type);
+                    //battle_screen_loop(enemies[i].enemy_type);
+                    design_screen_loop();
                     first_frame = 1;
                     break;
                 }
