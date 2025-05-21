@@ -23,5 +23,6 @@
         "game_combat.h": "c",
         "video.h": "c",
         "welcomescreen.h": "c"
+
     }
 }

@@ -167,3 +167,4 @@ int convert(char s[]);
 void set_baudrate(int baudrate);
 void uart_set_flow_control(int enable);
 int uart_input_available();
+void uart_putint(int num);
