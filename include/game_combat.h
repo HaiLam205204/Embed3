@@ -1,5 +1,6 @@
 #include "framebf.h"
 #include "models/character_sprite.h"
+#include "models/enemy_sprite.h"
 
 // Define keyboard key codes (ASCII or custom)
 #define ATTACK 0x71  // 'q'
@@ -29,13 +30,20 @@ void draw_skill_option_screen(int persona, int option);
 
 void wait_for_button_release_animation();
 
+int get_enemy_x_position(int index);
+int get_enemy_y_position(int index);
+void draw_attack_target_screen(int target_index);
+
 void draw_turn_indicator(CharacterSprite* sprite, int triangle_x, int triangle_y);
+void draw_enemy_selected(EnemySprite *sprite, int triangle_x, int triangle_y );
 typedef enum {
     SCREEN_COMBAT,
     SCREEN_PERSONA_MENU,
     SCREEN_SKILL_MENU,
     SCREEN_SELECT_ENEMY
 } GameScreen;
+
+extern GameScreen current_screen;  // <-- extern declaration
 
 extern int current_player_turn;
 

@@ -3,7 +3,7 @@
 #include "../../include/models/character.h"
 #include "../../include/uart0.h"
 
-extern Enemy enemy[MAX_ENEMIES]; // Access the enemy array
+extern EnemyModel enemy[MAX_ENEMIES]; // Access the enemy array
 
 #define FIREBOLT_DAMAGE 25
 #define EARTHQUAKE_DAMAGE 15

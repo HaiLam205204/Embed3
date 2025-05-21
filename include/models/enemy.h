@@ -12,8 +12,8 @@ typedef struct {
     int current_hp;
     int enemy_type;  // 1 or 2
     Skill skills[MAX_SKILLS_PER_ENEMY];
-} Enemy;
+} EnemyModel;
 
-extern Enemy enemies[MAX_ENEMIES];
+extern EnemyModel enemies[MAX_ENEMIES];
 
 #endif

@@ -36,7 +36,7 @@ int enemy_positions[MAX_ENEMIES][2] = {
 };
 
 Character protagonists[MAX_PROTAGONISTS];
-Enemy enemy[MAX_ENEMIES];
+EnemyModel enemy[MAX_ENEMIES];
 
 // Function prototypes
 void init_protagonists();
@@ -76,7 +76,7 @@ void design_screen_loop()
                 for (int i = 0; i < MAX_PROTAGONISTS; ++i)
                 {
                     draw_character_sprite(&sprites[i]);
-                    draw_turn_indicator(&sprites[current_player_turn], 20 ,20);
+                    // draw_turn_indicator(&sprites[current_player_turn], 20 ,20);
                 }
 
                 for (int i = 0; i < MAX_ENEMIES; ++i) {
@@ -135,7 +135,7 @@ void init_enemies()
     enemy[2].enemy_type = 1; // shadow1 reused
 }
 
-void redraw_combat_screen(int current_player_turn)
+void redraw_combat_screen(int current_player_turn, int selected_enemy_index)
 {
     uart_puts("[REDRAW_COMBAT_UI] Redrawing combat screen...\n");
     uart_puts("Current player turn: ");
@@ -144,24 +144,9 @@ void redraw_combat_screen(int current_player_turn)
     // Draw background
     drawImage_double_buffering(MAP_START_X, MAP_START_Y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
 
-    // Redraw protagonists with correct sprites and HP bars
-    // CharacterSprite sprites[MAX_PROTAGONISTS] = {
-    //     {&protagonists[0], myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT, 452, 500},
-    //     {&protagonists[1], char1, PROTAG_WIDTH, PROTAG_HEIGHT, 280, 330},
-    //     {&protagonists[2], char2, 80, 88, 664, 300},
-    //     {&protagonists[3], char3, PROTAG_WIDTH, PROTAG_HEIGHT, 472, 150}
-    // };
-
     for (int i = 0; i < MAX_PROTAGONISTS; ++i) {
         draw_character_sprite(&sprites[i]);
     }
-
-    // Redraw enemies with correct sprites and HP bars
-    // EnemySprite enemies_sprites[MAX_ENEMIES] = {
-    //     {&enemy[0], shadow1, ENEMY1_WIDTH, ENEMY1_HEIGHT, 370, 320 },
-    //     {&enemy[1], shadow2, ENEMY2_WIDTH, ENEMY2_HEIGHT, 445, 370 },
-    //     {&enemy[2], shadow1, ENEMY1_WIDTH, ENEMY1_HEIGHT, 520, 320 }
-    // };
 
     for (int i = 0; i < MAX_ENEMIES; ++i) {
         draw_enemy_sprite(&enemies_sprites[i]);
@@ -182,6 +167,13 @@ void redraw_combat_screen(int current_player_turn)
     int triangle_y = current_sprite->pos_y + current_sprite->height + 5; // Just below the sprite
 
     draw_turn_indicator(current_sprite, triangle_x, triangle_y);
+    // === Highlight selected enemy if in selection screen ===
+    if (current_screen == SCREEN_SELECT_ENEMY) {
+        EnemySprite *selected_enemy = &enemies_sprites[selected_enemy_index];
+        int enemy_triangle_x = selected_enemy->pos_x + (selected_enemy->width / 2) - (40 / 2);
+        int enemy_triangle_y = selected_enemy->pos_y + selected_enemy->height + 5;
+        draw_enemy_selected(selected_enemy, enemy_triangle_x, enemy_triangle_y);
+    }
     // Show updated buffer
     swap_buffers();
 }

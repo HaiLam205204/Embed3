@@ -22,6 +22,9 @@ typedef struct {
         Persona persona;
         int run_flag;  
     } action_data;
+
+    int skill_index;    // only if applicable
+    int target_enemy;   // index of the target enemy (0-based)
 } Action;
 
 #endif

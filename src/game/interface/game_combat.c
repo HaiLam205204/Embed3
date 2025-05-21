@@ -14,10 +14,12 @@
 #include "../../../include/bitmaps/Pixie_Skill_Option.h"
 #include "../../../include/models/character.h"
 #include "../../../include/models/character_sprite.h"
+#include "../../../include/models/enemy_sprite.h"
 #include "../../../include/models/enemy.h"
 #include "../../../include/game_design.h"
 #include "../../../include/combat.h"
 #include "../../../include/bitmaps/yellow_triangle.h"
+
 
 #define GAME_FRAME_RATE 30                        // e.g., 30 FPS
 #define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per frame
@@ -139,11 +141,27 @@ void draw_turn_indicator(CharacterSprite* sprite, int triangle_x, int triangle_y
     );
 }
 
+void draw_enemy_selected(EnemySprite *sprite, int triangle_x, int triangle_y ) {
+
+    if (triangle_x == 0 && triangle_y == 0) {
+        triangle_x = sprite->pos_x + (sprite->width / 2) - (TRIANGLE_WIDTH / 2);
+        triangle_y = sprite->pos_y + sprite->height - 20;
+    }
+     // 5px below the sprite
+    drawImage_double_buffering(
+        triangle_x,
+        triangle_y,
+        epd_bitmap_triangle_turn_indicator,
+        TRIANGLE_WIDTH,
+        TRIANGLE_HEIGHT
+    );
+}
+
 int turn_index = 0; // Track whose turn it is
 extern int current_player_turn = 0; // 0 to 3 for 4 characters
-int selected_enemy_index = 0;
+int selected_enemy = 0;
 
-void combat_utility_UI(Character protagonists[], int num_protagonists, Enemy enemy[], int num_enemies) {
+void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyModel enemy[], int num_enemies) {
     int button_pressed_attack = 0;
     int button_pressed_item = 0;
     int button_pressed_persona = 0;
@@ -154,7 +172,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, Enemy ene
     int exit_ui = 0;  // <-- Flag to exit loop
 
     // turn_index = (turn_index + 1) % num_enemies;
-    current_player_turn = (current_player_turn + 1) % 4;
+    // current_player_turn = (current_player_turn + 1) % 4;
 
     uart_puts("[PLAYERS]\n");
     for (int i = 0; i < num_protagonists; ++i) {
@@ -205,10 +223,15 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, Enemy ene
                     button_pressed_time = start_time;
                     uart_puts("ATTACK\n");
                     // Set current action
-                    protagonists[current_player_turn].current_action.type = ACTION_ATTACK;
-                    redraw_combat_screen(current_player_turn);
-                    redraw_combat_screen(current_player_turn);
-                    exit_ui = 1;  
+                    // protagonists[current_player_turn].current_action.type = ACTION_ATTACK;
+                    // redraw_combat_screen(current_player_turn);
+                    // redraw_combat_screen(current_player_turn);
+                    // exit_ui = 1; 
+                    
+                    selected_enemy = 0;  // Default target
+                    current_screen = SCREEN_SELECT_ENEMY;
+                    redraw_combat_screen(current_player_turn, 0);
+                    redraw_combat_screen(current_player_turn, 0);
                 }
                 if (input == ITEM) {
                     button_pressed_item = 1;
@@ -255,15 +278,15 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, Enemy ene
                     // Select persona
                     current_screen = SCREEN_COMBAT;
                     button_pressed_persona = 0; // <-- ensure button state is reset 
-                    redraw_combat_screen(current_player_turn);
-                    redraw_combat_screen(current_player_turn);  
+                    redraw_combat_screen(current_player_turn, 0);
+                    redraw_combat_screen(current_player_turn, 0);  
                     uart_puts("[DEBUG] Persona Confirmed, returning to combat\n");
                 } 
                 else if (input == KEY_ESC) {  // ESC to cancel
                     current_screen = SCREEN_COMBAT;
                     button_pressed_persona = 0; // <-- reset state
-                    redraw_combat_screen(current_player_turn); 
-                    redraw_combat_screen(current_player_turn); 
+                    redraw_combat_screen(current_player_turn, 0); 
+                    redraw_combat_screen(current_player_turn, 0); 
                     uart_puts("[DEBUG] Persona Cancelled, returning to combat\n");
                 }
             }
@@ -293,16 +316,53 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, Enemy ene
                 } else if (input == KEY_ESC) {
                     current_screen = SCREEN_COMBAT;
                     button_pressed_skill = 0;
-                    redraw_combat_screen(current_player_turn);
-                    redraw_combat_screen(current_player_turn);
+                    redraw_combat_screen(current_player_turn, 0);
+                    redraw_combat_screen(current_player_turn, 0);
                     uart_puts("[DEBUG] Skill Menu Cancelled, returning to combat\n");
                 } else if (input == KEY_ENTER) {  // Enter
                     // selected_persona = persona_option; // <-- Save selected persona
                     current_screen = SCREEN_COMBAT;
                     button_pressed_persona = 0; // <-- ensure button state is reset 
-                    redraw_combat_screen(current_player_turn);
-                    redraw_combat_screen(current_player_turn);  
+                    redraw_combat_screen(current_player_turn, 0);
+                    redraw_combat_screen(current_player_turn, 0);  
                     uart_puts("[DEBUG] Skill Menu Confirmed, returning to combat\n");
+                }
+            }
+            else if (current_screen == SCREEN_SELECT_ENEMY && selected_enemy >= 0) {
+                int selecting = 1;
+                redraw_combat_screen(current_player_turn, selected_enemy);
+                redraw_combat_screen(current_player_turn, selected_enemy);
+                while(selecting){
+                        if (uart_input_available()) {
+                        char input = uart_getc();  // <--- Get input each loop
+                        if (input == 'i' && selected_enemy > 0) {
+                            selected_enemy--;
+                            redraw_combat_screen(current_player_turn, selected_enemy);
+                            redraw_combat_screen(current_player_turn, selected_enemy);
+                        } else if (input == 'p' && selected_enemy < num_enemies - 1) {
+                            selected_enemy++;
+                            redraw_combat_screen(current_player_turn, selected_enemy);
+                            redraw_combat_screen(current_player_turn, selected_enemy);
+                        } else if (input == KEY_ENTER) {
+                            protagonists[current_player_turn].current_action.type = ACTION_ATTACK;
+                            protagonists[current_player_turn].current_action.target_enemy = selected_enemy;
+                            current_screen = SCREEN_COMBAT;
+                            button_pressed_attack = 0;
+                            selecting = 0;
+                            exit_ui = 1;
+                            current_player_turn = (current_player_turn + 1) % 4;
+                            redraw_combat_screen(current_player_turn, 0);
+                            redraw_combat_screen(current_player_turn, 0);
+                            uart_puts("[DEBUG] Attack target confirmed\n");
+                        } else if (input == KEY_ESC) {
+                            current_screen = SCREEN_COMBAT;
+                            button_pressed_attack = 0;
+                            selecting = 0;
+                            redraw_combat_screen(current_player_turn, 0);
+                            redraw_combat_screen(current_player_turn, 0);
+                            uart_puts("[DEBUG] Attack target cancelled\n");
+                        }
+                    }
                 }
             }
         }
@@ -377,6 +437,25 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, Enemy ene
 //         PERSONA_OPTION_HEIGHT,
 //         0xFF000000
 //     );
+// }
+
+// void draw_attack_target_screen(int target_index) {
+//     redraw_combat_screen(current_player_turn); // Reuse existing UI
+
+//     // Draw triangle over the enemy at target_index
+//     int x = get_enemy_x_position(target_index); // You define this
+//     int y = get_enemy_y_position(target_index); // You define this
+
+//     drawImage_double_buffering( x, y, epd_bitmap_triangle_turn_indicator, TRIANGLE_WIDTH,
+//         TRIANGLE_HEIGHT);
+// }
+
+// int get_enemy_x_position(int index) {
+//     return 250 + index * 60; // Adjust based on spacing of enemies
+// }
+
+// int get_enemy_y_position(int index) {
+//     return 80; // Y position above enemy sprite
 // }
 
 
