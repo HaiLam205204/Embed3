@@ -26,6 +26,9 @@
         "character_sprite.h": "c",
         "orpheus_skill_option.h": "c",
         "combat.h": "c",
-        "yellow_trianble.h": "c"
+        "yellow_trianble.h": "c",
+        "enemy_sprite.h": "c",
+        "yellow_triangle.h": "c",
+        "game_logic.h": "c"
     }
 }

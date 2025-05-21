@@ -221,6 +221,14 @@ void* memcpy(void *dest, const void *src, unsigned long n) {
     return dest;  // Add this line
 }
 
+void *memset(void *ptr, int value, unsigned int num) {
+    unsigned char *p = (unsigned char *)ptr;
+    while (num--) {
+        *p++ = (unsigned char)value;
+    }
+    return ptr;
+}
+
 const char* welcome_message = 
 "8888888888 8888888888 8888888888 88888888888 .d8888b.      d8888   .d8888b.   .d8888b.  \n"
 "888        888        888            888    d88P  Y88b    d8P888  d88P  Y88b d88P  Y88b \n"

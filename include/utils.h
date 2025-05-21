@@ -8,4 +8,5 @@ unsigned char getUart();
 void wait_us(uint64_t usVal);
 void set_wait_timer(int set, uint64_t usVal);
 void* memcpy(void *dest, const void *src, unsigned long n);
+void *memset(void *ptr, int value, unsigned int num);
 extern const char* welcome_message;

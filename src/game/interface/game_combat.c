@@ -19,6 +19,7 @@
 #include "../../../include/game_design.h"
 #include "../../../include/combat.h"
 #include "../../../include/bitmaps/yellow_triangle.h"
+#include "../../../include/game_logic.h"
 
 
 #define GAME_FRAME_RATE 30                        // e.g., 30 FPS
@@ -351,6 +352,23 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                             selecting = 0;
                             exit_ui = 1;
                             current_player_turn = (current_player_turn + 1) % 4;
+
+                            // Perform damage
+                            // int base_damage = 30;
+                            // enemy[selected_enemy].current_hp -= base_damage;
+                            // if (enemy[selected_enemy].current_hp < 0) {
+                            //     enemy[selected_enemy].current_hp = 0;
+                            // }
+
+                            // uart_puts("[DEBUG] Enemy HP after attack: ");
+                            // uart_dec(enemy[selected_enemy].current_hp);
+                            // uart_puts("\n");
+
+                            int base_damage = 30;
+                            deal_damage(selected_enemy, base_damage);
+
+
+                            // Redraw the screen
                             redraw_combat_screen(current_player_turn, 0);
                             redraw_combat_screen(current_player_turn, 0);
                             uart_puts("[DEBUG] Attack target confirmed\n");
