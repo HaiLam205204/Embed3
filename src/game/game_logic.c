@@ -1,5 +1,6 @@
 #include "../../include/game_logic.h"
 #include "../../include/models/enemy.h"
+#include "../../include/models/character.h"
 #include "../../include/bitmaps/enemy1.h"
 #include "../../include/bitmaps/enemy2.h"
 #include "../../include/uart0.h"
@@ -31,7 +32,7 @@ void deal_damage(int index, int amount) {
     uart_puts("[DEBUG] Enemy: ");
     uart_puts(enemy[i].name);
     uart_puts(" Sprite pos_x: ");
-    uart_dec(enemy_sprites[i].pos_x); // assuming `id` or similar exists
+    uart_dec(enemy_sprites[i].pos_x); 
     uart_puts("\n");
     }
 }
@@ -61,4 +62,65 @@ void recalculate_enemy_sprite_positions() {
     for (int i = 0; i < num_enemies; i++) {
         enemy_sprites[i].pos_x = base_x + spacing * i;
     }
+}
+
+void enemy_turn(Character *protagonists, int num_protagonists) {
+    uart_puts("[ENEMY TURN] Enemies are attacking...\n");
+
+    for (int i = 0; i < num_enemies; ++i) {
+        EnemyModel *e = &enemy[i];
+
+        // Choose an attack type: 0 = single-target, 1 = AoE
+        int attack_type = rand_0_or_1();
+
+        if (attack_type == 0) {
+            // Single-target attack
+            int target_index = rand_0_to_3();
+            int damage = 30;  // Example damage
+
+            protagonists[target_index].current_hp -= damage;
+            if (protagonists[target_index].current_hp < 0)
+                protagonists[target_index].current_hp = 0;
+
+            uart_puts("[ENEMY TURN] ");
+            uart_puts(e->name);
+            uart_puts(" attacks ");
+            uart_puts(protagonists[target_index].name);
+            uart_puts(" for ");
+            uart_dec(damage);
+            uart_puts(" damage!\n");
+
+        } else {
+            // AoE attack
+            int damage = 20;
+
+            uart_puts("[ENEMY TURN] ");
+            uart_puts(e->name);
+            uart_puts(" uses AoE attack!\n");
+
+            for (int j = 0; j < num_protagonists; ++j) {
+                protagonists[j].current_hp -= damage;
+                if (protagonists[j].current_hp < 0)
+                    protagonists[j].current_hp = 0;
+            }
+        }
+
+        // print_number(attack_type);
+        wait_us(2000000ULL);  // wait 2,000,000 microseconds = 2 seconds
+    }
+}
+
+void reset_player_turns(Character *protagonists, int num_protagonists) {
+    for (int i = 0; i < num_protagonists; ++i) {
+        protagonists[i].has_acted = 0;
+    }
+}
+
+int all_characters_have_acted(Character *protagonists, int num_protagonists) {
+    for (int i = 0; i < num_protagonists; ++i) {
+        if (protagonists[i].current_hp > 0 && protagonists[i].has_acted == 0) {
+            return 0; // Someone hasn't acted yet
+        }
+    }
+    return 1; // All have acted
 }

@@ -352,20 +352,14 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                             selecting = 0;
                             exit_ui = 1;
                             current_player_turn = (current_player_turn + 1) % 4;
+                            protagonists[current_player_turn].has_acted = 1;
 
-                            // Perform damage
-                            // int base_damage = 30;
-                            // enemy[selected_enemy].current_hp -= base_damage;
-                            // if (enemy[selected_enemy].current_hp < 0) {
-                            //     enemy[selected_enemy].current_hp = 0;
-                            // }
-
-                            // uart_puts("[DEBUG] Enemy HP after attack: ");
-                            // uart_dec(enemy[selected_enemy].current_hp);
-                            // uart_puts("\n");
-
-                            int base_damage = 30;
+                            int base_damage = 20;
                             deal_damage(selected_enemy, base_damage);
+
+                            if (all_characters_have_acted(protagonists, num_protagonists)) {
+                                current_screen = SCREEN_ENEMY_COUNTER_ATTACK;
+                            }
 
 
                             // Redraw the screen
@@ -382,6 +376,12 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                         }
                     }
                 }
+            } else if (current_screen == SCREEN_ENEMY_COUNTER_ATTACK) {
+                enemy_turn(protagonists, num_protagonists);
+                reset_player_turns(protagonists, num_protagonists);
+                current_screen = SCREEN_COMBAT;
+                redraw_combat_screen(current_player_turn, 0);
+                redraw_combat_screen(current_player_turn, 0);
             }
         }
         // Draw button based on state

@@ -254,3 +254,44 @@ const char* welcome_message =
     "             <NGUYEN TRONG KHOA> - <S3978477>\n"
     "Ctrl + T to access the CLI, Ctrl + A to run the game\n";                                                  
 
+
+// Your PRNG from before
+static uint64_t rand_state = 0;
+
+void srand_custom(uint64_t seed) {
+    rand_state = seed ? seed : 0xdeadbeefcafebabeULL;
+}
+
+uint64_t rand_custom() {
+    uint64_t x = rand_state;
+    x ^= x >> 12;
+    x ^= x << 25;
+    x ^= x >> 27;
+    rand_state = x;
+    return x * 2685821657736338717ULL;
+}
+
+uint64_t get_arm_system_time();
+
+void wait_us(uint64_t usVal);
+
+// void print_number(uint64_t n); // You will replace with your actual print routine
+
+uint64_t rand_0_or_1() {
+    return get_arm_system_time() & 1; // Fastest way to get a random bit
+}
+
+uint64_t rand_0_to_3() {
+    return get_arm_system_time() % 4;
+}
+
+// void run_random_prints() {
+//     srand_custom(get_arm_system_time());
+
+//     for (int i = 0; i < 3; i++) {
+//         uint64_t number = rand_0_to_3();
+//         print_number(number);
+
+//         wait_us(2000000ULL);  // wait 2,000,000 microseconds = 2 seconds
+//     }
+// }

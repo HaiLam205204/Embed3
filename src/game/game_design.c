@@ -104,24 +104,24 @@ void init_protagonists()
 
     strcpy(protagonists[1].name, "Ally1");
     protagonists[1].is_main_character = 0;
-    protagonists[1].current_hp = 80;
+    protagonists[1].current_hp = 100;
     protagonists[1].max_hp = 100;
 
     strcpy(protagonists[2].name, "Ally2");
     protagonists[2].is_main_character = 0;
-    protagonists[2].current_hp = 50;
+    protagonists[2].current_hp = 100;
     protagonists[2].max_hp = 100;
 
     strcpy(protagonists[3].name, "Ally3");
     protagonists[3].is_main_character = 0;
-    protagonists[3].current_hp = 20;
+    protagonists[3].current_hp = 100;
     protagonists[3].max_hp = 100;
 }
 
 void init_enemies()
 {
     strcpy(enemy[0].name, "Enemy1");
-    enemy[0].current_hp = 30;
+    enemy[0].current_hp = 60;
     enemy[0].max_hp = 60;
     enemy[0].enemy_type = 1; // shadow1
 

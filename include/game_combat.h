@@ -40,7 +40,8 @@ typedef enum {
     SCREEN_COMBAT,
     SCREEN_PERSONA_MENU,
     SCREEN_SKILL_MENU,
-    SCREEN_SELECT_ENEMY
+    SCREEN_SELECT_ENEMY,
+    SCREEN_ENEMY_COUNTER_ATTACK
 } GameScreen;
 
 extern GameScreen current_screen;  // <-- extern declaration
