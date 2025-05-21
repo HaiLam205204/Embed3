@@ -27,15 +27,39 @@ typedef struct {
     int is_solid;            // 1 if collision enabled
 } Wall;
 
-// --- Function Prototypes ---
+typedef struct {
+    const char* name;         // Optional: name or title of the level
+    int level_number;         // For progression
+    const unsigned long* background; // Background image or tilemap
+    int bg_width;
+    int bg_height;
+
+    Enemy* enemies;           // Array of enemies
+    int enemy_count;
+
+    Wall* walls;              // Array of walls
+    int wall_count;
+
+    int start_x, start_y;     // Where the player spawns in the level
+} Level;
+
+// --- Game API ---
 void game_loop();
+
+// --- Level-related ---
+void load_level(Level* level);  // Load the level: sets up enemies, walls, etc.
+void clear_level();             // Optional: cleanup/reset before loading next level
+
+// --- Protagonist ---
 void update_protagonist_position(char input);
 void update_camera();
+void render_protagonist_with_animation();
+
+// --- Rendering ---
 void render_world();
-void render_protagonist_with_animation();
-int check_enemy_collision();
-void start_animation();
-void render_protagonist_with_animation();
-void battle_screen_loop(int enemy_type);
 void render_initial_frame();
-void lobby_screen_loop();
+
+// --- Logic ---
+int check_enemy_collision();
+void battle_screen_loop(int enemy_type);
+void start_animation();
