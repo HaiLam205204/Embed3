@@ -27,8 +27,15 @@ typedef struct {
     int is_solid;            // 1 if collision enabled
 } Wall;
 
+// --- Function Prototypes ---
 void game_loop();
-void render_world_view(int camera_x, int camera_y);
-int check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
-void update_camera_position(int protag_x, int protag_y, int *camera_x, int *camera_y);
-void update_protag_position(int *x, int *y, char direction);
+void update_protagonist_position(char input);
+void update_camera();
+void render_world();
+void render_protagonist_with_animation();
+int check_enemy_collision();
+void start_animation();
+void render_protagonist_with_animation();
+void battle_screen_loop(int enemy_type);
+void render_initial_frame();
+void lobby_screen_loop();
