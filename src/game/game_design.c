@@ -51,9 +51,9 @@ CharacterSprite sprites[MAX_PROTAGONISTS] = {
     };
 
 EnemySprite enemies_sprites[MAX_ENEMIES] = {
-    {&enemy[0], shadow1, ENEMY1_WIDTH, ENEMY1_HEIGHT, 370, 320 },
-    {&enemy[1], shadow2, ENEMY2_WIDTH, ENEMY2_HEIGHT, 445, 370 },
-    {&enemy[2], shadow1, ENEMY1_WIDTH, ENEMY1_HEIGHT, 520, 320 },
+    {&enemy[0], shadow1, ENEMY1_WIDTH, ENEMY1_HEIGHT, 370, 270 },
+    {&enemy[1], shadow2, ENEMY2_WIDTH, ENEMY2_HEIGHT, 475, 360 },
+    {&enemy[2], shadow1, ENEMY1_WIDTH, ENEMY1_HEIGHT, 520, 270 },
 };
 
 void design_screen_loop()
@@ -76,7 +76,7 @@ void design_screen_loop()
                 for (int i = 0; i < MAX_PROTAGONISTS; ++i)
                 {
                     draw_character_sprite(&sprites[i]);
-                    // draw_turn_indicator(&sprites[current_player_turn], 20 ,20);
+                    draw_turn_indicator(&sprites[current_player_turn], 466 ,593);
                 }
 
                 for (int i = 0; i < MAX_ENEMIES; ++i) {
