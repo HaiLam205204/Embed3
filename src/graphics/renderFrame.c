@@ -17,7 +17,6 @@ void video_playback(const unsigned long** frames, uint32_t frame_count, int x, i
         
         // detect non-blocking input 
         if(getUart() == ESCAPE){ 
-            drawImage(WELCOME_SCREEN_HEIGHT, WELCOME_SCREEN_START_Y, background, WELCOME_SCREEN_WIDTH, WELCOME_SCREEN_HEIGHT);
             break;
         }
         // 1. Display current frame (implement your display function)

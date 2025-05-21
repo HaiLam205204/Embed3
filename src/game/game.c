@@ -23,6 +23,8 @@
 #define WORLD_HEIGHT 768*2
 #define GAME_FRAME_US 30/1000000
 
+#define ESCAPE 0x1B // ESC
+
 // --- Protagonist ---
 int protag_world_x = PROTAG_START_X;
 int protag_world_y = PROTAG_START_Y;
@@ -90,6 +92,11 @@ void game_loop() {
         } else {
             // Handle input
             input = uart_getc();
+            // detect non-blocking input 
+            if(input == ESCAPE){ 
+                break;
+            }
+
             if (input) {
                 anim_playing = 1;
                 uart_puts("\n[INPUT]: ");
@@ -300,19 +307,6 @@ void battle_screen_loop(int enemy_type) {
         }
     }
 }
-
-// // --- Lobby Placeholder ---
-// void lobby_screen_loop() {
-//     uart_puts("\n[LOBBY] Entered lobby");
-//     swap_buffers();
-//     while (1) {
-//         char input = uart_getc();
-//         if (input == 'g' || input == 'G') {
-//             uart_puts("\n[LOBBY] Returning to game");
-//             return;
-//         }
-//     }
-// }
 
 // --- Initial Frame ---
 void render_initial_frame() {
