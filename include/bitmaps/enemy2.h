@@ -1,8 +1,6 @@
 #ifndef ENEMY2_SPRITE_H
 #define ENEMY2_SPRITE_H
 
-#define ENEMY2_START_X 478
-#define ENEMY2_START_Y 340
 #define ENEMY2_WIDTH 68
 #define ENEMY2_HEIGHT 100
 

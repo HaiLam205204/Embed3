@@ -28,6 +28,18 @@ typedef struct {
 } Wall;
 
 typedef struct {
+    int x;                   // Top-left x position in world coordinates
+    int y;                   // Top-left y position in world coordinates
+    const unsigned long* bitmap;  // Visual representation of the zone
+    int width;               // Width of the zone
+    int height;              // Height of the zone
+    int target_level_number; // Level number to load when triggered
+    int target_spawn_x;      // X position to spawn player in the new level
+    int target_spawn_y;      // Y position to spawn player in the new level
+} Zone;
+
+
+typedef struct {
     int level_number;         // For progression
     const unsigned long* background; // Background image or tilemap
     int bg_width;
@@ -39,24 +51,24 @@ typedef struct {
     Wall* walls;              // Array of walls
     int wall_count;
 
+    Zone* zones;              // Array of transition zones
+    int zone_count;
+
     int start_x, start_y;     // Where the player spawns in the level
 } Level;
 
 // --- Game API ---
 void game_loop();
 
-// --- Level-related ---
-void load_level(Level* level);  // Load the level: sets up enemies, walls, etc.
-//void clear_level();             // Optional: cleanup/reset before loading next level
+// --- Level ---
+void load_level(Level* level);  
+Level* get_level_by_number(int number);      
 
 // --- Protagonist ---
 void update_protagonist_position(char input);
 void update_camera();
 void render_protagonist_with_animation();
-
-// --- Rendering ---
 void render_world();
-void render_initial_frame();
 
 // --- Logic ---
 int check_enemy_collision();

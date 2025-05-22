@@ -13,6 +13,7 @@
 #include "../../include/bitmaps/enemy2.h"
 #include "../../include/bitmaps/maze1.h"
 #include "../../include/bitmaps/protagonist_animation.h"
+#include "../../include/bitmaps/transitionZone.h"
 #include "../../include/game_design.h"
 
 // --- Constants ---
@@ -97,6 +98,17 @@ Wall level3_walls[MAX_WALLS] = {
     {1200, 1000, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1},
 };
 
+Zone level1_zones[] = {
+    { .x = 240, .y = 160, .bitmap = zone, .width = 32, .height = 32, .target_level_number = 2, .target_spawn_x = 0, .target_spawn_y = 0 }
+};
+
+Zone level2_zones[] = {
+    { .x = 240, .y = 160, .bitmap = zone, .width = 32, .height = 32, .target_level_number = 2, .target_spawn_x = 0, .target_spawn_y = 0 }
+};
+
+Zone level3_zones[] = {
+    { .x = 240, .y = 160, .bitmap = zone, .width = 32, .height = 32, .target_level_number = 2, .target_spawn_x = 0, .target_spawn_y = 0 }
+};
 
 // --- Levels ---
 Level levels[MAX_LEVELS] = {
@@ -109,6 +121,8 @@ Level levels[MAX_LEVELS] = {
         .enemy_count = sizeof(level1_enemies) / sizeof(Enemy),
         .walls = level1_walls,
         .wall_count = sizeof(level1_walls) / sizeof(Wall),
+        .zones = level1_zones,
+        .zone_count = 1,
         .start_x = 100,
         .start_y = 100,
     },
@@ -121,6 +135,8 @@ Level levels[MAX_LEVELS] = {
         .enemy_count = sizeof(level2_enemies) / sizeof(Enemy),
         .walls = level2_walls,
         .wall_count = sizeof(level2_walls) / sizeof(Wall),
+        .zones = level2_zones,
+        .zone_count = 1,
         .start_x = 200,
         .start_y = 300,
     },
@@ -133,6 +149,8 @@ Level levels[MAX_LEVELS] = {
         .enemy_count = sizeof(level3_enemies) / sizeof(Enemy),
         .walls = level3_walls,
         .wall_count = sizeof(level3_walls) / sizeof(Wall),
+        .zones = level3_zones,
+        .zone_count = 1,
         .start_x = 50,
         .start_y = 600,
     }
@@ -152,9 +170,6 @@ void game_loop() {
     uart_puts(",");
     uart_dec(protag_world_y);
     uart_puts(")");
-
-    // Initial level load
-    load_level(current_level);
 
     while (1) {
         uint64_t start_time = get_arm_system_time();
@@ -241,6 +256,73 @@ void game_loop() {
     }
 }
 
+// --- Movement ---
+void update_protagonist_position(char input) {
+    int new_x = protag_world_x;
+    int new_y = protag_world_y;
+
+    switch (input) {
+        case UP:    new_y -= STEP; break;
+        case DOWN:  new_y += STEP; break;
+        case LEFT:  new_x -= STEP; break;
+        case RIGHT: new_x += STEP; break;
+    }
+
+    // Boundary checks against level dimensions
+    if (new_x < 0) new_x = 0;
+    if (new_y < 0) new_y = 0;
+    if (new_x > current_level->bg_width - PROTAG_WIDTH)
+        new_x = current_level->bg_width - PROTAG_WIDTH;
+    if (new_y > current_level->bg_height - PROTAG_HEIGHT)
+        new_y = current_level->bg_height - PROTAG_HEIGHT;
+
+    // Wall collision checks
+    for (int i = 0; i < current_level->wall_count; i++) {
+        Wall* wall = &current_level->walls[i];
+        if (!wall->is_solid) continue;
+
+        if (new_x < wall->world_x + wall->width &&
+            new_x + PROTAG_WIDTH > wall->world_x &&
+            new_y < wall->world_y + wall->height &&
+            new_y + PROTAG_HEIGHT > wall->world_y) {
+            uart_puts("\n[COLLISION] Blocked by wall");
+            return; // Cancel movement
+        }
+    }
+
+    // Zone transition check
+    for (int i = 0; i < current_level->zone_count; i++) {
+        Zone* zone = &current_level->zones[i];
+
+        if (new_x < zone->x + zone->width &&
+            new_x + PROTAG_WIDTH > zone->x &&
+            new_y < zone->y + zone->height &&
+            new_y + PROTAG_HEIGHT > zone->y) {
+
+            uart_puts("\n[ZONE] Transition triggered");
+
+            // Optional: fade or animation here
+
+            // Load new level
+            Level* new_level = get_level_by_number(zone->target_level_number); 
+            load_level(new_level);
+
+            // Set protagonist to target spawn
+            protag_world_x = zone->target_spawn_x;
+            protag_world_y = zone->target_spawn_y;
+
+            update_camera(); // Realign camera after teleport
+
+            return; // Exit early — no need to update with new_x/y
+        }
+    }
+
+    // Update position if no collisions
+    protag_world_x = new_x;
+    protag_world_y = new_y;
+}
+
+// --- Level tranisition ---
 void load_level(Level* level) {
     if (!level) return;
 
@@ -308,45 +390,17 @@ void load_level(Level* level) {
     uart_puts("\n[LEVEL] Loaded successfully");
 }
 
-// --- Movement ---
-void update_protagonist_position(char input) {
-    int new_x = protag_world_x;
-    int new_y = protag_world_y;
-
-    switch (input) {
-        case UP:    new_y -= STEP; break;
-        case DOWN:  new_y += STEP; break;
-        case LEFT:  new_x -= STEP; break;
-        case RIGHT: new_x += STEP; break;
-    }
-
-    // Boundary checks against level dimensions
-    if (new_x < 0) new_x = 0;
-    if (new_y < 0) new_y = 0;
-    if (new_x > current_level->bg_width - PROTAG_WIDTH)
-        new_x = current_level->bg_width - PROTAG_WIDTH;
-    if (new_y > current_level->bg_height - PROTAG_HEIGHT)
-        new_y = current_level->bg_height - PROTAG_HEIGHT;
-
-    // Wall collision checks
-    for (int i = 0; i < current_level->wall_count; i++) {
-        Wall* wall = &current_level->walls[i];
-        if (!wall->is_solid) continue;
-
-        if (new_x < wall->world_x + wall->width &&
-            new_x + PROTAG_WIDTH > wall->world_x &&
-            new_y < wall->world_y + wall->height &&
-            new_y + PROTAG_HEIGHT > wall->world_y) {
-            uart_puts("\n[COLLISION] Blocked by wall");
-            return; // Cancel movement
+Level* get_level_by_number(int number) {
+    for (int i = 0; i < total_levels; i++) {
+        if (levels[i].level_number == number) {
+            return &levels[i];
         }
     }
 
-    // Update position if no collisions
-    protag_world_x = new_x;
-    protag_world_y = new_y;
+    uart_puts("\n[ERROR] Level not found: ");
+    uart_dec(number);
+    return NULL;
 }
-
 
 // --- Camera ---
 void update_camera() {
@@ -427,6 +481,24 @@ void render_world() {
             );
         }
     }
+
+    // --- Draw zones ---
+    for (int i = 0; i < current_level->zone_count; i++) {
+        Zone* zone = &current_level->zones[i];
+        if (!zone->bitmap) continue;
+
+        int screen_x = zone->x - camera_x;
+        int screen_y = zone->y - camera_y;
+
+        if (screen_x + zone->width > 0 && screen_x < VIEWPORT_WIDTH &&
+            screen_y + zone->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+            drawImage_double_buffering(
+                screen_x, screen_y,
+                zone->bitmap,
+                zone->width, zone->height
+            );
+        }
+    }
 }
 
 // --- Draw walking animation ---
@@ -466,12 +538,4 @@ void battle_screen_loop(int enemy_type) {
             return;
         }
     }
-}
-
-// --- Initial Frame ---
-void render_initial_frame() {
-    update_camera();
-    render_world();
-    render_protagonist_with_animation();
-    swap_buffers();
 }
