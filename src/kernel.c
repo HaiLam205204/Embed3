@@ -21,8 +21,6 @@
 
 void main()
 {
-    int start_x = 0;
-    int start_y = 0;
     // set up serial console
 	uart_init();
 
@@ -42,7 +40,7 @@ void main()
     //         );
 
     //Draw background image
-    drawImage(start_x, start_y, background, 1024, 768);
+    draw_background();
 
     while(1) {
         // Read character from UART
@@ -54,7 +52,7 @@ void main()
             draw_cli_window();
             cli_loop();  // Start handling input in the CLI window
 		} else if (c == VIDEO) {
-            video_playback(video_allArray, video_allArray_LEN, start_x, start_y, VIDEO_WIDTH, VIDEO_HEIGHT, DESTINATION_WIDTH, DESTINATION_HEIGHT);
+            video_playback(video_allArray, video_allArray_LEN, 0, 0, VIDEO_WIDTH, VIDEO_HEIGHT, DESTINATION_WIDTH, DESTINATION_HEIGHT);
         } else if(c == GAME) {
             game_loop();
         } else if(c == DESIGN) {

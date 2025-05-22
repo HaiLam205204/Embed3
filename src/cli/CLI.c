@@ -9,6 +9,7 @@
 #include "../../include/framebf.h"
 #include "../../include/mbox.h"
 #include "../../include/bitmaps/welcomeScreen.h"
+#include "../../include/renderFrame.h"
 // #include "../header/commands.h"
 // #include "../header/history.h"
 // #include "../header/autocomplete.h"
@@ -141,7 +142,7 @@ void cli_loop() {
             cursorX = CLI_LEFT + 1;
             cursorY = CLI_TOP + 1;
             // Draw background image
-            drawImage(0, 0, background, 1024, 768);
+            draw_background();
             return;              // Exit CLI mode
         }
 

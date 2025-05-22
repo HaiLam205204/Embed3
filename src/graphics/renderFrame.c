@@ -17,7 +17,7 @@ void video_playback(const unsigned long** frames, uint32_t frame_count, int x, i
         
         // detect non-blocking input 
         if(getUart() == ESCAPE){ 
-            drawImage(0, 0, background, 1024, 768);
+            draw_background();
             break;
         }
         // 1. Display current frame (implement your display function)
@@ -34,6 +34,14 @@ void video_playback(const unsigned long** frames, uint32_t frame_count, int x, i
             current_frame = 0; // Loop video if desired
         }
     }
+}
+
+void draw_background() {
+    drawImage(0, 0, background, 1024, 768);
+    drawString(0, 0, "Nguyen Hai Lam", 0x0000ACFF, 7);
+    drawString(0, 200, "Nguyen Trong Khoa", 0x0000AE00, 7);
+    drawString(0, 400, "Nguyen Duc Anh", 0x00CC00FF, 7);
+    drawString(0, 600, "Ung Xuan Dat", 0x00FFAC00, 7);
 }
 
 // // GPU sync frame rendering
