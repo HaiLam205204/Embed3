@@ -99,8 +99,9 @@ void init_protagonists()
 {
     strcpy(protagonists[0].name, "Hero");
     protagonists[0].is_main_character = 1;
-    protagonists[0].current_hp = 100;
+    protagonists[0].current_hp = 50;
     protagonists[0].max_hp = 100;
+    protagonists[0].healing_item_quantity = 1;
 
     strcpy(protagonists[1].name, "Ally1");
     protagonists[1].is_main_character = 0;
@@ -155,7 +156,7 @@ void redraw_combat_screen(int current_player_turn, int selected_enemy_index)
 
     // Redraw buttons
     draw_attack_button(0);
-    draw_item_button(0);
+    draw_item_button(0,&protagonists[0]);
     draw_persona_button(0);
     draw_run_button(0);
     draw_skill_button(0);
@@ -177,4 +178,46 @@ void redraw_combat_screen(int current_player_turn, int selected_enemy_index)
     }
     // Show updated buffer
     swap_buffers();
+}
+void heal_character_25_percent(Character *ch) {
+    if (!ch) return;
+    if (ch->healing_item_quantity < 1) {
+        uart_puts("[HEAL] No healing items left.\n");
+        return;
+    }
+
+    if (ch->current_hp >= ch->max_hp) {
+        uart_puts("[HEAL] ");
+        uart_puts(ch->name);
+        uart_puts("'s HP is already full. Cannot heal.\n");
+        return;
+    }
+
+    int original_hp = ch->current_hp;
+    int heal_amount = ch->max_hp / 4;
+
+    ch->current_hp += heal_amount;
+    if (ch->current_hp > ch->max_hp) {
+        ch->current_hp = ch->max_hp;
+    }
+
+    ch->healing_item_quantity--;
+
+    int actual_healed = ch->current_hp - original_hp;
+
+    uart_puts("[HEAL] ");
+    uart_puts(ch->name);
+    uart_puts(" used a healing item.\n");
+    uart_puts("Healed for ");
+    uart_dec(actual_healed);
+    uart_puts(" HP. Current HP: ");
+    uart_dec(ch->current_hp);
+    uart_puts("/");
+    uart_dec(ch->max_hp);
+    uart_puts("\nRemaining healing items: ");
+    uart_dec(ch->healing_item_quantity);
+    uart_puts("\n");
+    //draw_character_sprite(&sprites[0]);
+        int hp_percent = (sprites[0].character->current_hp * 100) / sprites[0].character->max_hp;
+    draw_hp_bar(sprites[0].pos_x, sprites[0].pos_y, hp_percent);
 }

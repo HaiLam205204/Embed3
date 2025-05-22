@@ -29,6 +29,7 @@
         "yellow_trianble.h": "c",
         "enemy_sprite.h": "c",
         "yellow_triangle.h": "c",
-        "game_logic.h": "c"
+        "game_logic.h": "c",
+        "stdio.h": "c"
     }
 }

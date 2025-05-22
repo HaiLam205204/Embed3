@@ -15,7 +15,7 @@
 #define KEY_ESC         0x1B      // quit selection scrren
 
 void draw_attack_button(int is_pressed);
-void draw_item_button(int is_pressed);
+void draw_item_button(int is_pressed, Character *ch);
 void draw_persona_button(int is_pressed);
 void draw_run_button(int is_pressed);
 void draw_skill_button(int is_pressed);

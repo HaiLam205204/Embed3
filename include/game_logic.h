@@ -1,6 +1,5 @@
 #ifndef GAME_LOGIC_H
 #define GAME_LOGIC_H
-
 #include "models/enemy.h"
 #include "models/character.h"
 #include "models/enemy_sprite.h"
@@ -16,4 +15,5 @@ void recalculate_enemy_sprite_positions();
 void enemy_turn(Character *protagonists, int num_protagonists);
 void reset_player_turns(Character *protagonists, int num_protagonists);
 int all_characters_have_acted(Character *protagonists, int num_protagonists);
+void heal_character_25_percent(Character *ch);
 #endif

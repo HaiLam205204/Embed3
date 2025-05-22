@@ -1,3 +1,4 @@
+
 #include "../../include/game_logic.h"
 #include "../../include/models/enemy.h"
 #include "../../include/models/character.h"
@@ -124,3 +125,8 @@ int all_characters_have_acted(Character *protagonists, int num_protagonists) {
     }
     return 1; // All have acted
 }
+
+
+
+
+

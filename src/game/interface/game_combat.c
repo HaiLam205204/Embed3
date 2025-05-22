@@ -24,12 +24,129 @@
 
 #define GAME_FRAME_RATE 30                        // e.g., 30 FPS
 #define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per frame
+#define FONT_ZOOM          2
+#define FONT_COLOR         0xFFFFFFFF  // White
+#define BOX_COLOR       0xFF007700  // dark green
+#define RED_COLOR 0xFFFF0000
+
+int is_50_pressed = 0;
+int is_100_pressed = 0;
 
 GameScreen current_screen = SCREEN_COMBAT;
 int persona_option = 0;
 int selected_persona = 0; // 0 for Orpheus, 1 for Pixie
 int skill_option = 0;
 
+// void clear_heal_options_buttons() {
+//     int item_x = 700;
+//     int item_y = 620;
+
+//     int box_width = 120;
+//     int box_height = 30;
+//     int box_margin = 10;
+
+//     int total_width = (box_width * 2) + box_margin;
+//     int start_x = item_x + (100 - total_width) / 2;
+//     int y = item_y - box_height - 5;
+
+//     int clear_width = total_width;
+//     int clear_height = box_height;
+
+//     // Clear the area where the buttons were drawn
+//    // draw_rect_double_buffering(start_x, y, clear_width, clear_height, BACKGROUND_COLOR);
+// }
+
+// void draw_heal_options_above_item_button() {
+//     int item_x = 700;
+//     int item_y = 620;
+
+//     int box_width = 120;
+//     int box_height = 30;
+//     int box_margin = 10;
+
+//     int total_width = (box_width * 2) + box_margin;
+//     int start_x = item_x + (100 - total_width) / 2;
+//     int y = item_y - box_height - 5;
+
+//     // 50% Button
+//     unsigned int color_50 = is_50_pressed ? RED_COLOR : BOX_COLOR;
+//     draw_rect_double_buffering(start_x, y, box_width, box_height, color_50);
+//     drawString_double_buffering(start_x + 15, y + 8, "50%(1)", FONT_COLOR, FONT_ZOOM);
+
+//     // 100% Button
+//     int box2_x = start_x + box_width + box_margin;
+//     unsigned int color_100 = is_100_pressed ? RED_COLOR : BOX_COLOR;
+//     draw_rect_double_buffering(box2_x, y, box_width, box_height, color_100);
+//     drawString_double_buffering(box2_x + 10, y + 8, "100%(2)", FONT_COLOR, FONT_ZOOM);
+//     uart_puts("50% button is drawn\n");
+//     uart_puts("100% button is drawn\n");
+// }
+
+void int_to_str(int num, char *buffer) {
+    if (num == 0) {
+        buffer[0] = '0';
+        buffer[1] = '\0';
+        return;
+    }
+
+    int i = 0;
+    int temp = num;
+
+    // Extract digits
+    while (temp > 0) {
+        buffer[i++] = (temp % 10) + '0';
+        temp /= 10;
+    }
+
+    buffer[i] = '\0';
+
+    // Reverse the string
+    for (int j = 0; j < i / 2; j++) {
+        char t = buffer[j];
+        buffer[j] = buffer[i - 1 - j];
+        buffer[i - 1 - j] = t;
+    }
+}
+
+void build_item_text(char *item_text, int quantity) {
+    const char *prefix = "ITEM(";
+    const char *suffix = ")";
+
+    // Copy "ITEM("
+    int i = 0;
+    while (prefix[i] != '\0') {
+        item_text[i] = prefix[i];
+        i++;
+    }
+
+    // Convert quantity to string
+    char num_str[12];
+    int_to_str(quantity, num_str);
+
+    // Copy number string
+    int j = 0;
+    while (num_str[j] != '\0') {
+        item_text[i++] = num_str[j++];
+    }
+
+    // Copy ")"
+    j = 0;
+    while (suffix[j] != '\0') {
+        item_text[i++] = suffix[j++];
+    }
+
+    item_text[i] = '\0'; // Null-terminate
+}
+void drawRectARGB32_double_buffering_item(int x, int y, int width, int height, unsigned int attr, int fill)
+{
+    for (int j = 0; j < height; j++) {
+        for (int i = 0; i < width; i++) {
+            if (fill || i == 0 || j == 0 || i == width - 1 || j == height - 1) {
+                drawPixelARGB32_double_buffering(x + i, y + j, attr);
+            }
+        }
+    }
+}
 // Draws the button in "off" or "on" state
 void draw_attack_button(int is_pressed)
 {
@@ -37,11 +154,14 @@ void draw_attack_button(int is_pressed)
     drawImage_double_buffering(BUTTON_ATTACK_X, BUTTON_ATTACK_Y, img, BUTTON_WIDTH, BUTTON_HEIGHT);
 }
 
-// Draws the button in "off" or "on" state for Item button
-void draw_item_button(int is_pressed)
+void draw_item_button(int is_pressed, Character *ch)
 {
-    const unsigned long *img = is_pressed ? epd_bitmap_Item_on : epd_bitmap_Item_off;
-    drawImage_double_buffering(BUTTON_ITEM_X, BUTTON_ITEM_Y, img, BUTTON_WIDTH, BUTTON_HEIGHT);
+    int background_color = is_pressed ? 0xFFFF0000 : 0xFF3b7d23;
+    drawRectARGB32_double_buffering_item(BUTTON_ITEM_X, BUTTON_ITEM_Y, BUTTON_WIDTH, BUTTON_HEIGHT, background_color, 2);
+
+    char item_text[20];
+    build_item_text(item_text, ch->healing_item_quantity);
+    drawString_double_buffering(BUTTON_ITEM_X + 5, BUTTON_ITEM_Y + 15, item_text, 0xFFd5e0d2, 2);
 }
 
 // Draws the button in "off" or "on" state for Persona button
@@ -206,7 +326,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
 
         // Show the "off" state initially, before any key is pressed
         draw_attack_button(button_pressed_attack);
-        draw_item_button(button_pressed_item);
+        draw_item_button(button_pressed_item, &protagonists[0]);
         draw_persona_button(button_pressed_persona);
         draw_run_button(button_pressed_run);
         draw_skill_button(button_pressed_skill);
@@ -235,10 +355,11 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     redraw_combat_screen(current_player_turn, 0);
                 }
                 if (input == ITEM) {
+                    heal_character_25_percent(&protagonists[0]);
                     button_pressed_item = 1;
                     button_pressed_time = start_time;
                     uart_puts("ITEM\n");
-                    // exit_ui = 1;
+                    
                 }
                 if (input == PERSONA) {
                     button_pressed_persona = 1;
@@ -392,9 +513,9 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
         }
 
         if (button_pressed_item) {
-            draw_item_button(1);  // Show "on"
+            draw_item_button(1, &protagonists[0]);  // Show "on"
         } else {
-            draw_item_button(0);  // Show "off"
+            draw_item_button(0, &protagonists[0]);  // Show "off"
         }
 
         if (button_pressed_persona) {

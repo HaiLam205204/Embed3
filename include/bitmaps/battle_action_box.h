@@ -9,7 +9,7 @@
 #define BUTTON_SKILL_X 775
 #define BUTTON_SKILL_Y 700
 #define BUTTON_WIDTH 100
-#define BUTTON_HEIGHT 54
+#define BUTTON_HEIGHT 54 
 
 // 'Attack_off', 100x54px
 const unsigned long epd_bitmap_Attack_off []= {

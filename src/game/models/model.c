@@ -51,6 +51,7 @@ typedef struct {
     int is_main_character;
     int current_hp;
     int max_hp;
+    int healing_item_quantity;  // NEW: Number of healing items
     Action action;
 } Character;
 
