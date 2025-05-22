@@ -211,13 +211,12 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
         draw_run_button(button_pressed_run);
         draw_skill_button(button_pressed_skill);
         // first_frame = 0;
-        
-
         // Read input
         if (uart_input_available()) {
             uart_puts("[DEBUG] Input detected\n");
             char input = uart_getc();
             if (current_screen == SCREEN_COMBAT){
+                // Character *current = &protagonists[current_player_turn];
                 uart_puts("[DEBUG] Switched to SCREEN_COMBAT\n");
                 if (input == ATTACK) {
                     button_pressed_attack = 1;
@@ -263,6 +262,11 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     current_screen = SCREEN_SKILL_MENU;
                     uart_puts("SKILL\n");
                     // exit_ui = 1;
+                }
+                if (current_player_turn >= num_protagonists) {
+                    uart_putint(current_player_turn);
+                    current_player_turn = 0;
+                    current_screen = SCREEN_ENEMY_COUNTER_ATTACK;
                 }
             }
             else if (current_screen == SCREEN_PERSONA_MENU){
@@ -351,7 +355,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                             button_pressed_attack = 0;
                             selecting = 0;
                             exit_ui = 1;
-                            current_player_turn = (current_player_turn + 1) % 4;
+                            current_player_turn = (current_player_turn + 1) % num_protagonists;
                             protagonists[current_player_turn].has_acted = 1;
 
                             int base_damage = 20;
