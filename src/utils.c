@@ -136,22 +136,22 @@ void drawString_double_buffering(int x, int y, char *str, unsigned int attr, int
  * - Implemented for UART0 or UART1 depending on preprocessor flag
  */
 
-// #if 0// Use UART0
-// unsigned int uart_isReadByteReady() {
-//     return ( !(*UART0_FR & UART0_FR_RXFE) ); // RXFE = Receive FIFO Empty
-// }
-// #else // Use UART1
-// unsigned int uart_isReadByteReady() {
-//     return (AUX_MU_LSR & 0x01); // LSR bit 0 = data ready
-// }
-// #endif
+#if 1// Use UART0
+unsigned int uart_isReadByteReady() {
+    return ( !(UART0_FR & UART0_FR_RXFE) ); // RXFE = Receive FIFO Empty
+}
+#else // Use UART1
+unsigned int uart_isReadByteReady() {
+    return (AUX_MU_LSR & 0x01); // LSR bit 0 = data ready
+}
+#endif
 
-// unsigned char getUart() {
-//     unsigned char ch = 0;
-//     if (uart_isReadByteReady())
-//         ch = uart_getc(); // Read character from UART
-//     return ch;
-// }
+unsigned char getUart() {
+    unsigned char ch = 0;
+    if (uart_isReadByteReady())
+        ch = uart_getc(); // Read character from UART
+    return ch;
+}
 
 /*
  * TIMER UTILITIES

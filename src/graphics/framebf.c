@@ -410,14 +410,21 @@ void drawImage_double_buffering(int x, int y, const unsigned long *image, int im
 {
     for (int j = 0; j < image_height; j++)
     {
+        int screen_y = y + j;
+        if (screen_y < 0 || screen_y >= 768)
+            continue;
+
         for (int i = 0; i < image_width; i++)
         {
+            int screen_x = x + i;
+            if (screen_x < 0 || screen_x >= 1024)
+                continue;
+
             unsigned int pixel = image[j * image_width + i];
-            if ((pixel & 0x00FFFFFF) != 0)
-            { // skip transparent pixels
-                drawPixelARGB32_double_buffering(x + i, y + j, pixel);
+            if ((pixel & 0x00FFFFFF) != 0) //skip black
+            {
+                drawPixelARGB32_double_buffering(screen_x, screen_y, pixel);
             }
-            // drawPixelARGB32_double_buffering(x + i, y + j, image[j * image_width + i]);
         }
     }
 }
@@ -434,7 +441,7 @@ void drawImage_double_buffering_stride(int x, int y, const unsigned long *image,
     for (int j = 0; j < image_height; j++) {
         for (int i = 0; i < image_width; i++) {
             unsigned int pixel = image[j * image_stride + i];
-            if ((pixel & 0x00FFFFFF) != 0) { // skip transparent pixels
+            if ((pixel & 0x00FFFFFF) != 0) { // skip black
                 drawPixelARGB32_double_buffering(x + i, y + j, pixel);
             }
         }

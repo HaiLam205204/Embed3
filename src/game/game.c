@@ -4,6 +4,7 @@
 #include "../../include/gpio.h"
 #include "../../include/utils.h"
 #include "../../include/renderFrame.h"
+#include "../../include/bitmaps/welcomeScreen.h"
 #include "../../include/bitmaps/game_map.h"
 #include "../../include/bitmaps/game_map_4x.h"
 #include "../../include/bitmaps/protagonist_sprite.h"
@@ -11,54 +12,188 @@
 #include "../../include/bitmaps/enemy1.h"
 #include "../../include/bitmaps/enemy2.h"
 #include "../../include/bitmaps/maze1.h"
+#include "../../include/bitmaps/protagonist_animation.h"
+#include "../../include/bitmaps/transitionZone.h"
+#include "../../include/game_design.h"
 
-#define GAME_FRAME_RATE 30                        // 30 FPS
-#define GAME_FRAME_US (1000000 / GAME_FRAME_RATE) // microseconds per 
+// --- Constants ---
+#define STEP 10
+#define MAX_ENEMIES 10
+#define MAX_WALLS 20
+#define VIEWPORT_WIDTH 1024
+#define VIEWPORT_HEIGHT 768
+#define WORLD_WIDTH 1024*2
+#define WORLD_HEIGHT 768*2
+#define FRAME_RATE 30
+#define GAME_FRAME_US (1000000 / FRAME_RATE)
+#define MAX_LEVELS 3
 
-#define NULL ((void *)0)
+#define NULL ((void*)0)
+#define ESCAPE 0x1B // ESC
 
-#define VIEWPORT_WIDTH  1024  // Physical screen width
-#define VIEWPORT_HEIGHT 768  // Physical screen height
-#define WORLD_WIDTH     GAME_MAP_WIDTH_4X  // Map is twice as big as screen
-#define WORLD_HEIGHT    GAME_MAP_HEIGHT_4X 
+// --- Protagonist ---
+int protag_world_x = PROTAG_START_X;
+int protag_world_y = PROTAG_START_Y;
 
-#define RESTORE_MARGIN 10
-// The safety margin (RESTORE_MARGIN) ensures complete coverage of the changed pixels
-static unsigned long sprite_bg_buffer[(PROTAG_WIDTH + 2 * RESTORE_MARGIN) * (PROTAG_HEIGHT + 2 * RESTORE_MARGIN)];
-
-// map starting coordinates
-int map_x = MAP_4X_START_X;
-int map_y = MAP_4X_START_Y;
-
-// Camera offset
+// --- Camera ---
 int camera_x = 0;
 int camera_y = 0;
 
-// World coordinates of sprite
-int protag_world_x = PROTAG_START_X;  
-int protag_world_y = PROTAG_START_Y;
+// --- Animation ---
+uint32_t anim_frame = 0;
+uint64_t last_anim_time = 0;
+int anim_playing = 0;
 
-#define MAX_ENEMIES 10
-
-Enemy enemies[MAX_ENEMIES] = {
-    {1300, 1000, shadow1, 136, 88, 1, 4, 4, 
+// --- Level 1 Enemies ---
+Enemy level1_enemies[MAX_ENEMIES] = {
+    {1300, 1000, shadow1, 136, 88, 
+        1, // active
+        4, 4, // hitbox 
         //1 //enemy type
-    },  
+    },
     {1800, 450, shadow2, 68, 100, 1, 4, 4, 
         //1 //enemy type
     },
-    // Add more enemies as needed
 };
 
-#define MAX_WALLS 20
+// --- Level 2 Enemies ---
+Enemy level2_enemies[MAX_ENEMIES] = {
+    {500, 300, shadow1, 136, 88, 1, 4, 4},
+    {900, 700, shadow2, 68, 100, 1, 4, 4},
+    {1500, 1200, shadow2, 68, 100, 1, 4, 4},
+};
 
-Wall walls[MAX_WALLS] = {
-    {MAZE1_START_X, MAZE1_START_Y, maze1, MAZE1_WIDTH, MAZE1_HEIGHT, 1},  // First maze
+// --- Level 3 Enemies ---
+Enemy level3_enemies[MAX_ENEMIES] = {
+    {800, 600, shadow1, 136, 88, 1, 4, 4},
+};
+
+// --- Level 1 Walls ---
+Wall level1_walls[MAX_WALLS] = {
+    // {WALL1_START_X, WALL1_START_Y, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1}, 
+    // {WALL2_START_X, WALL2_START_Y, wall2, WALL2_WIDTH, WALL2_HEIGHT, 1}, 
+    // {WALL1_START_X, WALL1_START_Y + 768*2 - 63, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1}, 
+    // {WALL2_START_X + 1024*2 - 63, WALL2_START_Y, wall2, WALL2_WIDTH, WALL2_HEIGHT, 1},
+    {WALL3_START_X, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*2, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*3, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*5, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL4_START_X, WALL4_START_Y, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X, WALL4_START_Y + 256*2, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X, WALL4_START_Y + 256*3, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X, WALL4_START_Y + 256*5, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
     // Add more walls...
 };
 
-void game_loop()
-{
+// --- Level 2 Walls ---
+Wall level2_walls[MAX_WALLS] = {
+    {WALL3_START_X, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*2, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*3, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*5, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+
+    {WALL3_START_X + 342*3, WALL3_START_Y + 256*2, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*4, WALL3_START_Y + 256*2, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*4, WALL3_START_Y - 256*2, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*3, WALL3_START_Y - 256*2, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+
+    {WALL4_START_X + 342, WALL4_START_Y + 256, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X + 342, WALL4_START_Y + 256*2, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X + 342, WALL4_START_Y + 256*3, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X + 342, WALL4_START_Y + 256*4, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+
+    {WALL4_START_X - 342, WALL4_START_Y + 256*5, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X - 342, WALL4_START_Y + 256*4, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X - 342, WALL4_START_Y, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X - 342, WALL4_START_Y + 256, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+};
+
+// --- Level 3 Walls ---
+Wall level3_walls[MAX_WALLS] = {
+    {WALL3_START_X + 342, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*2, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*5, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*4, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+
+    {WALL3_START_X, WALL3_START_Y + 256*2, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*3, WALL3_START_Y - 256*2, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+
+    {WALL4_START_X, WALL4_START_Y + 256, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X, WALL4_START_Y + 256*2, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X, WALL4_START_Y + 256*3, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X, WALL4_START_Y + 256*4, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X - 342*2, WALL4_START_Y, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X - 342*2, WALL4_START_Y + 256, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X + 342, WALL4_START_Y, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X + 342, WALL4_START_Y + 256*5, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X + 342, WALL4_START_Y + 256, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+};
+
+Zone level1_zones[] = {
+    { .x = 0, .y = 1408, .bitmap = zone, .width = ZONE_WIDTH, .height = ZONE_HEIGHT, .target_level_number = 2, .target_spawn_x = 0, .target_spawn_y = 0 }
+};
+
+Zone level2_zones[] = {
+    { .x = 0, .y = 1408, .bitmap = zone, .width = ZONE_WIDTH, .height = ZONE_HEIGHT, .target_level_number = 3, .target_spawn_x = 0, .target_spawn_y = 0 }
+};
+
+Zone level3_zones[] = {
+    { .x = 1920, .y = 0, .bitmap = zone, .width = ZONE_WIDTH, .height = ZONE_HEIGHT, .target_level_number = 1, .target_spawn_x = 0, .target_spawn_y = 0 }
+};
+
+// --- Levels ---
+Level levels[MAX_LEVELS] = {
+    {
+        .level_number = 1,
+        .background = gameMap4x,
+        .bg_width = GAME_MAP_WIDTH_4X,
+        .bg_height = GAME_MAP_HEIGHT_4X,
+        .enemies = level1_enemies,
+        .enemy_count = sizeof(level1_enemies) / sizeof(Enemy),
+        .walls = level1_walls,
+        .wall_count = sizeof(level1_walls) / sizeof(Wall),
+        .zones = level1_zones,
+        .zone_count = 1,
+        .start_x = 100,
+        .start_y = 100,
+    },
+    {
+        .level_number = 2,
+        .background = gameMap4x, // Change if using another map
+        .bg_width = GAME_MAP_WIDTH_4X,
+        .bg_height = GAME_MAP_HEIGHT_4X,
+        .enemies = level2_enemies,
+        .enemy_count = sizeof(level2_enemies) / sizeof(Enemy),
+        .walls = level2_walls,
+        .wall_count = sizeof(level2_walls) / sizeof(Wall),
+        .zones = level2_zones,
+        .zone_count = 1,
+        .start_x = 200,
+        .start_y = 300,
+    },
+    {
+        .level_number = 3,
+        .background = gameMap4x, // Update if you add unique backgrounds
+        .bg_width = GAME_MAP_WIDTH_4X,
+        .bg_height = GAME_MAP_HEIGHT_4X,
+        .enemies = level3_enemies,
+        .enemy_count = sizeof(level3_enemies) / sizeof(Enemy),
+        .walls = level3_walls,
+        .wall_count = sizeof(level3_walls) / sizeof(Wall),
+        .zones = level3_zones,
+        .zone_count = 1,
+        .start_x = 50,
+        .start_y = 600,
+    }
+};
+
+const int total_levels = sizeof(levels) / sizeof(Level);
+Level* current_level = &levels[0]; // Start at level 1
+
+// --- Game Loop ---
+void game_loop() {
     int first_frame = 1;
     char input;
 
@@ -69,332 +204,369 @@ void game_loop()
     uart_dec(protag_world_y);
     uart_puts(")");
 
-    while (1)
-    {
+    while (1) {
         uint64_t start_time = get_arm_system_time();
         uart_puts("\n[FRAME] ---- NEW FRAME ----");
 
-        if (first_frame)
-        { // display first frame
-            for (int i = 0; i < 2; i++)
-            {
-                // draw game map
-                drawImage_double_buffering(map_x, map_y, gameMap4x, GAME_MAP_WIDTH_4X, GAME_MAP_HEIGHT_4X);
-
-                // draw protagonist
-                drawImage_double_buffering(protag_world_x, protag_world_y, myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
-
-                // swap buffer to display frame
+        if (first_frame) {
+            //Display first frame (double buffered)
+            for (int i = 0; i < 2; i++) {
+                render_world();
+                render_protagonist_with_animation();
                 swap_buffers();
-                uart_puts("\n[FRAME] Swapped buffers");
                 wait_us(16000);
             }
-            first_frame = 0; // toggle flag
-        }
-        else
-        { // display second frame onwards
+            first_frame = 0;
+        } else {
+            // Handle input
             input = uart_getc();
+            // detect non-blocking input 
+            if(input == ESCAPE){ 
+                draw_background();
+                break;
+            }
 
-            // Check for 'M' key to jump to lobby screen
+            if (input) {
+                anim_playing = 1;
+                uart_puts("\n[INPUT]: ");
+                uart_sendc(input);
+            }
+
+            // Check for lobby screen transition
             if (input == 'm' || input == 'M') {
                 uart_puts("\n[INPUT] 'M' pressed - Switching to Lobby Screen...");
-                lobby_screen_loop(); // Call lobby loop
-                // After lobby screen ends, redraw the current game frame again
+                lobby_screen_loop();
                 first_frame = 1;
-                continue;  // Continue the loop to redraw the game frame
+                continue;
             }
 
-            // Update player position on the map
-            update_protag_position(&protag_world_x, &protag_world_y, input);
+            // Update game state
+            update_protagonist_position(input);
+            
+            // Check enemy collisions
+            for (int i = 0; i < current_level->enemy_count; i++) {
+                Enemy* enemy = &current_level->enemies[i];
+                if (!enemy->active) continue;
 
-            // Check for enemies encounters
-            for (int i = 0; i < MAX_ENEMIES; i++) {
-                if (!enemies[i].active) continue;
-                
-                if (check_collision(
+                if (check_enemy_collision(
                     protag_world_x, protag_world_y, PROTAG_WIDTH, PROTAG_HEIGHT,
-                    enemies[i].world_x + enemies[i].collision_offset_x,
-                    enemies[i].world_y + enemies[i].collision_offset_y,
-                    enemies[i].width - 2*enemies[i].collision_offset_x,
-                    enemies[i].height - 2*enemies[i].collision_offset_y
+                    enemy->world_x + enemy->collision_offset_x,
+                    enemy->world_y + enemy->collision_offset_y,
+                    enemy->width - 2 * enemy->collision_offset_x,
+                    enemy->height - 2 * enemy->collision_offset_y
                 )) {
                     uart_puts("\n[COMBAT] Enemy contact!");
-
-                    // Transition to battle
-                    //clear_screen(0xFFFF0000);
-                    battle_screen_loop(enemies[i].enemy_type);
-                    first_frame = 1; // Reset game frame after battle
-                    break; // Exit combat loop
+                    // battle_screen_loop(enemy->enemy_type);
+                    design_screen_loop();
+                    first_frame = 1;
+                    break;
                 }
             }
+
+            // Update camera
+            update_camera();
             
-            // Update camera position to follow protagonist
-            update_camera_position(protag_world_x, protag_world_y, &camera_x, &camera_y);
-            
-            // Render the visible portion of the world
-            render_world_view(camera_x, camera_y);
-            
-            // Render protagonist relative to camera
-            int protag_screen_x = protag_world_x - camera_x;
-            int protag_screen_y = protag_world_y - camera_y;
-            drawImage_double_buffering(protag_screen_x, protag_screen_y, 
-                                    myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
-            
+            // Render
+            render_world();
+            render_protagonist_with_animation();
             swap_buffers();
         }
 
-        // keep track rendering time
+        // Frame timing control
         uint64_t end_time = get_arm_system_time();
         uint64_t render_time_us = ticks_to_us(end_time - start_time);
         uart_puts("\n[TIMING] Frame render time (us): ");
         uart_dec(render_time_us);
 
-        if (render_time_us < GAME_FRAME_US)
-        {
+        if (render_time_us < GAME_FRAME_US) {
             uint64_t wait_time = GAME_FRAME_US - render_time_us;
             uart_puts("\n[TIMING] Waiting (us): ");
             uart_dec(wait_time);
             wait_us(wait_time);
-        }
-        else
-        {
+        } else {
             uart_puts("\n[WARNING] Frame took too long!");
         }
     }
 }
 
+// --- Movement ---
+void update_protagonist_position(char input) {
+    int new_x = protag_world_x;
+    int new_y = protag_world_y;
+
+    switch (input) {
+        case UP:    new_y -= STEP; break;
+        case DOWN:  new_y += STEP; break;
+        case LEFT:  new_x -= STEP; break;
+        case RIGHT: new_x += STEP; break;
+    }
+
+    // Boundary checks against level dimensions
+    if (new_x < 0) new_x = 0;
+    if (new_y < 0) new_y = 0;
+    if (new_x > current_level->bg_width - PROTAG_WIDTH)
+        new_x = current_level->bg_width - PROTAG_WIDTH;
+    if (new_y > current_level->bg_height - PROTAG_HEIGHT)
+        new_y = current_level->bg_height - PROTAG_HEIGHT;
+
+    // Wall collision checks
+    for (int i = 0; i < current_level->wall_count; i++) {
+        Wall* wall = &current_level->walls[i];
+        if (!wall->is_solid) continue;
+
+        if (new_x < wall->world_x + wall->width &&
+            new_x + PROTAG_WIDTH > wall->world_x &&
+            new_y < wall->world_y + wall->height &&
+            new_y + PROTAG_HEIGHT > wall->world_y) {
+            uart_puts("\n[COLLISION] Blocked by wall");
+            return; // Cancel movement
+        }
+    }
+
+    // Zone transition check
+    for (int i = 0; i < current_level->zone_count; i++) {
+        Zone* zone = &current_level->zones[i];
+
+        if (new_x < zone->x + zone->width &&
+            new_x + PROTAG_WIDTH > zone->x &&
+            new_y < zone->y + zone->height &&
+            new_y + PROTAG_HEIGHT > zone->y) {
+
+            uart_puts("\n[ZONE] Transition triggered");
+
+            // Load new level
+            Level* new_level = get_level_by_number(zone->target_level_number); 
+            load_level(new_level);
+
+            // Set protagonist to target spawn
+            protag_world_x = zone->target_spawn_x;
+            protag_world_y = zone->target_spawn_y;
+
+            update_camera(); // Realign camera after teleport
+
+            return; // Exit early — no need to update with new_x/y
+        }
+    }
+
+    // Update position if no collisions
+    protag_world_x = new_x;
+    protag_world_y = new_y;
+}
+
+// --- Level tranisition ---
+void load_level(Level* level) {
+    if (!level) return;
+
+    uart_puts("\n[LEVEL] Loading level ");
+    uart_dec(level->level_number);
+
+    // Set current level
+    current_level = level;
+
+    // Reset protagonist position to level's start position
+    protag_world_x = level->start_x;
+    protag_world_y = level->start_y;
+
+    // Reset camera
+    update_camera();
+
+    // Activate all enemies and walls in the level
+    for (int i = 0; i < level->enemy_count; i++) {
+        level->enemies[i].active = 1;
+    }
+    for (int i = 0; i < level->wall_count; i++) {
+        level->walls[i].is_solid = 1;
+    }
+
+    // Double buffered render of initial level state
+    for (int i = 0; i < 2; i++) {
+
+        // Draw background
+        drawImage_double_buffering_stride(
+            0, 0,
+            level->background + camera_y * level->bg_width + camera_x,
+            VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
+            level->bg_width
+        );
+
+        // Draw walls
+        for (int j = 0; j < level->wall_count; j++) {
+            Wall* wall = &level->walls[j];
+            int screen_x = wall->world_x - camera_x;
+            int screen_y = wall->world_y - camera_y;
+            
+            if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
+                screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+                drawImage_double_buffering(
+                    screen_x, screen_y,
+                    wall->bitmap,
+                    wall->width, wall->height
+                );
+            }
+        }
+
+        // Draw protagonist
+        drawImage_double_buffering(
+            protag_world_x - camera_x,
+            protag_world_y - camera_y,
+            myBitmapprotag,  // Default protagonist sprite
+            PROTAG_WIDTH,
+            PROTAG_HEIGHT
+        );
+
+        swap_buffers();
+        wait_us(16000); // Small delay for smooth transition
+    }
+
+    uart_puts("\n[LEVEL] Loaded successfully");
+}
+
+Level* get_level_by_number(int number) {
+    for (int i = 0; i < total_levels; i++) {
+        if (levels[i].level_number == number) {
+            return &levels[i];
+        }
+    }
+
+    uart_puts("\n[ERROR] Level not found: ");
+    uart_dec(number);
+    return NULL;
+}
+
+// --- Camera ---
+void update_camera() {
+    camera_x = protag_world_x - VIEWPORT_WIDTH / 2 + PROTAG_WIDTH / 2;
+    camera_y = protag_world_y - VIEWPORT_HEIGHT / 2 + PROTAG_HEIGHT / 2;
+
+    if (camera_x < 0) camera_x = 0;
+    if (camera_y < 0) camera_y = 0;
+    if (camera_x > WORLD_WIDTH - VIEWPORT_WIDTH) camera_x = WORLD_WIDTH - VIEWPORT_WIDTH;
+    if (camera_y > WORLD_HEIGHT - VIEWPORT_HEIGHT) camera_y = WORLD_HEIGHT - VIEWPORT_HEIGHT;
+}
+
+// --- Collision ---
+int check_enemy_collision() {
+    for (int i = 0; i < current_level->enemy_count; i++) {
+        Enemy* enemy = &current_level->enemies[i];
+        if (!enemy->active) continue;
+
+        int ex = enemy->world_x + enemy->collision_offset_x;
+        int ey = enemy->world_y + enemy->collision_offset_y;
+        int ew = enemy->width - 2 * enemy->collision_offset_x;
+        int eh = enemy->height - 2 * enemy->collision_offset_y;
+
+        if (protag_world_x < ex + ew &&
+            protag_world_x + PROTAG_WIDTH > ex &&
+            protag_world_y < ey + eh &&
+            protag_world_y + PROTAG_HEIGHT > ey) {
+            return 1; // Collision detected
+        }
+    }
+    return 0; // No collision
+}
+
+
+// --- Rendering ---
+void render_world() {
+    if (current_level == NULL) return;
+
+    // Draw map
+    drawImage_double_buffering_stride(
+        0, 0,
+        gameMap4x + camera_y * GAME_MAP_WIDTH_4X + camera_x,
+        VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
+        GAME_MAP_WIDTH_4X
+    );
+
+    // --- Draw walls ---
+    for (int i = 0; i < current_level->wall_count; i++) {
+        Wall* wall = &current_level->walls[i];
+
+        int screen_x = wall->world_x - camera_x;
+        int screen_y = wall->world_y - camera_y;
+
+        if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
+            screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+            drawImage_double_buffering(
+                screen_x, screen_y,
+                wall->bitmap,
+                wall->width, wall->height
+            );
+        }
+    }
+
+    // --- Draw enemies ---
+    for (int i = 0; i < current_level->enemy_count; i++) {
+        Enemy* enemy = &current_level->enemies[i];
+        if (!enemy->active) continue;
+
+        int screen_x = enemy->world_x - camera_x;
+        int screen_y = enemy->world_y - camera_y;
+
+        if (screen_x + enemy->width > 0 && screen_x < VIEWPORT_WIDTH &&
+            screen_y + enemy->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+            drawImage_double_buffering(
+                screen_x, screen_y,
+                enemy->sprite,
+                enemy->width, enemy->height
+            );
+        }
+    }
+
+    // --- Draw zones ---
+    for (int i = 0; i < current_level->zone_count; i++) {
+        Zone* zone = &current_level->zones[i];
+        if (!zone->bitmap) continue;
+
+        int screen_x = zone->x - camera_x;
+        int screen_y = zone->y - camera_y;
+
+        if (screen_x + zone->width > 0 && screen_x < VIEWPORT_WIDTH &&
+            screen_y + zone->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+            drawImage_double_buffering(
+                screen_x, screen_y,
+                zone->bitmap,
+                zone->width, zone->height
+            );
+        }
+    }
+}
+
+// --- Draw walking animation ---
+void render_protagonist_with_animation() {
+    int screen_x = protag_world_x - camera_x;
+    int screen_y = protag_world_y - camera_y;
+    uint64_t now = get_arm_system_time();
+
+    if (anim_playing) {
+        // Advance animation every 100ms (adjust as needed)
+        if (now - last_anim_time >= 100000) { 
+            anim_frame = (anim_frame + 1) % protagAllArray_LEN;
+            last_anim_time = now;
+            if (anim_frame == 0) anim_playing = 0;
+        }
+        drawImage_double_buffering(screen_x, screen_y, 
+            protagAllArray[anim_frame], PROTAG_WIDTH, PROTAG_HEIGHT);
+    } else {
+        drawImage_double_buffering(screen_x, screen_y, 
+            myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
+    }
+}
+
+// --- Animation ---
+void start_animation() {
+    anim_playing = 1;
+}
+
+// --- Battle Screen ---
 void battle_screen_loop(int enemy_type) {
-    uart_puts("\n[BATTLE] Starting battle screen");
-    
-    // DRAW HERE
-    //drawString(300, 300, "BATTLE MODE!", 0xFFFFFF);
+    uart_puts("\n[BATTLE] Entering battle screen");
     swap_buffers();
-    
-    // Simple battle loop
     while (1) {
         char input = uart_getc();
         if (input == 'q' || input == 'Q') {
-            uart_puts("\n[BATTLE] Exiting battle");
+            uart_puts("\n[BATTLE] Quitting battle");
             return;
         }
     }
-}
-
-int check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2) {
-    return (x1 < x2 + w2) && (x1 + w1 > x2) &&
-           (y1 < y2 + h2) && (y1 + h1 > y2);
-}
-
-void render_world_view(int camera_x, int camera_y) {
-    
-    // Calculate which part of the map to render
-    int map_start_x = camera_x;
-    int map_start_y = camera_y;
-    int render_width = VIEWPORT_WIDTH;
-    int render_height = VIEWPORT_HEIGHT;
-    
-    // Clamp to map boundaries if needed
-    if (map_start_x + render_width > GAME_MAP_WIDTH_4X) {
-        render_width = GAME_MAP_WIDTH_4X - map_start_x;
-    }
-    if (map_start_y + render_height > GAME_MAP_HEIGHT_4X) {
-        render_height = GAME_MAP_HEIGHT_4X - map_start_y;
-    }
-
-    drawImage_double_buffering_stride(0, 0, 
-                                gameMap4x + map_start_y * GAME_MAP_WIDTH_4X + map_start_x,
-                                render_width, render_height,
-                                GAME_MAP_WIDTH_4X);  // STRIDE
-
-    // // Render walls in viewport
-    // for (int i = 0; i < MAX_WALLS; i++) {
-    //     int screen_x = walls[i].world_x - camera_x;
-    //     int screen_y = walls[i].world_y - camera_y;
-
-    //     // Check if wall intersects viewport
-    //     if (screen_x + walls[i].width > 0 && 
-    //         screen_x < VIEWPORT_WIDTH &&
-    //         screen_y + walls[i].height > 0 && 
-    //         screen_y < VIEWPORT_HEIGHT) {
-            
-    //         drawImage_double_buffering(screen_x, screen_y, 
-    //             walls[i].bitmap, 
-    //             walls[i].width, 
-    //             walls[i].height);
-    //     }
-    // }
-
-    // Render enemies that are in view
-    for (int i = 0; i < MAX_ENEMIES; i++) {
-        if (!enemies[i].active) continue;
-        
-        // Calculate screen coordinates
-        int screen_x = enemies[i].world_x - camera_x;
-        int screen_y = enemies[i].world_y - camera_y;
-        
-        // Check if enemy is in viewport
-        if (screen_x + enemies[i].width > 0 && 
-            screen_x < VIEWPORT_WIDTH &&
-            screen_y + enemies[i].height > 0 && 
-            screen_y < VIEWPORT_HEIGHT) {
-            
-            drawImage_double_buffering(screen_x, screen_y, 
-                enemies[i].sprite, 
-                enemies[i].width, 
-                enemies[i].height);
-        }
-    }
-}
-
-void update_camera_position(int protag_x, int protag_y, int *camera_x, int *camera_y) {
-    // Center camera on protagonist
-    int target_x = protag_x - VIEWPORT_WIDTH/2 + PROTAG_WIDTH/2;
-    int target_y = protag_y - VIEWPORT_HEIGHT/2 + PROTAG_HEIGHT/2;
-    
-    // Clamp camera to world boundaries
-    *camera_x = target_x;
-    *camera_y = target_y;
-    
-    if (*camera_x < 0) *camera_x = 0;
-    if (*camera_y < 0) *camera_y = 0;
-    if (*camera_x > WORLD_WIDTH - VIEWPORT_WIDTH) 
-        *camera_x = WORLD_WIDTH - VIEWPORT_WIDTH;
-    if (*camera_y > WORLD_HEIGHT - VIEWPORT_HEIGHT) 
-        *camera_y = WORLD_HEIGHT - VIEWPORT_HEIGHT;
-}
-
-void update_protag_position(int *x, int *y, char direction) {
-    const int step_size = RESTORE_MARGIN;
-    // int new_x = *x, new_y = *y;
-    
-    switch (direction) {
-        case UP:    *y -= step_size; break;
-        case DOWN:  *y += step_size; break;
-        case LEFT:  *x -= step_size; break;
-        case RIGHT: *x += step_size; break;
-    }
-    
-    // // Check wall collisions
-    // for (int i = 0; i < MAX_WALLS; i++) {
-    //     if (!walls[i].is_solid) continue;
-        
-    //     if (new_x < walls[i].world_x + walls[i].width &&
-    //         new_x + PROTAG_WIDTH > walls[i].world_x &&
-    //         new_y < walls[i].world_y + walls[i].height &&
-    //         new_y + PROTAG_HEIGHT > walls[i].world_y) {
-    //         return; // Cancel movement if collision
-    //     }
-    // }
-
-    // // Update position if no collision
-    // *x = new_x;
-    // *y = new_y;
-
-    // Clamp to world boundaries
-    if (*x < 0) *x = 0;
-    if (*y < 0) *y = 0;
-    if (*x > WORLD_WIDTH - PROTAG_WIDTH) *x = WORLD_WIDTH - PROTAG_WIDTH;
-    if (*y > WORLD_HEIGHT - PROTAG_HEIGHT) *y = WORLD_HEIGHT - PROTAG_HEIGHT;
-}
-
-// draw a fraction of the map
-void draw_partial_map(int prev_x, int prev_y)
-{
-    // Convert screen coords to map coords with safety margins
-    int map_local_x = prev_x - map_x - RESTORE_MARGIN;
-    int map_local_y = prev_y - map_y - RESTORE_MARGIN;
-
-    // Calculate dimensions with margins
-    int restore_width = PROTAG_WIDTH + 2 * RESTORE_MARGIN;
-    int restore_height = PROTAG_HEIGHT + 2 * RESTORE_MARGIN;
-
-    // Clamp to map boundaries
-    if (map_local_x < 0)
-    {
-        restore_width += map_local_x; // Reduces width
-        map_local_x = 0;
-    }
-    if (map_local_y < 0)
-    {
-        restore_height += map_local_y;
-        map_local_y = 0;
-    }
-    if (map_local_x + restore_width > GAME_MAP_WIDTH_4X)
-    {
-        restore_width = GAME_MAP_WIDTH_4X - map_local_x;
-    }
-    if (map_local_y + restore_height > GAME_MAP_HEIGHT_4X)
-    {
-        restore_height = GAME_MAP_HEIGHT_4X - map_local_y;
-    }
-
-    // Debug output
-    uart_puts("\n[RESTORE] Prev(");
-    uart_dec(prev_x);
-    uart_puts(",");
-    uart_dec(prev_y);
-    uart_puts(") MapLocal(");
-    uart_dec(map_local_x);
-    uart_puts(",");
-    uart_dec(map_local_y);
-    uart_puts(") Size:");
-    uart_dec(restore_width);
-    uart_puts("x");
-    uart_dec(restore_height);
-
-    // Extract and restore
-    unsigned long *bg_section = extract_subimage_static(
-        gameMap4x, GAME_MAP_WIDTH_4X, GAME_MAP_HEIGHT_4X,
-        map_local_x, map_local_y,
-        restore_width, restore_height,
-        sprite_bg_buffer);
-
-    if (bg_section)
-    {
-        // Draw at adjusted screen position
-        int screen_x = map_local_x + map_x;
-        int screen_y = map_local_y + map_y;
-        drawImage_double_buffering(screen_x, screen_y, bg_section, restore_width, restore_height);
-    }
-}
-
-// extract the part of the map that was hidden by the sprite
-unsigned long *extract_subimage_static(const unsigned long *src, int src_w, int src_h,
-                                       int start_x, int start_y, int w, int h,
-                                       unsigned long *buffer)
-{
-    // Strict alignment check
-    if (((unsigned long)src | (unsigned long)buffer) & 0x3)
-    {
-        uart_puts("\n[ALIGN] Misaligned! src:");
-        uart_hex((unsigned long)src);
-        uart_puts(" buf:");
-        uart_hex((unsigned long)buffer);
-        return NULL;
-    }
-
-    // Validate bounds
-    if (start_x < 0 || start_y < 0 || start_x + w > src_w || start_y + h > src_h)
-    {
-        uart_puts("\n[BOUNDS] Invalid: X[");
-        uart_dec(start_x);
-        uart_puts("..");
-        uart_dec(start_x + w);
-        uart_puts("] Y[");
-        uart_dec(start_y);
-        uart_puts("..");
-        uart_dec(start_y + h);
-        uart_puts("]");
-        return NULL;
-    }
-
-    // Row-by-row copy with memcpy
-    for (int y = 0; y < h; y++)
-    {
-        const unsigned long *src_row = src + (start_y + y) * src_w + start_x;
-        unsigned long *dst_row = buffer + y * w;
-        memcpy(dst_row, src_row, w * sizeof(unsigned long));
-    }
-
-    return buffer;
 }

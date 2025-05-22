@@ -27,11 +27,50 @@ typedef struct {
     int is_solid;            // 1 if collision enabled
 } Wall;
 
+typedef struct {
+    int x;                   // Top-left x position in world coordinates
+    int y;                   // Top-left y position in world coordinates
+    const unsigned long* bitmap;  // Visual representation of the zone
+    int width;               // Width of the zone
+    int height;              // Height of the zone
+    int target_level_number; // Level number to load when triggered
+    int target_spawn_x;      // X position to spawn player in the new level
+    int target_spawn_y;      // Y position to spawn player in the new level
+} Zone;
+
+
+typedef struct {
+    int level_number;         // For progression
+    const unsigned long* background; // Background image or tilemap
+    int bg_width;
+    int bg_height;
+
+    Enemy* enemies;           // Array of enemies
+    int enemy_count;
+
+    Wall* walls;              // Array of walls
+    int wall_count;
+
+    Zone* zones;              // Array of transition zones
+    int zone_count;
+
+    int start_x, start_y;     // Where the player spawns in the level
+} Level;
+
+// --- Game API ---
 void game_loop();
-void render_world_view(int camera_x, int camera_y);
-void update_camera_position(int protag_x, int protag_y, int *camera_x, int *camera_y);
-void update_protag_position(int *x, int *y, char direction);
-void draw_partial_map(int x, int y);
-unsigned long* extract_subimage_static(const unsigned long* src, int src_width, int src_height, int start_x, int start_y, int width, int height, unsigned long* out_buffer);
-int check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
+
+// --- Level ---
+void load_level(Level* level);  
+Level* get_level_by_number(int number);      
+
+// --- Protagonist ---
+void update_protagonist_position(char input);
+void update_camera();
+void render_protagonist_with_animation();
+void render_world();
+
+// --- Logic ---
+int check_enemy_collision();
 void battle_screen_loop(int enemy_type);
+void start_animation();

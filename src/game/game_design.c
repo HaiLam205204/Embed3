@@ -74,7 +74,7 @@ void design_screen_loop()
             {
                 drawImage_double_buffering(MAP_START_X, MAP_START_Y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
 
-                for (int i = 0; i < MAX_PROTAGONISTS; ++i)
+                for (int i = 0; i < num_protagonists; ++i)
                 {
                     draw_character_sprite(&sprites[i]);
                     draw_turn_indicator(&sprites[current_player_turn], 466 ,593);
@@ -89,7 +89,7 @@ void design_screen_loop()
             first_frame = 0;
         } 
 
-        combat_utility_UI(protagonists, MAX_PROTAGONISTS, enemy, num_enemies);
+        combat_utility_UI(protagonists, num_protagonists, enemy, num_enemies);
     }
 
     uart_puts("[DESIGN_SCREEN] Design Screen Render Complete.\n");
@@ -110,7 +110,7 @@ void init_protagonists()
 
     strcpy(protagonists[2].name, "Ally2");
     protagonists[2].is_main_character = 0;
-    protagonists[2].current_hp = 100;
+    protagonists[2].current_hp = 1;
     protagonists[2].max_hp = 100;
 
     strcpy(protagonists[3].name, "Ally3");
@@ -139,14 +139,14 @@ void init_enemies()
 
 void redraw_combat_screen(int current_player_turn, int selected_enemy_index)
 {
-    uart_puts("[REDRAW_COMBAT_UI] Redrawing combat screen...\n");
-    uart_puts("Current player turn: ");
+    // uart_puts("[REDRAW_COMBAT_UI] Redrawing combat screen...\n");
+    // uart_puts("Current player turn: ");
     uart_putint(current_player_turn);
     uart_puts("\n");
     // Draw background
     drawImage_double_buffering(MAP_START_X, MAP_START_Y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
 
-    for (int i = 0; i < MAX_PROTAGONISTS; ++i) {
+    for (int i = 0; i < num_protagonists; ++i) {
         draw_character_sprite(&sprites[i]);
     }
 

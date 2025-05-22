@@ -8,6 +8,8 @@
 #include "../../include/uart0.h"
 #include "../../include/framebf.h"
 #include "../../include/mbox.h"
+#include "../../include/bitmaps/welcomeScreen.h"
+#include "../../include/renderFrame.h"
 // #include "../header/commands.h"
 // #include "../header/history.h"
 // #include "../header/autocomplete.h"
@@ -121,13 +123,6 @@ void cli_put_hex8(uint8_t byte, unsigned int attr, int zoom) {
     cli_put_char(hex_chars[byte & 0xF], attr, zoom);
 }
 
-
-// Function to clear (close) the CLI window by drawing over it
-void clear_cli_window() {
-    // Fill the entire CLI window area with the background color (black)
-    drawRectARGB32(CLI_LEFT, CLI_TOP, CLI_RIGHT, CLI_BOTTOM, BLACK, 1); 
-}
-
 // Function to handle CLI loop inside the popup window
 void cli_loop() {
     // Store input
@@ -143,10 +138,11 @@ void cli_loop() {
 
         // Check exit key FIRST
         if (c == ESC) {
-            clear_cli_window();  // Erase the window from screen
             // Reset cursor position
             cursorX = CLI_LEFT + 1;
             cursorY = CLI_TOP + 1;
+            // Draw background image
+            draw_background();
             return;              // Exit CLI mode
         }
 

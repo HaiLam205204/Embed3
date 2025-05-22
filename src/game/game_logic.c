@@ -2,12 +2,15 @@
 #include "../../include/game_logic.h"
 #include "../../include/models/enemy.h"
 #include "../../include/models/character.h"
+#include "../../include/models/character_sprite.h"
 #include "../../include/bitmaps/enemy1.h"
 #include "../../include/bitmaps/enemy2.h"
 #include "../../include/uart0.h"
 #include "../../include/utils.h"
+#include "../../include/game_design.h"
 
 int num_enemies = 3;  // <- THIS IS THE DEFINITION
+int num_protagonists = 4;
 
 void deal_damage(int index, int amount) {
     enemy[index].current_hp -= amount;
@@ -80,9 +83,10 @@ void enemy_turn(Character *protagonists, int num_protagonists) {
             int damage = 30;  // Example damage
 
             protagonists[target_index].current_hp -= damage;
-            if (protagonists[target_index].current_hp < 0)
-                protagonists[target_index].current_hp = 0;
-
+                if (protagonists[target_index].current_hp <= 0) {
+                    protagonists[target_index].current_hp = 0;
+                    remove_protagonist(target_index);
+            }
             uart_puts("[ENEMY TURN] ");
             uart_puts(e->name);
             uart_puts(" attacks ");
@@ -99,12 +103,17 @@ void enemy_turn(Character *protagonists, int num_protagonists) {
             uart_puts(e->name);
             uart_puts(" uses AoE attack!\n");
 
-            for (int j = 0; j < num_protagonists; ++j) {
+            for (int j = num_protagonists - 1; j >= 0; --j) {
                 protagonists[j].current_hp -= damage;
-                if (protagonists[j].current_hp < 0)
+                if (protagonists[j].current_hp <= 0) {
                     protagonists[j].current_hp = 0;
+                    remove_protagonist(j);
+                }
             }
         }
+
+        redraw_combat_screen(0, 0);
+        redraw_combat_screen(0, 0);
 
         // print_number(attack_type);
         wait_us(2000000ULL);  // wait 2,000,000 microseconds = 2 seconds
@@ -124,6 +133,23 @@ int all_characters_have_acted(Character *protagonists, int num_protagonists) {
         }
     }
     return 1; // All have acted
+}
+
+void remove_protagonist(int index) {
+    if (index < 0 || index >= num_protagonists) return;
+
+    uart_puts("[DEBUG] Removing protagonist: ");
+    uart_puts(protagonists[index].name);
+    uart_puts("\n");
+
+    // Shift the array left
+    for (int i = index; i < num_protagonists - 1; i++) {
+        protagonists[i] = protagonists[i + 1];
+        sprites[i] = sprites[i + 1];
+        sprites[i].character = &protagonists[i];  // FIX: Update pointer to correct enemy
+    }
+
+    num_protagonists--;  // reduce the count
 }
 
 

@@ -2,14 +2,24 @@
 #include "../../include/timer.h"
 #include "../../include/framebf.h"
 #include "../../include/utils.h"
+#include "../../include/uart0.h"
+#include "../../include/bitmaps/welcomeScreen.h"
+
+#define ESCAPE 0x1B // ESC
 
 void video_playback(const unsigned long** frames, uint32_t frame_count, int x, int y, int src_width, int src_height, int max_width, int max_height) {
     uint32_t current_frame = 0;
     
     // Initialize timer for first frame
     set_wait_timer(1, FRAME_US);
-    
+
     while (current_frame < frame_count) {
+        
+        // detect non-blocking input 
+        if(getUart() == ESCAPE){ 
+            draw_background();
+            break;
+        }
         // 1. Display current frame (implement your display function)
         drawImageScaledAspect(x, y, frames[current_frame], src_width, src_height, max_width, max_height);
         // 2. Wait for next frame time
@@ -24,6 +34,14 @@ void video_playback(const unsigned long** frames, uint32_t frame_count, int x, i
             current_frame = 0; // Loop video if desired
         }
     }
+}
+
+void draw_background() {
+    drawImage(0, 0, background, 1024, 768);
+    drawString(0, 0, "Nguyen Hai Lam", 0x0000ACFF, 7);
+    drawString(0, 200, "Nguyen Trong Khoa", 0x0000AE00, 7);
+    drawString(0, 400, "Nguyen Duc Anh", 0x00CC00FF, 7);
+    drawString(0, 600, "Ung Xuan Dat", 0x00FFAC00, 7);
 }
 
 // // GPU sync frame rendering
