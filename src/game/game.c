@@ -222,7 +222,7 @@ void game_loop() {
             input = uart_getc();
             // detect non-blocking input 
             if(input == ESCAPE){ 
-                drawImage(0, 0, background, 1024, 768);
+                draw_background();
                 break;
             }
 
