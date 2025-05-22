@@ -12,6 +12,8 @@ typedef struct {
     int pos_y;                     // Y Position on screen
 } CharacterSprite;
 
+extern CharacterSprite sprites[MAX_PROTAGONISTS];  // <-- Just declaration
+
 void draw_character_sprite(CharacterSprite *sprite);
 
 #endif
