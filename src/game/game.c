@@ -75,6 +75,7 @@ Wall level1_walls[MAX_WALLS] = {
     // {WALL1_START_X, WALL1_START_Y + 768*2 - 63, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1}, 
     // {WALL2_START_X + 1024*2 - 63, WALL2_START_Y, wall2, WALL2_WIDTH, WALL2_HEIGHT, 1},
     {WALL3_START_X, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
     {WALL3_START_X + 342*2, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
     {WALL3_START_X + 342*3, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
     {WALL3_START_X + 342*5, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
@@ -129,15 +130,15 @@ Wall level3_walls[MAX_WALLS] = {
 };
 
 Zone level1_zones[] = {
-    { .x = 240, .y = 160, .bitmap = zone, .width = 32, .height = 32, .target_level_number = 2, .target_spawn_x = 0, .target_spawn_y = 0 }
+    { .x = 0, .y = 1408, .bitmap = zone, .width = ZONE_WIDTH, .height = ZONE_HEIGHT, .target_level_number = 2, .target_spawn_x = 0, .target_spawn_y = 0 }
 };
 
 Zone level2_zones[] = {
-    { .x = 240, .y = 160, .bitmap = zone, .width = 32, .height = 32, .target_level_number = 3, .target_spawn_x = 0, .target_spawn_y = 0 }
+    { .x = 0, .y = 1408, .bitmap = zone, .width = ZONE_WIDTH, .height = ZONE_HEIGHT, .target_level_number = 3, .target_spawn_x = 0, .target_spawn_y = 0 }
 };
 
 Zone level3_zones[] = {
-    { .x = 240, .y = 160, .bitmap = zone, .width = 32, .height = 32, .target_level_number = 1, .target_spawn_x = 0, .target_spawn_y = 0 }
+    { .x = 1920, .y = 1408, .bitmap = zone, .width = ZONE_WIDTH, .height = ZONE_HEIGHT, .target_level_number = 1, .target_spawn_x = 0, .target_spawn_y = 0 }
 };
 
 // --- Levels ---
