@@ -110,8 +110,22 @@ Wall level2_walls[MAX_WALLS] = {
 
 // --- Level 3 Walls ---
 Wall level3_walls[MAX_WALLS] = {
-    {400, 400, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
-    {1200, 1000, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1},
+    {WALL3_START_X + 342, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*2, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*5, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*4, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+
+    {WALL3_START_X, WALL3_START_Y + 256*2, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+    {WALL3_START_X + 342*3, WALL3_START_Y - 256*2, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+
+    {WALL4_START_X, WALL4_START_Y + 256, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X, WALL4_START_Y + 256*2, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X, WALL4_START_Y + 256*3, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X, WALL4_START_Y + 256*4, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X - 342*2, WALL4_START_Y, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X - 342*2, WALL4_START_Y + 256, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X + 342, WALL4_START_Y, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {WALL4_START_X + 342, WALL4_START_Y + 256*5, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
 };
 
 Zone level1_zones[] = {
@@ -119,11 +133,11 @@ Zone level1_zones[] = {
 };
 
 Zone level2_zones[] = {
-    { .x = 240, .y = 160, .bitmap = zone, .width = 32, .height = 32, .target_level_number = 2, .target_spawn_x = 0, .target_spawn_y = 0 }
+    { .x = 240, .y = 160, .bitmap = zone, .width = 32, .height = 32, .target_level_number = 3, .target_spawn_x = 0, .target_spawn_y = 0 }
 };
 
 Zone level3_zones[] = {
-    { .x = 240, .y = 160, .bitmap = zone, .width = 32, .height = 32, .target_level_number = 2, .target_spawn_x = 0, .target_spawn_y = 0 }
+    { .x = 240, .y = 160, .bitmap = zone, .width = 32, .height = 32, .target_level_number = 1, .target_spawn_x = 0, .target_spawn_y = 0 }
 };
 
 // --- Levels ---
