@@ -1,4 +1,5 @@
 #include "framebf.h"
+#include "models/character.h"
 #include "models/character_sprite.h"
 #include "models/enemy_sprite.h"
 
@@ -26,7 +27,9 @@ void draw_all_buttons();
 void combat_utility_UI();
 void clear_persona_option_screen(); 
 
-void draw_skill_option_screen(int persona, int option);
+// void draw_skill_option_screen(int persona, int option);
+
+void draw_skill_option_screen(Character character, int option, int character_index);
 
 void wait_for_button_release_animation();
 

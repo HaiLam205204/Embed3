@@ -23,6 +23,9 @@
         "game_combat.h": "c",
         "video.h": "c",
         "welcomescreen.h": "c",
-        "protagonist_animation.h": "c"
+        "protagonist_animation.h": "c",
+        "enemy_sprite.h": "c",
+        "character_sprite.h": "c",
+        "constants.h": "c"
     }
 }
