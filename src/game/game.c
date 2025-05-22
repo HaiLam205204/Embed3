@@ -23,8 +23,11 @@
 #define VIEWPORT_HEIGHT 768
 #define WORLD_WIDTH 1024*2
 #define WORLD_HEIGHT 768*2
-#define GAME_FRAME_US 30/1000000
+#define FRAME_RATE 30
+#define GAME_FRAME_US (1000000 / FRAME_RATE)
+#define MAX_LEVELS 3
 
+#define NULL ((void*)0)
 #define ESCAPE 0x1B // ESC
 
 // --- Protagonist ---
@@ -40,8 +43,8 @@ uint32_t anim_frame = 0;
 uint64_t last_anim_time = 0;
 int anim_playing = 0;
 
-Enemy enemies[MAX_ENEMIES] = {
-    
+// --- Level 1 Enemies ---
+Enemy level1_enemies[MAX_ENEMIES] = {
     {1300, 1000, shadow1, 136, 88, 
         1, // active
         4, 4, // hitbox 
@@ -52,7 +55,20 @@ Enemy enemies[MAX_ENEMIES] = {
     },
 };
 
-Wall walls[MAX_WALLS] = {
+// --- Level 2 Enemies ---
+Enemy level2_enemies[MAX_ENEMIES] = {
+    {500, 300, shadow1, 136, 88, 1, 4, 4},
+    {900, 700, shadow2, 68, 100, 1, 4, 4},
+    {1500, 1200, shadow2, 68, 100, 1, 4, 4},
+};
+
+// --- Level 3 Enemies ---
+Enemy level3_enemies[MAX_ENEMIES] = {
+    {800, 600, shadow1, 136, 88, 1, 4, 4},
+};
+
+// --- Level 1 Walls ---
+Wall level1_walls[MAX_WALLS] = {
     {WALL1_START_X, WALL1_START_Y, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1}, 
     {WALL2_START_X, WALL2_START_Y, wall2, WALL2_WIDTH, WALL2_HEIGHT, 1}, 
     {WALL1_START_X, WALL1_START_Y + 768*2 - 63, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1}, 
@@ -68,6 +84,63 @@ Wall walls[MAX_WALLS] = {
     // Add more walls...
 };
 
+// --- Level 2 Walls ---
+Wall level2_walls[MAX_WALLS] = {
+    {100, 100, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1},
+    {500, 200, wall2, WALL2_WIDTH, WALL2_HEIGHT, 1},
+    {900, 800, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
+};
+
+// --- Level 3 Walls ---
+Wall level3_walls[MAX_WALLS] = {
+    {400, 400, wall4, WALL4_WIDTH, WALL4_HEIGHT, 1},
+    {1200, 1000, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1},
+};
+
+
+// --- Levels ---
+Level levels[MAX_LEVELS] = {
+    {
+        .level_number = 1,
+        .background = gameMap4x,
+        .bg_width = GAME_MAP_WIDTH_4X,
+        .bg_height = GAME_MAP_HEIGHT_4X,
+        .enemies = level1_enemies,
+        .enemy_count = sizeof(level1_enemies) / sizeof(Enemy),
+        .walls = level1_walls,
+        .wall_count = sizeof(level1_walls) / sizeof(Wall),
+        .start_x = 100,
+        .start_y = 100,
+    },
+    {
+        .level_number = 2,
+        .background = gameMap4x, // Change if using another map
+        .bg_width = GAME_MAP_WIDTH_4X,
+        .bg_height = GAME_MAP_HEIGHT_4X,
+        .enemies = level2_enemies,
+        .enemy_count = sizeof(level2_enemies) / sizeof(Enemy),
+        .walls = level2_walls,
+        .wall_count = sizeof(level2_walls) / sizeof(Wall),
+        .start_x = 200,
+        .start_y = 300,
+    },
+    {
+        .level_number = 3,
+        .background = gameMap4x, // Update if you add unique backgrounds
+        .bg_width = GAME_MAP_WIDTH_4X,
+        .bg_height = GAME_MAP_HEIGHT_4X,
+        .enemies = level3_enemies,
+        .enemy_count = sizeof(level3_enemies) / sizeof(Enemy),
+        .walls = level3_walls,
+        .wall_count = sizeof(level3_walls) / sizeof(Wall),
+        .start_x = 50,
+        .start_y = 600,
+    }
+};
+
+const int total_levels = sizeof(levels) / sizeof(Level);
+Level* current_level = &levels[0]; // Start at level 1
+
 // --- Game Loop ---
 void game_loop() {
     int first_frame = 1;
@@ -80,12 +153,15 @@ void game_loop() {
     uart_dec(protag_world_y);
     uart_puts(")");
 
+    // Initial level load
+    load_level(current_level);
+
     while (1) {
         uint64_t start_time = get_arm_system_time();
         uart_puts("\n[FRAME] ---- NEW FRAME ----");
 
         if (first_frame) {
-            // Display first frame (double buffered)
+            //Display first frame (double buffered)
             for (int i = 0; i < 2; i++) {
                 render_world();
                 render_protagonist_with_animation();
@@ -120,18 +196,19 @@ void game_loop() {
             update_protagonist_position(input);
             
             // Check enemy collisions
-            for (int i = 0; i < MAX_ENEMIES; i++) {
-                if (!enemies[i].active) continue;
-                
+            for (int i = 0; i < current_level->enemy_count; i++) {
+                Enemy* enemy = &current_level->enemies[i];
+                if (!enemy->active) continue;
+
                 if (check_enemy_collision(
                     protag_world_x, protag_world_y, PROTAG_WIDTH, PROTAG_HEIGHT,
-                    enemies[i].world_x + enemies[i].collision_offset_x,
-                    enemies[i].world_y + enemies[i].collision_offset_y,
-                    enemies[i].width - 2*enemies[i].collision_offset_x,
-                    enemies[i].height - 2*enemies[i].collision_offset_y
+                    enemy->world_x + enemy->collision_offset_x,
+                    enemy->world_y + enemy->collision_offset_y,
+                    enemy->width - 2 * enemy->collision_offset_x,
+                    enemy->height - 2 * enemy->collision_offset_y
                 )) {
                     uart_puts("\n[COMBAT] Enemy contact!");
-                    //battle_screen_loop(enemies[i].enemy_type);
+                    // battle_screen_loop(enemy->enemy_type);
                     design_screen_loop();
                     first_frame = 1;
                     break;
@@ -164,11 +241,78 @@ void game_loop() {
     }
 }
 
+void load_level(Level* level) {
+    if (!level) return;
+
+    uart_puts("\n[LEVEL] Loading level ");
+    uart_dec(level->level_number);
+
+    // Set current level
+    current_level = level;
+
+    // Reset protagonist position to level's start position
+    protag_world_x = level->start_x;
+    protag_world_y = level->start_y;
+
+    // Reset camera
+    update_camera();
+
+    // Activate all enemies and walls in the level
+    for (int i = 0; i < level->enemy_count; i++) {
+        level->enemies[i].active = 1;
+    }
+    for (int i = 0; i < level->wall_count; i++) {
+        level->walls[i].is_solid = 1;
+    }
+
+    // Double buffered render of initial level state
+    for (int i = 0; i < 2; i++) {
+
+        // Draw background
+        drawImage_double_buffering_stride(
+            0, 0,
+            level->background + camera_y * level->bg_width + camera_x,
+            VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
+            level->bg_width
+        );
+
+        // Draw walls
+        for (int j = 0; j < level->wall_count; j++) {
+            Wall* wall = &level->walls[j];
+            int screen_x = wall->world_x - camera_x;
+            int screen_y = wall->world_y - camera_y;
+            
+            if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
+                screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+                drawImage_double_buffering(
+                    screen_x, screen_y,
+                    wall->bitmap,
+                    wall->width, wall->height
+                );
+            }
+        }
+
+        // Draw protagonist
+        drawImage_double_buffering(
+            protag_world_x - camera_x,
+            protag_world_y - camera_y,
+            myBitmapprotag,  // Default protagonist sprite
+            PROTAG_WIDTH,
+            PROTAG_HEIGHT
+        );
+
+        swap_buffers();
+        wait_us(16000); // Small delay for smooth transition
+    }
+
+    uart_puts("\n[LEVEL] Loaded successfully");
+}
+
 // --- Movement ---
 void update_protagonist_position(char input) {
     int new_x = protag_world_x;
     int new_y = protag_world_y;
-    
+
     switch (input) {
         case UP:    new_y -= STEP; break;
         case DOWN:  new_y += STEP; break;
@@ -176,29 +320,33 @@ void update_protagonist_position(char input) {
         case RIGHT: new_x += STEP; break;
     }
 
-    // Boundary checks
+    // Boundary checks against level dimensions
     if (new_x < 0) new_x = 0;
     if (new_y < 0) new_y = 0;
-    if (new_x > WORLD_WIDTH - PROTAG_WIDTH) new_x = WORLD_WIDTH - PROTAG_WIDTH;
-    if (new_y > WORLD_HEIGHT - PROTAG_HEIGHT) new_y = WORLD_HEIGHT - PROTAG_HEIGHT;
+    if (new_x > current_level->bg_width - PROTAG_WIDTH)
+        new_x = current_level->bg_width - PROTAG_WIDTH;
+    if (new_y > current_level->bg_height - PROTAG_HEIGHT)
+        new_y = current_level->bg_height - PROTAG_HEIGHT;
 
     // Wall collision checks
-    for (int i = 0; i < MAX_WALLS; i++) {
-        if (!walls[i].is_solid) continue;
-        
-        if (new_x < walls[i].world_x + walls[i].width &&
-            new_x + PROTAG_WIDTH > walls[i].world_x &&
-            new_y < walls[i].world_y + walls[i].height &&
-            new_y + PROTAG_HEIGHT > walls[i].world_y) {
+    for (int i = 0; i < current_level->wall_count; i++) {
+        Wall* wall = &current_level->walls[i];
+        if (!wall->is_solid) continue;
+
+        if (new_x < wall->world_x + wall->width &&
+            new_x + PROTAG_WIDTH > wall->world_x &&
+            new_y < wall->world_y + wall->height &&
+            new_y + PROTAG_HEIGHT > wall->world_y) {
             uart_puts("\n[COLLISION] Blocked by wall");
             return; // Cancel movement
         }
     }
 
-    // Only update position if no collisions
+    // Update position if no collisions
     protag_world_x = new_x;
     protag_world_y = new_y;
 }
+
 
 // --- Camera ---
 void update_camera() {
@@ -213,26 +361,30 @@ void update_camera() {
 
 // --- Collision ---
 int check_enemy_collision() {
-    for (int i = 0; i < MAX_ENEMIES; i++) {
-        if (!enemies[i].active) continue;
+    for (int i = 0; i < current_level->enemy_count; i++) {
+        Enemy* enemy = &current_level->enemies[i];
+        if (!enemy->active) continue;
 
-        int ex = enemies[i].world_x + enemies[i].collision_offset_x;
-        int ey = enemies[i].world_y + enemies[i].collision_offset_y;
-        int ew = enemies[i].width - 2 * enemies[i].collision_offset_x;
-        int eh = enemies[i].height - 2 * enemies[i].collision_offset_y;
+        int ex = enemy->world_x + enemy->collision_offset_x;
+        int ey = enemy->world_y + enemy->collision_offset_y;
+        int ew = enemy->width - 2 * enemy->collision_offset_x;
+        int eh = enemy->height - 2 * enemy->collision_offset_y;
 
         if (protag_world_x < ex + ew &&
             protag_world_x + PROTAG_WIDTH > ex &&
             protag_world_y < ey + eh &&
             protag_world_y + PROTAG_HEIGHT > ey) {
-            return 1;
+            return 1; // Collision detected
         }
     }
-    return 0;
+    return 0; // No collision
 }
+
 
 // --- Rendering ---
 void render_world() {
+    if (current_level == NULL) return;
+
     // Draw map
     drawImage_double_buffering_stride(
         0, 0,
@@ -241,41 +393,43 @@ void render_world() {
         GAME_MAP_WIDTH_4X
     );
 
-    // Draw walls
-    for (int i = 0; i < MAX_WALLS; i++) {
-        int screen_x = walls[i].world_x - camera_x;
-        int screen_y = walls[i].world_y - camera_y;
-        
-        if (screen_x + walls[i].width > 0 && 
-            screen_x < VIEWPORT_WIDTH &&
-            screen_y + walls[i].height > 0 && 
-            screen_y < VIEWPORT_HEIGHT) {
-            drawImage_double_buffering(screen_x, screen_y, 
-                walls[i].bitmap, 
-                walls[i].width, 
-                walls[i].height);
+    // --- Draw walls ---
+    for (int i = 0; i < current_level->wall_count; i++) {
+        Wall* wall = &current_level->walls[i];
+
+        int screen_x = wall->world_x - camera_x;
+        int screen_y = wall->world_y - camera_y;
+
+        if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
+            screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+            drawImage_double_buffering(
+                screen_x, screen_y,
+                wall->bitmap,
+                wall->width, wall->height
+            );
         }
     }
 
-    // Draw enemies
-    for (int i = 0; i < MAX_ENEMIES; i++) {
-        if (!enemies[i].active) continue;
-        
-        int screen_x = enemies[i].world_x - camera_x;
-        int screen_y = enemies[i].world_y - camera_y;
-        
-        if (screen_x + enemies[i].width > 0 && 
-            screen_x < VIEWPORT_WIDTH &&
-            screen_y + enemies[i].height > 0 && 
-            screen_y < VIEWPORT_HEIGHT) {
-            drawImage_double_buffering(screen_x, screen_y, 
-                enemies[i].sprite, 
-                enemies[i].width, 
-                enemies[i].height);
+    // --- Draw enemies ---
+    for (int i = 0; i < current_level->enemy_count; i++) {
+        Enemy* enemy = &current_level->enemies[i];
+        if (!enemy->active) continue;
+
+        int screen_x = enemy->world_x - camera_x;
+        int screen_y = enemy->world_y - camera_y;
+
+        if (screen_x + enemy->width > 0 && screen_x < VIEWPORT_WIDTH &&
+            screen_y + enemy->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+            drawImage_double_buffering(
+                screen_x, screen_y,
+                enemy->sprite,
+                enemy->width, enemy->height
+            );
         }
     }
 }
 
+// --- Draw walking animation ---
 void render_protagonist_with_animation() {
     int screen_x = protag_world_x - camera_x;
     int screen_y = protag_world_y - camera_y;

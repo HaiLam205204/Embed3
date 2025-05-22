@@ -28,7 +28,6 @@ typedef struct {
 } Wall;
 
 typedef struct {
-    const char* name;         // Optional: name or title of the level
     int level_number;         // For progression
     const unsigned long* background; // Background image or tilemap
     int bg_width;
@@ -48,7 +47,7 @@ void game_loop();
 
 // --- Level-related ---
 void load_level(Level* level);  // Load the level: sets up enemies, walls, etc.
-void clear_level();             // Optional: cleanup/reset before loading next level
+//void clear_level();             // Optional: cleanup/reset before loading next level
 
 // --- Protagonist ---
 void update_protagonist_position(char input);
