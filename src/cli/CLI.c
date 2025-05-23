@@ -450,9 +450,7 @@ void handle_command(char *command) {
         cli_put_string("Board Revision: ", WHITE, ZOOM);
         cli_put_hex(rev,  WHITE, ZOOM);
         cli_put_char('\n', WHITE, ZOOM);
-        print_board_revision_info(rev);
-        cli_put_char('\n', WHITE, ZOOM);
-        
+
         // MAC Address
         unsigned char mac[6];
         if (get_mac_address(mac)) {
@@ -525,71 +523,6 @@ void handle_command(char *command) {
             cli_put_char(msg[i], WHITE, ZOOM);
         }
     }
-}
-
-/**
- * Parses and prints human-readable information from the board revision code
- * retrieved from the mailbox property interface.
- */
-void print_board_revision_info(unsigned int rev) {
-    // Check if it's a new-style revision (bit 23 should be 1)
-    if ((rev & (1 << 23)) == 0) {
-        cli_put_string("Old-style revision, no decoding available.\n", WHITE, ZOOM);
-        return;
-    }
-
-    // Extract fields from revision code
-    unsigned int type = (rev >> 4) & 0xFF;      // Bits 4–11: Board type
-    unsigned int proc = (rev >> 12) & 0xF;      // Bits 12–15: Processor type
-    unsigned int manuf = (rev >> 16) & 0xF;     // Bits 16–19: Manufacturer
-    unsigned int mem = (rev >> 20) & 0x7;       // Bits 20–22: Memory size
-    unsigned int rev_num = rev & 0xF;           // Bits 0–3: Revision number
-
-    // Lookup table: Board model types based on the 'type' field
-    const char* types[] = {
-        "A", "B", "A+", "B+", "2B", "Alpha", "CM1", "3B", "Zero", "CM3",
-        "Zero W", "3B+", "3A+", "Internal", "CM3+", "4B"
-    };
-    if (type < sizeof(types) / sizeof(types[0])) {
-        cli_put_string("Model: Raspberry Pi ", WHITE, ZOOM);
-        cli_put_string(types[type], WHITE, ZOOM);
-        cli_put_char('\n', WHITE, ZOOM);
-    }
-
-    // Lookup table: Processor types
-    const char* procs[] = {
-        "BCM2835", "BCM2836", "BCM2837", "BCM2711"
-    };
-    if (proc < sizeof(procs) / sizeof(procs[0])) {
-        cli_put_string("Processor: ", WHITE, ZOOM);
-        cli_put_string(procs[proc], WHITE, ZOOM);
-        cli_put_char('\n', WHITE, ZOOM);
-    }
-
-    // Lookup table: Manufacturers
-    const char* manufs[] = {
-        "Sony UK", "Egoman", "Embest", "Sony Japan", "Embest (China)", "Stadium"
-    };
-    if (manuf < sizeof(manufs) / sizeof(manufs[0])) {
-        cli_put_string("Manufacturer: ", WHITE, ZOOM);
-        cli_put_string(manufs[manuf], WHITE, ZOOM);
-        cli_put_char('\n', WHITE, ZOOM);
-    }
-
-    // Lookup table: Memory sizes
-    const char* mems[] = {
-        "256 MB", "512 MB", "1 GB", "2 GB", "4 GB", "8 GB"
-    };
-    if (mem < sizeof(mems) / sizeof(mems[0])) {
-        cli_put_string("Memory Size: ", WHITE, ZOOM);
-        cli_put_string(mems[mem], WHITE, ZOOM);
-        cli_put_char('\n', WHITE, ZOOM);
-    }
-
-    // Print the raw revision number from the lowest 4 bits
-    cli_put_string("PCB Revision: ", WHITE, ZOOM);
-    cli_put_hex(rev_num, WHITE, ZOOM);
-    cli_put_char('\n', WHITE, ZOOM);
 }
 
 void show_all_help(){
