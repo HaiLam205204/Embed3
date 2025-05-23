@@ -90,6 +90,8 @@ void design_screen_loop()
         } 
 
         combat_utility_UI(protagonists, num_protagonists, enemy, num_enemies);
+
+        break;
     }
 
     uart_puts("[DESIGN_SCREEN] Design Screen Render Complete.\n");

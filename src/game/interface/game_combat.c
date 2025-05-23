@@ -23,6 +23,7 @@
 #include "../../../include/combat.h"
 #include "../../../include/bitmaps/yellow_triangle.h"
 #include "../../../include/game_logic.h"
+#include "../../../include/game.h"
 
 
 #define GAME_FRAME_RATE 30                        // e.g., 30 FPS
@@ -176,11 +177,13 @@ void draw_enemy_selected(EnemySprite *sprite, int triangle_x, int triangle_y ) {
 }
 
 int turn_index = 0; // Track whose turn it is
-extern int current_player_turn = 0; // 0 to 3 for 4 characters
+int current_player_turn = 0; // 0 to 3 for 4 characters
 int selected_enemy = 0;
 int is_previous_screen_skill_menu = 0;
 
 void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyModel enemy[], int num_enemies) {
+    redraw_combat_screen(current_player_turn, 0);
+    redraw_combat_screen(current_player_turn, 0);
     int button_pressed_attack = 0;
     int button_pressed_item = 0;
     int button_pressed_persona = 0;
@@ -189,7 +192,6 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
     // Time the last button was pressed
     uint64_t button_pressed_time = 0;
     int exit_ui = 0;  // <-- Flag to exit loop
-
     // turn_index = (turn_index + 1) % num_enemies;
     // current_player_turn = (current_player_turn + 1) % 4;
 
@@ -245,12 +247,13 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     current_screen = SCREEN_SELECT_ENEMY;
                     redraw_combat_screen(current_player_turn, 0);
                     redraw_combat_screen(current_player_turn, 0);
+                    exit_ui = 0;
                 }
                 if (input == ITEM) {
                     button_pressed_item = 1;
                     button_pressed_time = start_time;
                     uart_puts("ITEM\n");
-                    // exit_ui = 1;
+                    exit_ui = 0;
                 }
                 if (input == PERSONA) {
                     if (protagonists[current_player_turn].is_main_character) {
@@ -263,13 +266,14 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     } else {
                         uart_puts("[DEBUG] Ally cannot use persona\n");
                     }
-                    // exit_ui = 1;
+                    exit_ui = 0;
                 }
                 if (input == RUN) {
                     button_pressed_run = 1;
                     button_pressed_time = start_time;
                     uart_puts("RUN\n");
-                    // exit_ui = 1;
+                    protag_world_x -= 10; // or any direction away from the enemy
+                    exit_ui = 1;
                 }
                 if (input == SKILL) { 
                     button_pressed_skill = 1;
@@ -278,6 +282,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
                     current_screen = SCREEN_SKILL_MENU;
                     uart_puts("SKILL\n");
+                    exit_ui = 0;
                 }
                 if (current_player_turn >= num_protagonists) {
                     uart_putint(current_player_turn);
@@ -314,7 +319,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
             }
             else if (current_screen == SCREEN_SKILL_MENU) {
                 // int max_skills = (selected_persona == 0) ? orpheus_skill_bitmap_allArray_LEN : pixie_skill_bitmap_allArray_LEN;
-
+                uart_puts("[DEBUG] Switched to SCREEN_SKILL_MENU\n");
                 int is_main = protagonists[current_player_turn].is_main_character;
                 int max_skills = 2;
 
@@ -386,6 +391,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                 }
             }
             else if (current_screen == SCREEN_SELECT_ENEMY && selected_enemy >= 0) {
+                uart_puts("[DEBUG] Switched to SCREEN_SELECT_ENEMY\n");
                 int selecting = 1;
                 redraw_combat_screen(current_player_turn, selected_enemy);
                 redraw_combat_screen(current_player_turn, selected_enemy);
@@ -406,8 +412,6 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                             current_screen = SCREEN_COMBAT;
                             button_pressed_attack = 0;
                             selecting = 0;
-                            exit_ui = 1;
-
                             // === Apply attack/skill BEFORE changing player turn ===
                             int base_damage = 20;
                             int skill_damage = 50;
