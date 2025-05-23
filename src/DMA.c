@@ -190,7 +190,7 @@ void compare_CPU_DMA(){
         src_data[i] = i;
     }
     ticks_start = get_arm_system_time();
-    us_start = ticks_to_us(ticks_end);
+    us_start = ticks_to_us(ticks_start);
 
     // Copy using CPU
     for(unsigned int i = 0; i < SIZE_LARGE_DATA; i++){

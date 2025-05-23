@@ -11,6 +11,7 @@
 #include "../include/game_design.h"
 // #include "../include/Orpheus_Skill_Option.h"
 #include "../include/game_menu.h"
+#include "../include/DMA.h"
 
 
 #define DESIGN 0x18 //CTRL X
@@ -29,6 +30,9 @@ void main()
 
 	// Initialize frame buffer
 	framebf_init();
+
+    // Initialize DMA
+    dma_init();
 
     // draw_skill_option_screen(0, 1);
     // drawImage_double_buffering(

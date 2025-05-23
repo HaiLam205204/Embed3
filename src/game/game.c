@@ -214,12 +214,12 @@ void game_loop() {
                 render_world();
                 render_protagonist_with_animation();
                 swap_buffers();
-                wait_us(16000);
+                //wait_us(16000);
             }
             first_frame = 0;
         } else {
             // Handle input
-            input = uart_getc();
+            input = getUart(); // non-blocking
             // detect non-blocking input 
             if(input == ESCAPE){ 
                 draw_background();
@@ -287,6 +287,84 @@ void game_loop() {
             uart_puts("\n[WARNING] Frame took too long!");
         }
     }
+
+}
+
+// --- Rendering ---
+void render_world() {
+    if (current_level == NULL) return;
+
+    // Draw map
+    drawImage_double_buffering_stride(
+        0, 0,
+        gameMap4x + camera_y * GAME_MAP_WIDTH_4X + camera_x,
+        VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
+        GAME_MAP_WIDTH_4X
+    );
+
+    // --- Draw walls ---
+    for (int i = 0; i < current_level->wall_count; i++) {
+        Wall* wall = &current_level->walls[i];
+
+        int screen_x = wall->world_x - camera_x;
+        int screen_y = wall->world_y - camera_y;
+
+        if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
+            screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+            drawImage_dma(
+                screen_x, screen_y,
+                wall->bitmap,
+                wall->width, wall->height
+            );
+        }
+    }
+
+    // --- Draw enemies ---
+    for (int i = 0; i < current_level->enemy_count; i++) {
+        Enemy* enemy = &current_level->enemies[i];
+        if (!enemy->active) continue;
+
+        int screen_x = enemy->world_x - camera_x;
+        int screen_y = enemy->world_y - camera_y;
+
+        if (screen_x + enemy->width > 0 && screen_x < VIEWPORT_WIDTH &&
+            screen_y + enemy->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+            drawImage_double_buffering(
+                screen_x, screen_y,
+                enemy->sprite,
+                enemy->width, enemy->height
+            );
+        }
+    }
+
+    // --- Draw zones ---
+    for (int i = 0; i < current_level->zone_count; i++) {
+        Zone* zone = &current_level->zones[i];
+        if (!zone->bitmap) continue;
+
+        int screen_x = zone->x - camera_x;
+        int screen_y = zone->y - camera_y;
+
+        if (screen_x + zone->width > 0 && screen_x < VIEWPORT_WIDTH &&
+            screen_y + zone->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+            drawImage_double_buffering(
+                screen_x, screen_y,
+                zone->bitmap,
+                zone->width, zone->height
+            );
+        }
+    }
+}
+
+// --- Camera ---
+void update_camera() {
+    camera_x = protag_world_x - VIEWPORT_WIDTH / 2 + PROTAG_WIDTH / 2;
+    camera_y = protag_world_y - VIEWPORT_HEIGHT / 2 + PROTAG_HEIGHT / 2;
+
+    if (camera_x < 0) camera_x = 0;
+    if (camera_y < 0) camera_y = 0;
+    if (camera_x > WORLD_WIDTH - VIEWPORT_WIDTH) camera_x = WORLD_WIDTH - VIEWPORT_WIDTH;
+    if (camera_y > WORLD_HEIGHT - VIEWPORT_HEIGHT) camera_y = WORLD_HEIGHT - VIEWPORT_HEIGHT;
 }
 
 // --- Movement ---
@@ -433,17 +511,6 @@ Level* get_level_by_number(int number) {
     return NULL;
 }
 
-// --- Camera ---
-void update_camera() {
-    camera_x = protag_world_x - VIEWPORT_WIDTH / 2 + PROTAG_WIDTH / 2;
-    camera_y = protag_world_y - VIEWPORT_HEIGHT / 2 + PROTAG_HEIGHT / 2;
-
-    if (camera_x < 0) camera_x = 0;
-    if (camera_y < 0) camera_y = 0;
-    if (camera_x > WORLD_WIDTH - VIEWPORT_WIDTH) camera_x = WORLD_WIDTH - VIEWPORT_WIDTH;
-    if (camera_y > WORLD_HEIGHT - VIEWPORT_HEIGHT) camera_y = WORLD_HEIGHT - VIEWPORT_HEIGHT;
-}
-
 // --- Collision ---
 int check_enemy_collision() {
     for (int i = 0; i < current_level->enemy_count; i++) {
@@ -463,73 +530,6 @@ int check_enemy_collision() {
         }
     }
     return 0; // No collision
-}
-
-
-// --- Rendering ---
-void render_world() {
-    if (current_level == NULL) return;
-
-    // Draw map
-    drawImage_double_buffering_stride(
-        0, 0,
-        gameMap4x + camera_y * GAME_MAP_WIDTH_4X + camera_x,
-        VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
-        GAME_MAP_WIDTH_4X
-    );
-
-    // --- Draw walls ---
-    for (int i = 0; i < current_level->wall_count; i++) {
-        Wall* wall = &current_level->walls[i];
-
-        int screen_x = wall->world_x - camera_x;
-        int screen_y = wall->world_y - camera_y;
-
-        if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
-            screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-            drawImage_double_buffering(
-                screen_x, screen_y,
-                wall->bitmap,
-                wall->width, wall->height
-            );
-        }
-    }
-
-    // --- Draw enemies ---
-    for (int i = 0; i < current_level->enemy_count; i++) {
-        Enemy* enemy = &current_level->enemies[i];
-        if (!enemy->active) continue;
-
-        int screen_x = enemy->world_x - camera_x;
-        int screen_y = enemy->world_y - camera_y;
-
-        if (screen_x + enemy->width > 0 && screen_x < VIEWPORT_WIDTH &&
-            screen_y + enemy->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-            drawImage_double_buffering(
-                screen_x, screen_y,
-                enemy->sprite,
-                enemy->width, enemy->height
-            );
-        }
-    }
-
-    // --- Draw zones ---
-    for (int i = 0; i < current_level->zone_count; i++) {
-        Zone* zone = &current_level->zones[i];
-        if (!zone->bitmap) continue;
-
-        int screen_x = zone->x - camera_x;
-        int screen_y = zone->y - camera_y;
-
-        if (screen_x + zone->width > 0 && screen_x < VIEWPORT_WIDTH &&
-            screen_y + zone->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-            drawImage_double_buffering(
-                screen_x, screen_y,
-                zone->bitmap,
-                zone->width, zone->height
-            );
-        }
-    }
 }
 
 // --- Draw walking animation ---
