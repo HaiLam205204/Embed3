@@ -325,15 +325,15 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                         max_skills = pixie_skill_bitmap_allArray_LEN;
                     }
                 } else {
-                    max_skills = 2; // Assume 2 pages for each ally
+                    max_skills = 2; 
                 }
 
                 draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
                 if (input == 'o' && skill_option > 0) {
-                    skill_option = (skill_option - 1 + max_skills) % max_skills;
+                    skill_option = 0;
                     draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
                 } else if (input == 'l' && skill_option < max_skills - 1) {
-                    skill_option = (skill_option + 1) % max_skills;
+                    skill_option = 1;
                     draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
                 } else if (input == KEY_ESC) {
                     current_screen = SCREEN_COMBAT;
@@ -357,13 +357,14 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                         if (protagonists[current_player_turn].current_hp >= 20) {
                             protagonists[current_player_turn].current_hp -= 20;
                             is_previous_screen_skill_menu = 1;
-                            protagonists[current_player_turn].has_acted = 1;
 
                             // Damage all enemies
                             int aoe_damage = 15; // you can tweak this value
                             for (int i = 0; i < num_enemies; i++) {
                                 deal_damage(i, aoe_damage);
                             }
+
+                            protagonists[current_player_turn].has_acted = 1;
 
                             // Advance turn
                             current_player_turn = (current_player_turn + 1) % num_protagonists;
@@ -407,29 +408,32 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                             button_pressed_attack = 0;
                             selecting = 0;
                             exit_ui = 1;
-                            current_player_turn = (current_player_turn + 1) % num_protagonists;
-                            protagonists[current_player_turn].has_acted = 1;
 
+                            // === Apply attack/skill BEFORE changing player turn ===
                             int base_damage = 20;
-                            deal_damage(selected_enemy, base_damage);
-
                             int skill_damage = 100;
+
                             if (is_previous_screen_skill_menu == 1) {
-                                // This is skill-based single-target attack
                                 if (protagonists[current_player_turn].current_hp >= 12) {
-                                    // protagonists[current_player_turn].current_hp -= 12;
                                     deal_damage(selected_enemy, skill_damage);
                                 } else {
                                     uart_puts("[DEBUG] Not enough HP for Skill 1, fallback to normal attack\n");
+                                    deal_damage(selected_enemy, base_damage);
                                 }
                                 is_previous_screen_skill_menu = 0;
+                            } else {
+                                deal_damage(selected_enemy, base_damage);
                             }
+
+                            protagonists[current_player_turn].has_acted = 1;  
 
                             if (all_characters_have_acted(protagonists, num_protagonists)) {
                                 current_screen = SCREEN_ENEMY_COUNTER_ATTACK;
+                            } else {
+                                current_player_turn = (current_player_turn + 1) % num_protagonists;
+                                current_screen = SCREEN_COMBAT;
                             }
-                            
-                            // Redraw the screen
+
                             redraw_combat_screen(current_player_turn, 0);
                             redraw_combat_screen(current_player_turn, 0);
                             uart_puts("[DEBUG] Attack target confirmed\n");
