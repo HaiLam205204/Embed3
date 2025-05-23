@@ -55,7 +55,7 @@ void remove_enemy(int index) {
     }
 
     num_enemies--;
-    recalculate_enemy_sprite_positions();
+    // recalculate_enemy_sprite_positions();
 }
 
 void recalculate_enemy_sprite_positions() {
@@ -185,4 +185,8 @@ void use_aoe_skill(Character *user) {
     for (int i = num_enemies - 1; i >= 0; i--) {
         deal_damage(i, aoe_damage);
     }
+}
+
+int is_enemy_alive(int enemy_index) {
+    return enemy[enemy_index].current_hp > 0;
 }

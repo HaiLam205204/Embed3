@@ -346,7 +346,6 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     if (skill_option == 0) {
                     // Skill 1: Single Target Skill
                     if (protagonists[current_player_turn].current_hp >= 12) {
-                        protagonists[current_player_turn].current_hp -= 12;
                         is_previous_screen_skill_menu = 1;
                         current_screen = SCREEN_SELECT_ENEMY;
                     } else {
@@ -411,10 +410,11 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
 
                             // === Apply attack/skill BEFORE changing player turn ===
                             int base_damage = 20;
-                            int skill_damage = 100;
+                            int skill_damage = 50;
 
                             if (is_previous_screen_skill_menu == 1) {
                                 if (protagonists[current_player_turn].current_hp >= 12) {
+                                    protagonists[current_player_turn].current_hp -= 12;
                                     deal_damage(selected_enemy, skill_damage);
                                 } else {
                                     uart_puts("[DEBUG] Not enough HP for Skill 1, fallback to normal attack\n");
@@ -426,11 +426,10 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                             }
 
                             protagonists[current_player_turn].has_acted = 1;  
-
+                            current_player_turn = (current_player_turn + 1) % num_protagonists;
                             if (all_characters_have_acted(protagonists, num_protagonists)) {
                                 current_screen = SCREEN_ENEMY_COUNTER_ATTACK;
                             } else {
-                                current_player_turn = (current_player_turn + 1) % num_protagonists;
                                 current_screen = SCREEN_COMBAT;
                             }
 
