@@ -123,18 +123,18 @@ void init_protagonists()
 void init_enemies()
 {
     strcpy(enemy[0].name, "Enemy1");
-    enemy[0].current_hp = 60;
-    enemy[0].max_hp = 60;
+    enemy[0].current_hp = 1;
+    enemy[0].max_hp = 1;
     enemy[0].enemy_type = 1; // shadow1
 
     strcpy(enemy[1].name, "Enemy2");
-    enemy[1].current_hp = 40;
-    enemy[1].max_hp = 40;
+    enemy[1].current_hp = 1;
+    enemy[1].max_hp = 1;
     enemy[1].enemy_type = 1; // shadow1
 
     strcpy(enemy[2].name, "Enemy3");
-    enemy[2].current_hp = 90;
-    enemy[2].max_hp = 90;
+    enemy[2].current_hp = 1;
+    enemy[2].max_hp = 1;
     enemy[2].enemy_type = 1; // shadow1 reused
 }
 

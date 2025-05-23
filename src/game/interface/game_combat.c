@@ -180,6 +180,7 @@ int turn_index = 0; // Track whose turn it is
 int current_player_turn = 0; // 0 to 3 for 4 characters
 int selected_enemy = 0;
 int is_previous_screen_skill_menu = 0;
+int exit_ui = 0;  // <-- Flag to exit loop
 
 void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyModel enemy[], int num_enemies) {
     redraw_combat_screen(current_player_turn, 0);
@@ -191,7 +192,6 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
     int button_pressed_skill = 0;
     // Time the last button was pressed
     uint64_t button_pressed_time = 0;
-    int exit_ui = 0;  // <-- Flag to exit loop
     // turn_index = (turn_index + 1) % num_enemies;
     // current_player_turn = (current_player_turn + 1) % 4;
 
@@ -247,13 +247,13 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     current_screen = SCREEN_SELECT_ENEMY;
                     redraw_combat_screen(current_player_turn, 0);
                     redraw_combat_screen(current_player_turn, 0);
-                    exit_ui = 0;
+                    // exit_ui = 0;
                 }
                 if (input == ITEM) {
                     button_pressed_item = 1;
                     button_pressed_time = start_time;
                     uart_puts("ITEM\n");
-                    exit_ui = 0;
+                    // exit_ui = 0;
                 }
                 if (input == PERSONA) {
                     if (protagonists[current_player_turn].is_main_character) {
@@ -266,13 +266,14 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     } else {
                         uart_puts("[DEBUG] Ally cannot use persona\n");
                     }
-                    exit_ui = 0;
+                    // exit_ui = 0;
                 }
                 if (input == RUN) {
                     button_pressed_run = 1;
                     button_pressed_time = start_time;
                     uart_puts("RUN\n");
-                    protag_world_x -= 10; // or any direction away from the enemy
+                    protag_world_x -= 50; // or any direction away from the enemy
+                    protag_world_y -= 50;
                     exit_ui = 1;
                 }
                 if (input == SKILL) { 
@@ -282,7 +283,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
                     current_screen = SCREEN_SKILL_MENU;
                     uart_puts("SKILL\n");
-                    exit_ui = 0;
+                    // exit_ui = 0;
                 }
                 if (current_player_turn >= num_protagonists) {
                     uart_putint(current_player_turn);
@@ -515,7 +516,27 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
         if (render_time < GAME_FRAME_US) {
             wait_us(GAME_FRAME_US - render_time);
         }
+
+        // if (num_enemies == 0) {
+        //     uart_puts("Number of enemy: ");
+        //     uart_putint(num_enemies);
+        //     uart_puts("\n");
+        //     uart_puts("[COMBAT] All enemies defeated. Exiting to exploration...\n");
+        //     protag_world_x -= 10; // or any direction away from the enemy
+        //     exit_ui = 1;
+        //     break;
+        // }
+
+        // if (num_protagonists == 0) {
+        //     uart_puts("[COMBAT] All allies defeated. Game over!\n");
+        //     // You could call game_over_screen(); or similar here
+        //     protag_world_x -= 10; // or any direction away from the enemy
+        //     exit_ui = 1;
+        //     break;
+        // }
+
         if (exit_ui) {
+            exit_ui = 0;
             break;
         }
     }

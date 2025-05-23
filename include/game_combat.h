@@ -48,6 +48,7 @@ typedef enum {
 } GameScreen;
 
 extern GameScreen current_screen;  // <-- extern declaration
+extern int exit_ui;
 
 extern int current_player_turn;
 
