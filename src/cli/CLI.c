@@ -459,7 +459,6 @@ void handle_command(char *command) {
             for (int i = 0; i < 6; i++) { 
                 if (i > 0) cli_put_char(':', WHITE, ZOOM);
                 cli_put_hex8(mac[i], WHITE, ZOOM);
-                cli_put_char('\n', WHITE, ZOOM);
             }
         } else {
             cli_put_string("Failed to retrieve MAC address\n", WHITE, ZOOM);
