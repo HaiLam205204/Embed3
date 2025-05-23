@@ -109,7 +109,7 @@ void init_protagonists()
 
     strcpy(protagonists[2].name, "Ally2");
     protagonists[2].is_main_character = 0;
-    protagonists[2].current_hp = 1;
+    protagonists[2].current_hp = 100;
     protagonists[2].max_hp = 100;
 
     strcpy(protagonists[3].name, "Ally3");

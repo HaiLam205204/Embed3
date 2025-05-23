@@ -18,4 +18,6 @@ void recalculate_enemy_sprite_positions();
 void enemy_turn(Character *protagonists, int num_protagonists);
 void reset_player_turns(Character *protagonists, int num_protagonists);
 int all_characters_have_acted(Character *protagonists, int num_protagonists);
+void use_single_target_skill(Character *user, int enemy_index);
+void use_aoe_skill(Character *user);
 #endif

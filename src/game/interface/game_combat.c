@@ -86,49 +86,6 @@ void draw_persona_option_screen(int selected_option) {
     // swap_buffers();
 }
 
-// void draw_skill_option_screen(int persona, int option) {
-//     if (persona == 0) { // Orpheus
-//         if (option >= 0 && option < orpheus_skill_bitmap_allArray_LEN) {
-//             const unsigned long* img = orpheus_skill_bitmap_allArray[option];
-//             if (img == 0) {
-//                 uart_puts("[ERROR] Orpheus skill bitmap is NULL\n");
-//             }
-//             draw_rect_double_buffering(ORPHEUS_SKILL_OPTION_SCRREN_X,
-//                 ORPHEUS_SKILL_OPTION_SCRREN_Y,
-//                 ORPHEUS_SKILL_OPTION_WIDTH,
-//                 ORPHEUS_SKILL_OPTION_HEIGHT, 0xFFDDEEFF);
-
-//             drawImage_double_buffering(
-//                 ORPHEUS_SKILL_OPTION_SCRREN_X,
-//                 ORPHEUS_SKILL_OPTION_SCRREN_Y,
-//                 img,
-//                 ORPHEUS_SKILL_OPTION_WIDTH,
-//                 ORPHEUS_SKILL_OPTION_HEIGHT
-//             );
-//         } 
-//     } else if (persona == 1) { // Pixie
-//         if (option >= 0 && option < pixie_skill_bitmap_allArray_LEN) {
-//             const unsigned long* img = pixie_skill_bitmap_allArray[option];
-//             if (img == 0) {
-//                 uart_puts("[ERROR] Pixie skill bitmap is NULL\n");
-//             }
-
-//             draw_rect_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-//             PIXIE_SKILL_OPTION_SCRREN_Y,
-//             PIXIE_SKILL_OPTION_WIDTH,
-//             PIXIE_SKILL_OPTION_HEIGHT, 0xFFDDEEFF);
-
-//             drawImage_double_buffering(
-//                 PIXIE_SKILL_OPTION_SCRREN_X,
-//                 PIXIE_SKILL_OPTION_SCRREN_Y,
-//                 img,
-//                 PIXIE_SKILL_OPTION_WIDTH,
-//                 PIXIE_SKILL_OPTION_HEIGHT
-//             );
-//         } 
-//     } 
-// }
-
 void draw_skill_option_screen(Character character, int option, int character_index) {
     if (character.is_main_character) {
         if (character.current_persona == PERSONA_ORPHEUS) {
@@ -221,6 +178,7 @@ void draw_enemy_selected(EnemySprite *sprite, int triangle_x, int triangle_y ) {
 int turn_index = 0; // Track whose turn it is
 extern int current_player_turn = 0; // 0 to 3 for 4 characters
 int selected_enemy = 0;
+int is_previous_screen_skill_menu = 0;
 
 void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyModel enemy[], int num_enemies) {
     int button_pressed_attack = 0;
@@ -282,12 +240,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     button_pressed_attack = 1;
                     button_pressed_time = start_time;
                     uart_puts("ATTACK\n");
-                    // Set current action
-                    // protagonists[current_player_turn].current_action.type = ACTION_ATTACK;
-                    // redraw_combat_screen(current_player_turn);
-                    // redraw_combat_screen(current_player_turn);
-                    // exit_ui = 1; 
-                    
+
                     selected_enemy = 0;  // Default target
                     current_screen = SCREEN_SELECT_ENEMY;
                     redraw_combat_screen(current_player_turn, 0);
@@ -325,7 +278,6 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
                     current_screen = SCREEN_SKILL_MENU;
                     uart_puts("SKILL\n");
-                    // exit_ui = 1;
                 }
                 if (current_player_turn >= num_protagonists) {
                     uart_putint(current_player_turn);
@@ -391,7 +343,42 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     uart_puts("[DEBUG] Skill Menu Cancelled, returning to combat\n");
                 } else if (input == KEY_ENTER) {  // Enter
                     // selected_persona = persona_option; // <-- Save selected persona
-                    current_screen = SCREEN_COMBAT;
+                    if (skill_option == 0) {
+                    // Skill 1: Single Target Skill
+                    if (protagonists[current_player_turn].current_hp >= 12) {
+                        protagonists[current_player_turn].current_hp -= 12;
+                        is_previous_screen_skill_menu = 1;
+                        current_screen = SCREEN_SELECT_ENEMY;
+                    } else {
+                        uart_puts("[DEBUG] Not enough HP for Skill 1\n");
+                    }
+                    } else if (skill_option == 1) {
+                        // Skill 2: AoE Skill
+                        if (protagonists[current_player_turn].current_hp >= 20) {
+                            protagonists[current_player_turn].current_hp -= 20;
+                            is_previous_screen_skill_menu = 1;
+                            protagonists[current_player_turn].has_acted = 1;
+
+                            // Damage all enemies
+                            int aoe_damage = 15; // you can tweak this value
+                            for (int i = 0; i < num_enemies; i++) {
+                                deal_damage(i, aoe_damage);
+                            }
+
+                            // Advance turn
+                            current_player_turn = (current_player_turn + 1) % num_protagonists;
+                            if (all_characters_have_acted(protagonists, num_protagonists)) {
+                                current_screen = SCREEN_ENEMY_COUNTER_ATTACK;
+                            } else {
+                                current_screen = SCREEN_COMBAT;
+                            }
+
+                            redraw_combat_screen(current_player_turn, 0);
+                            redraw_combat_screen(current_player_turn, 0);
+                        } else {
+                            uart_puts("[DEBUG] Not enough HP for Skill 2\n");
+                        }
+                    }
                     button_pressed_persona = 0; // <-- ensure button state is reset 
                     redraw_combat_screen(current_player_turn, 0);
                     redraw_combat_screen(current_player_turn, 0);  
@@ -425,6 +412,18 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
 
                             int base_damage = 20;
                             deal_damage(selected_enemy, base_damage);
+
+                            int skill_damage = 100;
+                            if (is_previous_screen_skill_menu == 1) {
+                                // This is skill-based single-target attack
+                                if (protagonists[current_player_turn].current_hp >= 12) {
+                                    // protagonists[current_player_turn].current_hp -= 12;
+                                    deal_damage(selected_enemy, skill_damage);
+                                } else {
+                                    uart_puts("[DEBUG] Not enough HP for Skill 1, fallback to normal attack\n");
+                                }
+                                is_previous_screen_skill_menu = 0;
+                            }
 
                             if (all_characters_have_acted(protagonists, num_protagonists)) {
                                 current_screen = SCREEN_ENEMY_COUNTER_ATTACK;
@@ -515,34 +514,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
     }
 }
 
-// void clear_persona_option_screen() {
-//     draw_rect_double_buffering(
-//         PERSONA_OPTION_SCRREN_X,
-//         PERSONA_OPTION_SCRREN_Y,
-//         PERSONA_OPTION_WIDTH,
-//         PERSONA_OPTION_HEIGHT,
-//         0xFF000000
-//     );
-// }
 
-// void draw_attack_target_screen(int target_index) {
-//     redraw_combat_screen(current_player_turn); // Reuse existing UI
-
-//     // Draw triangle over the enemy at target_index
-//     int x = get_enemy_x_position(target_index); // You define this
-//     int y = get_enemy_y_position(target_index); // You define this
-
-//     drawImage_double_buffering( x, y, epd_bitmap_triangle_turn_indicator, TRIANGLE_WIDTH,
-//         TRIANGLE_HEIGHT);
-// }
-
-// int get_enemy_x_position(int index) {
-//     return 250 + index * 60; // Adjust based on spacing of enemies
-// }
-
-// int get_enemy_y_position(int index) {
-//     return 80; // Y position above enemy sprite
-// }
 
 
 

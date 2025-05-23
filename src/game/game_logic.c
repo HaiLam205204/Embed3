@@ -150,3 +150,39 @@ void remove_protagonist(int index) {
 
     num_protagonists--;  // reduce the count
 }
+
+void use_single_target_skill(Character *user, int enemy_index) {
+    int skill_cost = 12;
+    int skill_damage = 30;  // You can tweak this
+
+    if (user->current_hp < skill_cost) {
+        uart_puts("[SKILL] Not enough HP to use single-target skill.\n");
+        return;
+    }
+
+    user->current_hp -= skill_cost;
+    uart_puts("[SKILL] Using single-target skill. Remaining HP: ");
+    uart_dec(user->current_hp);
+    uart_puts("\n");
+
+    deal_damage(enemy_index, skill_damage);
+}
+
+void use_aoe_skill(Character *user) {
+    int skill_cost = 20;
+    int aoe_damage = 15;  // You can tweak this
+
+    if (user->current_hp < skill_cost) {
+        uart_puts("[SKILL] Not enough HP to use AoE skill.\n");
+        return;
+    }
+
+    user->current_hp -= skill_cost;
+    uart_puts("[SKILL] Using AoE skill. Remaining HP: ");
+    uart_dec(user->current_hp);
+    uart_puts("\n");
+
+    for (int i = num_enemies - 1; i >= 0; i--) {
+        deal_damage(i, aoe_damage);
+    }
+}
