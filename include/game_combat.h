@@ -1,4 +1,3 @@
-#include "framebf.h"
 #include "models/character_sprite.h"
 #include "models/enemy_sprite.h"
 

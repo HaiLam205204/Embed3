@@ -4,6 +4,7 @@
 #include "../../include/framebf.h"
 #include "../../include/DMA.h"
 
+#define NULL ((void*)0)
 // Use RGBA32 (32 bits for each pixel)
 #define COLOR_DEPTH 32
 
@@ -11,7 +12,7 @@
 #define PIXEL_ORDER 0
 
 // Screen info
-unsigned int width, height, pitch;
+unsigned long width, height, pitch;
 unsigned int buffer_size;
 
 /* Frame buffer address
@@ -517,4 +518,134 @@ void drawRectARGB32_double_buffering(int x1, int y1, int x2, int y2, unsigned in
             else if (fill)
                 drawPixelARGB32_double_buffering(x, y, attr);
         }
+}
+
+/**
+ * Returns the address of the specified framebuffer with additional safety checks
+ * buffer_index 0 for front buffer, 1 for back buffer
+ * Pointer to the requested framebuffer, or NULL if invalid
+ */
+void* get_framebuffer_address(int buffer_index) {
+    // Check if framebuffer was initialized
+    if (front_buffer == NULL) {
+        uart_puts("Error: Framebuffer not initialized\n");
+        return NULL;
+    }
+
+    // Validate buffer index
+    if (buffer_index < 0 || buffer_index > 1) {
+        uart_puts("Error: Invalid buffer index (must be 0 or 1)\n");
+        return NULL;
+    }
+
+    // Handle case where back buffer isn't available (fallback to single buffer)
+    if (buffer_index == 1 && front_buffer == back_buffer) {
+        uart_puts("Warning: Back buffer not available, returning front buffer\n");
+        return front_buffer;
+    }
+
+    return (buffer_index == 0) ? front_buffer : back_buffer;
+}
+
+// ======================
+// DMA Framebuffer System
+// ======================
+
+// Initialize framebuffer with DMA support
+void dma_fb_init(dma_framebuffer* fb, unsigned long width, unsigned long height) {
+    fb->width = width;
+    fb->height = height;
+    fb->pitch = width * BYTES_PER_PIXEL;
+
+    fb->front_buffer = get_framebuffer_address(0);  // Must return 32-byte aligned addresses
+    fb->back_buffer = get_framebuffer_address(1);
+
+    if (((unsigned long)fb->front_buffer % 32) != 0 || ((unsigned long)fb->back_buffer % 32) != 0) {
+        uart_puts("ERROR: Framebuffers not 32-byte aligned!");
+    }
+}
+
+
+// // Clear framebuffer with solid color using DMA
+// void dma_fb_clear(dma_framebuffer* fb, unsigned long color) {
+//     dma_channel* channel = dma_open_channel(FRAMEBUFFER_DMA_CHANNEL);
+//     if (!channel) return;
+
+//     static unsigned long __attribute__((aligned(32))) color_pattern[8];
+//     for (int i = 0; i < 8; i++) {
+//         color_pattern[i] = color;
+//     }
+
+//     unsigned long total_pixels = (fb->height * fb->pitch) / BYTES_PER_PIXEL;
+//     unsigned long lines = total_pixels / 8;
+
+//     channel->block->res[0] = 0;
+//     channel->block->res[1] = 0;
+
+//     channel->block->transfer_info = (15 << TI_BURST_LENGTH_SHIFT) |
+//                                     TI_SRC_WIDTH |
+//                                     TI_DEST_WIDTH | TI_DEST_INC;  // No TI_SRC_INC: repeat pattern
+
+//     channel->block->src_addr = (unsigned long)color_pattern;
+//     channel->block->dest_addr = (unsigned long)fb->back_buffer;
+//     channel->block->transfer_length = 8 * BYTES_PER_PIXEL | (lines << 16);  // 2D transfer
+//     channel->block->mode_2d_stride = 0;  // No stride between rows of pattern
+
+//     dma_start(channel);
+//     dma_wait(channel);
+//     dma_close_channel(channel);
+// }
+
+
+// DMA copy from source to framebuffer with position and stride support
+void dma_fb_copy(dma_framebuffer* fb, void* src,
+                 unsigned long x, unsigned long y,
+                 unsigned long width, unsigned long height,
+                 unsigned long src_stride) {
+    dma_channel* channel = dma_open_channel(FRAMEBUFFER_DMA_CHANNEL);
+    if (!channel) return;
+
+    channel->block->res[0] = 0;
+    channel->block->res[1] = 0;
+
+    unsigned long dest_addr = (unsigned long)fb->back_buffer + y * fb->pitch + x * BYTES_PER_PIXEL;
+    unsigned long dest_stride = fb->pitch - (width * BYTES_PER_PIXEL);
+    unsigned long src_stride_bytes = src_stride * BYTES_PER_PIXEL - width * BYTES_PER_PIXEL;
+
+    channel->block->transfer_info = (15 << TI_BURST_LENGTH_SHIFT) |
+                                    TI_SRC_WIDTH | TI_SRC_INC |
+                                    TI_DEST_WIDTH | TI_DEST_INC;
+
+    channel->block->src_addr = (unsigned long)src;
+    channel->block->dest_addr = dest_addr;
+    channel->block->transfer_length = width * BYTES_PER_PIXEL | (height << 16);
+    channel->block->mode_2d_stride = (dest_stride << 16) | src_stride_bytes;
+
+    dma_start(channel);
+    dma_wait(channel);
+    dma_close_channel(channel);
+}
+
+
+// Swap front and back buffers using DMA
+void dma_fb_swap(dma_framebuffer* fb) {
+    dma_channel* channel = dma_open_channel(FRAMEBUFFER_DMA_CHANNEL);
+    if (!channel) return;
+
+    channel->block->res[0] = 0;
+    channel->block->res[1] = 0;
+
+    unsigned long total_bytes = fb->height * fb->pitch;
+
+    channel->block->transfer_info = (15 << TI_BURST_LENGTH_SHIFT) |
+                                    TI_SRC_WIDTH | TI_SRC_INC |
+                                    TI_DEST_WIDTH | TI_DEST_INC;
+
+    channel->block->src_addr = (unsigned long)fb->back_buffer;
+    channel->block->dest_addr = (unsigned long)fb->front_buffer;
+    channel->block->transfer_length = total_bytes;
+
+    dma_start(channel);
+    dma_wait(channel);
+    dma_close_channel(channel);
 }

@@ -1,5 +1,3 @@
-#include "framebf.h"
-
 // Define keyboard key codes (ASCII or custom)
 #define UP 0x77  // 'w'
 #define LEFT 0x61  // 'a'
@@ -57,6 +55,18 @@ typedef struct {
     int start_x, start_y;     // Where the player spawns in the level
 } Level;
 
+// ======================
+// Batch Rendering System
+// ======================
+
+typedef struct {
+    void* bitmap;
+    unsigned int x;
+    unsigned int y;
+    unsigned int width;
+    unsigned int height;
+} dma_render_item;
+
 // --- Game API ---
 void game_loop();
 
@@ -66,11 +76,16 @@ Level* get_level_by_number(int number);
 
 // --- Protagonist ---
 void update_protagonist_position(char input);
-void update_camera();
-void render_protagonist_with_animation();
-void render_world();
+void update_camera(void);
+void render_protagonist_with_animation(void);
+
+// --- Rendering ---
+void render_world_dma();
 
 // --- Logic ---
 int check_enemy_collision();
 void battle_screen_loop(int enemy_type);
 void start_animation();
+
+// --- DMA rendering ---
+void dma_render_batch(dma_render_item* items, unsigned long count, unsigned long camera_x, unsigned long camera_y);

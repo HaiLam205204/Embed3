@@ -15,11 +15,13 @@
 #include "../../include/bitmaps/protagonist_animation.h"
 #include "../../include/bitmaps/transitionZone.h"
 #include "../../include/game_design.h"
+#include "../../include/DMA.h"
 
 // --- Constants ---
 #define STEP 10
 #define MAX_ENEMIES 10
 #define MAX_WALLS 20
+#define MAX_ZONES 5
 #define VIEWPORT_WIDTH 1024
 #define VIEWPORT_HEIGHT 768
 #define WORLD_WIDTH 1024*2
@@ -29,6 +31,18 @@
 #define MAX_LEVELS 3
 
 #define NULL ((void*)0)
+// Safe macros that evaluate arguments only once
+#define MAX(a, b) ({ \
+    __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+    _a > _b ? _a : _b; \
+})
+
+#define MIN(a, b) ({ \
+    __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+    _a < _b ? _a : _b; \
+})
 #define ESCAPE 0x1B // ESC
 
 // --- Protagonist ---
@@ -192,134 +206,197 @@ Level levels[MAX_LEVELS] = {
 const int total_levels = sizeof(levels) / sizeof(Level);
 Level* current_level = &levels[0]; // Start at level 1
 
+static dma_framebuffer game_framebuffer;
+// ======================
+// Batch Rendering System
+// ======================
+
+// Optimized batch rendering for game objects
+void dma_render_batch(dma_render_item* items, unsigned long count, unsigned long camera_x, unsigned long camera_y) {
+    if (count == 0) return;
+
+    dma_channel* channel = dma_open_channel(FRAMEBUFFER_DMA_CHANNEL);
+    if (!channel) return;
+
+    for (unsigned long i = 0; i < count; i++) {
+        dma_render_item* item = &items[i];
+
+        int screen_x = item->x - camera_x;
+        int screen_y = item->y - camera_y;
+
+        if (screen_x + item->width > 0 && screen_x < game_framebuffer.width &&
+            screen_y + item->height > 0 && screen_y < game_framebuffer.height) {
+
+            unsigned long render_x = MAX(0, screen_x);
+            unsigned long render_y = MAX(0, screen_y);
+            unsigned long render_width  = MIN(item->width - MAX(0, -screen_x), game_framebuffer.width - render_x);
+            unsigned long render_height = MIN(item->height - MAX(0, -screen_y), game_framebuffer.height - render_y);
+
+            unsigned long src_x_offset = MAX(0, -screen_x);
+            unsigned long src_y_offset = MAX(0, -screen_y);
+            void* src_ptr = (char*)item->bitmap + src_y_offset * item->width * BYTES_PER_PIXEL
+                                                  + src_x_offset * BYTES_PER_PIXEL;
+
+            // Setup block manually (inlined dma_fb_copy core)
+            channel->block->res[0] = 0;
+            channel->block->res[1] = 0;
+
+            unsigned long dest_addr = (unsigned long)game_framebuffer.back_buffer + render_y * game_framebuffer.pitch + render_x * BYTES_PER_PIXEL;
+            unsigned long dest_stride = game_framebuffer.pitch - render_width * BYTES_PER_PIXEL;
+            unsigned long src_stride_bytes = item->width * BYTES_PER_PIXEL - render_width * BYTES_PER_PIXEL;
+
+            channel->block->transfer_info = (15 << TI_BURST_LENGTH_SHIFT) |
+                                            TI_SRC_WIDTH | TI_SRC_INC |
+                                            TI_DEST_WIDTH | TI_DEST_INC;
+
+            channel->block->src_addr = (unsigned long)src_ptr;
+            channel->block->dest_addr = dest_addr;
+            channel->block->transfer_length = render_width * BYTES_PER_PIXEL | (render_height << 16);
+            channel->block->mode_2d_stride = (dest_stride << 16) | src_stride_bytes;
+
+            dma_start(channel);
+            dma_wait(channel);
+        }
+    }
+
+    dma_close_channel(channel);
+}
+
+
 // --- Game Loop ---
+// ======================
+// Optimized Game Loop
+// ======================
+
 void game_loop() {
+    dma_fb_init(&game_framebuffer, 1024, 768);
     int first_frame = 1;
     char input;
 
-    uart_puts("\n[GAME_LOOP] Starting game loop");
-    uart_puts("\n[GAME_LOOP] Initial position: (");
-    uart_dec(protag_world_x);
-    uart_puts(",");
-    uart_dec(protag_world_y);
-    uart_puts(")");
-
-    while (1) {
+    while(1) {
         uint64_t start_time = get_arm_system_time();
-        uart_puts("\n[FRAME] ---- NEW FRAME ----");
-
-        if (first_frame) {
-            //Display first frame (double buffered)
-            for (int i = 0; i < 2; i++) {
-                render_world();
+        
+        if(first_frame) {
+            // Render two frames to initialize double buffering
+            for(int i = 0; i < 2; i++) {
+                render_world_dma();
                 render_protagonist_with_animation();
-                swap_buffers();
-                //wait_us(16000);
+                dma_fb_swap(&game_framebuffer);
             }
             first_frame = 0;
-        } else {
-            // Handle input
-            input = getUart(); // non-blocking
-            // detect non-blocking input 
-            if(input == ESCAPE){ 
-                draw_background();
-                break;
-            }
-
-            if (input) {
-                anim_playing = 1;
-                uart_puts("\n[INPUT]: ");
-                uart_sendc(input);
-            }
-
-            // Check for lobby screen transition
-            if (input == 'm' || input == 'M') {
-                uart_puts("\n[INPUT] 'M' pressed - Switching to Lobby Screen...");
+            continue;
+        }
+        
+        // Input handling
+        input = getUart();
+        if(input == ESCAPE) {
+            draw_background();
+            break;
+        }
+        
+        // Game state updates
+        if(input) {
+            anim_playing = 1;
+            update_protagonist_position(input);
+            
+            // Handle special inputs
+            if(input == 'm' || input == 'M') {
                 lobby_screen_loop();
                 first_frame = 1;
                 continue;
             }
-
-            // Update game state
-            update_protagonist_position(input);
-            
-            // Check enemy collisions
-            for (int i = 0; i < current_level->enemy_count; i++) {
-                Enemy* enemy = &current_level->enemies[i];
-                if (!enemy->active) continue;
-
-                if (check_enemy_collision(
-                    protag_world_x, protag_world_y, PROTAG_WIDTH, PROTAG_HEIGHT,
-                    enemy->world_x + enemy->collision_offset_x,
-                    enemy->world_y + enemy->collision_offset_y,
-                    enemy->width - 2 * enemy->collision_offset_x,
-                    enemy->height - 2 * enemy->collision_offset_y
-                )) {
-                    uart_puts("\n[COMBAT] Enemy contact!");
-                    // battle_screen_loop(enemy->enemy_type);
-                    design_screen_loop();
-                    first_frame = 1;
-                    break;
-                }
-            }
-
-            // Update camera
-            update_camera();
-            
-            // Render
-            render_world();
-            render_protagonist_with_animation();
-            swap_buffers();
         }
-
-        // Frame timing control
+        
+        // Collision detection
+        for(int i = 0; i < current_level->enemy_count; i++) {
+            Enemy* enemy = &current_level->enemies[i];
+            if(!enemy->active) continue;
+            
+            if(check_enemy_collision(
+                protag_world_x, protag_world_y, PROTAG_WIDTH, PROTAG_HEIGHT,
+                enemy->world_x + enemy->collision_offset_x,
+                enemy->world_y + enemy->collision_offset_y,
+                enemy->width - 2 * enemy->collision_offset_x,
+                enemy->height - 2 * enemy->collision_offset_y)) {
+                design_screen_loop();
+                first_frame = 1;
+                break;
+            }
+        }
+        
+        // Update camera
+        update_camera();
+        
+        // Rendering
+        render_world_dma();
+        render_protagonist_with_animation();
+        dma_fb_swap(&game_framebuffer);
+        
+        // Frame timing
         uint64_t end_time = get_arm_system_time();
         uint64_t render_time_us = ticks_to_us(end_time - start_time);
-        uart_puts("\n[TIMING] Frame render time (us): ");
-        uart_dec(render_time_us);
-
-        if (render_time_us < GAME_FRAME_US) {
-            uint64_t wait_time = GAME_FRAME_US - render_time_us;
-            uart_puts("\n[TIMING] Waiting (us): ");
-            uart_dec(wait_time);
-            wait_us(wait_time);
+        
+        if(render_time_us < GAME_FRAME_US) {
+            wait_us(GAME_FRAME_US - render_time_us);
         } else {
             uart_puts("\n[WARNING] Frame took too long!");
         }
     }
-
 }
 
-// --- Rendering ---
-void render_world() {
-    if (current_level == NULL) return;
+// ======================
+// Game Rendering System
+// ======================
 
-    // Draw map
-    drawImage_double_buffering_stride(
-        0, 0,
-        gameMap4x + camera_y * GAME_MAP_WIDTH_4X + camera_x,
-        VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
-        GAME_MAP_WIDTH_4X
-    );
+void render_world_dma() {
+    if (!current_level) return;
 
-    // --- Draw walls ---
+    // 1. Clear screen using DMA
+    //dma_fb_clear(0xFF000000); // Black background
+
+    // 2. Draw background (viewport)
+    int visible_x = camera_x;
+    int visible_y = camera_y;
+    int visible_width = MIN(VIEWPORT_WIDTH, current_level->bg_width - visible_x);
+    int visible_height = MIN(VIEWPORT_HEIGHT, current_level->bg_height - visible_y);
+
+    if (visible_width > 0 && visible_height > 0) {
+        void* src_ptr = (void*)(current_level->background +
+                        (visible_y * current_level->bg_width + visible_x));
+
+        dma_fb_copy(&game_framebuffer,
+                    src_ptr,
+                    0, 0,
+                    visible_width, visible_height,
+                    current_level->bg_width);
+    }
+
+    // 3. Render walls using batch
+    dma_render_item wall_items[MAX_WALLS];
+    uint32_t wall_count = 0;
+
     for (int i = 0; i < current_level->wall_count; i++) {
         Wall* wall = &current_level->walls[i];
-
         int screen_x = wall->world_x - camera_x;
         int screen_y = wall->world_y - camera_y;
 
         if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
             screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-            drawImage_dma(
-                screen_x, screen_y,
-                wall->bitmap,
-                wall->width, wall->height
-            );
+            wall_items[wall_count++] = (dma_render_item){
+                .bitmap = (void*)wall->bitmap,
+                .x = wall->world_x,
+                .y = wall->world_y,
+                .width = wall->width,
+                .height = wall->height
+            };
         }
     }
+    dma_render_batch(wall_items, wall_count, camera_x, camera_y);
 
-    // --- Draw enemies ---
+    // 4. Render enemies using batch
+    dma_render_item enemy_items[MAX_ENEMIES];
+    uint32_t enemy_count = 0;
+
     for (int i = 0; i < current_level->enemy_count; i++) {
         Enemy* enemy = &current_level->enemies[i];
         if (!enemy->active) continue;
@@ -329,15 +406,21 @@ void render_world() {
 
         if (screen_x + enemy->width > 0 && screen_x < VIEWPORT_WIDTH &&
             screen_y + enemy->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-            drawImage_double_buffering(
-                screen_x, screen_y,
-                enemy->sprite,
-                enemy->width, enemy->height
-            );
+            enemy_items[enemy_count++] = (dma_render_item){
+                .bitmap = (void*)enemy->sprite,
+                .x = enemy->world_x,
+                .y = enemy->world_y,
+                .width = enemy->width,
+                .height = enemy->height
+            };
         }
     }
+    dma_render_batch(enemy_items, enemy_count, camera_x, camera_y);
 
-    // --- Draw zones ---
+    // 5. Render zones using batch
+    dma_render_item zone_items[MAX_ZONES];
+    uint32_t zone_count = 0;
+
     for (int i = 0; i < current_level->zone_count; i++) {
         Zone* zone = &current_level->zones[i];
         if (!zone->bitmap) continue;
@@ -347,13 +430,16 @@ void render_world() {
 
         if (screen_x + zone->width > 0 && screen_x < VIEWPORT_WIDTH &&
             screen_y + zone->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-            drawImage_double_buffering(
-                screen_x, screen_y,
-                zone->bitmap,
-                zone->width, zone->height
-            );
+            zone_items[zone_count++] = (dma_render_item){
+                .bitmap = (void*)zone->bitmap,
+                .x = zone->x,
+                .y = zone->y,
+                .width = zone->width,
+                .height = zone->height
+            };
         }
     }
+    dma_render_batch(zone_items, zone_count, camera_x, camera_y);
 }
 
 // --- Camera ---
