@@ -55,54 +55,23 @@ void drawImage_double_buffering_parallel(int x, int y, const unsigned long *imag
 
             dma_setup_mem_copy(chan, draw_buf + dst_offset, image + j * w, w * sizeof(unsigned long), 15);
             dma_start(chan);
-        } else {
-            // CPU fallback
-            for (int i = 0; i < w; i++) {
-                int screen_x = x + i;
-                if (screen_x < 0 || screen_x >= width)
-                    continue;
+        } 
+        // else {
+        //     // CPU fallback
+        //     for (int i = 0; i < w; i++) {
+        //         int screen_x = x + i;
+        //         if (screen_x < 0 || screen_x >= width)
+        //             continue;
 
-                unsigned int pixel = image[j * w + i];
-                if ((pixel & 0x00FFFFFF) != 0)
-                    drawPixelARGB32_double_buffering(screen_x, screen_y, pixel);
-            }
-        }
+        //         unsigned int pixel = image[j * w + i];
+        //         if ((pixel & 0x00FFFFFF) != 0)
+        //             drawPixelARGB32_double_buffering(screen_x, screen_y, pixel);
+        //     }
+        // }
     }
 
     // No dma_wait() here — handled in render_world()
 }
-
-dma_channel* draw_map_dma_stride_parallel(
-    int x, int y,
-    const unsigned long *src,
-    int w, int h,
-    int src_stride
-) {
-    unsigned char *draw_buf = get_drawing_buffer();
-
-    int dst_offset = y * pitch + x * 4;
-
-    if (x >= 0 && x + w <= width && y >= 0 && y + h <= height) {
-        dma_channel *chan = render_channels[0]; // or reserve a specific index
-
-        dma_setup_2d_copy(
-            chan,
-            draw_buf + dst_offset,
-            src,
-            w * sizeof(unsigned long),   // width in bytes
-            h,
-            pitch,                        // destination stride in bytes
-            src_stride * sizeof(unsigned long),  // source stride in bytes
-            15                            // burst length
-        );
-
-        dma_start(chan);
-        return chan;
-    }
-
-    return NULL; // fallback if skipped due to out-of-bounds
-}
-
 
 /**
  * Set screen resolution to 1024x768

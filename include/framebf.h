@@ -26,10 +26,4 @@ void drawRectARGB32_double_buffering(int x1, int y1, int x2, int y2, unsigned in
 void init_dma_render_channels();
 void init_1_dma_render_channels();
 void drawImage_double_buffering_parallel(int x, int y, const unsigned long *image, int w, int h);
-dma_channel* draw_map_dma_stride_parallel(
-    int x, int y,
-    const unsigned long *src,
-    int w, int h,
-    int src_stride
-);
 #endif

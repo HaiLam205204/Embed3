@@ -19,24 +19,6 @@ unsigned int src_data[SIZE_LARGE_DATA];
 unsigned int dest_data_CPU[SIZE_LARGE_DATA];
 unsigned int dest_data_DMA[SIZE_LARGE_DATA];
 
-void dma_setup_2d_copy(dma_channel *channel, void *dest, const void *src,
-                       unsigned int width, unsigned int height,
-                       unsigned int dest_stride, unsigned int src_stride,
-                       unsigned int burst_length) {
-    channel->block->transfer_info = (burst_length << TI_BURST_LENGTH_SHIFT)
-                                   | TI_SRC_WIDTH
-                                   | TI_DEST_WIDTH
-                                   | TI_SRC_INC
-                                   | TI_DEST_INC
-                                   | TI_TDMODE;  // Enable 2D transfer
-
-    channel->block->src_addr = (unsigned long)src;
-    channel->block->dest_addr = (unsigned long)dest;
-    channel->block->transfer_length = width;
-    channel->block->mode_2d_stride = (src_stride << 16) | dest_stride;
-    channel->block->next_block_addr = 0;
-}
-
 /**
  * Allocate a DMA channel.
  * channel: Specific channel requested or CT_NORMAL/CT_PERIPHERAL for automatic selection.
