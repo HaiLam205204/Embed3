@@ -5,37 +5,6 @@
 #include "../../include/uart0.h"
 #include "../../include/bitmaps/welcomeScreen.h"
 
-#define ESCAPE 0x1B // ESC
-
-void video_playback(const unsigned long** frames, uint32_t frame_count, int x, int y, int src_width, int src_height, int max_width, int max_height) {
-    uint32_t current_frame = 0;
-    
-    // Initialize timer for first frame
-    set_wait_timer(1, FRAME_US);
-
-    while (current_frame < frame_count) {
-        
-        // detect non-blocking input 
-        if(getUart() == ESCAPE){ 
-            draw_background();
-            break;
-        }
-        // 1. Display current frame (implement your display function)
-        drawImageScaledAspect(x, y, frames[current_frame], src_width, src_height, max_width, max_height);
-        // 2. Wait for next frame time
-        set_wait_timer(0, 0); // Uses previously set expiration time
-        
-        // 3. Prepare timer for next frame
-        set_wait_timer(1, FRAME_US);
-        
-        // 4. Advance to next frame (with optional loop handling)
-        current_frame++;
-        if (current_frame >= frame_count) {
-            current_frame = 0; // Loop video if desired
-        }
-    }
-}
-
 void draw_background() {
     drawImage(0, 0, background, 1024, 768);
     drawString(0, 0, "Nguyen Hai Lam", 0x0000ACFF, 7);

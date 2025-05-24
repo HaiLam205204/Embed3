@@ -51,4 +51,5 @@ void autocomplete(char* buffer, int* index);
 void handle_command(char *command);
 void show_all_help();
 void show_command_help(char* command_name);
+void video_playback(const unsigned long** frames, uint32_t frame_count, int x, int y, int src_width, int src_height, int max_width, int max_height);
 

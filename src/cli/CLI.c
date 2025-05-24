@@ -516,11 +516,10 @@ void handle_command(char *command) {
             cli_put_string("Invalid input. Input 0 to disable handshake, 1 to enable handshake.\n", WHITE, ZOOM);
         }
         cli_put_char('\n', WHITE, ZOOM);
-    }else if(string_compare(command, "video") == 0){
-            //drawRectARGB32(CLI_LEFT, CLI_TOP, CLI_RIGHT, CLI_BOTTOM, BLUE, 1);
-            draw_background();
-            video_playback(video_allArray, video_allArray_LEN, 0, 0, VIDEO_WIDTH, VIDEO_HEIGHT, DESTINATION_WIDTH, DESTINATION_HEIGHT);
-    }else {
+    } else if(string_compare(command, "video") == 0) {
+        draw_background(); 
+        video_playback(video_allArray, video_allArray_LEN, 0, 0, VIDEO_WIDTH, VIDEO_HEIGHT, DESTINATION_WIDTH, DESTINATION_HEIGHT);
+    } else {
         // Default: command not recognized
         const char *msg = "Unknown command\n";
         for (int i = 0; msg[i] != '\0'; i++) {
@@ -558,6 +557,39 @@ void show_command_help(char* command_name){
     } else if(string_compare(command_name, "handshake") == 0){
         cli_put_string("handshake - turn on/off CTS/RTS handsharking on current UART ", WHITE, ZOOM);
         cli_put_char('\n', WHITE, ZOOM);
+    }
+}
+
+void video_playback(const unsigned long** frames, uint32_t frame_count, int x, int y, int src_width, int src_height, int max_width, int max_height) {
+    uint32_t current_frame = 0;
+    
+    // Initialize timer for first frame
+    set_wait_timer(1, FRAME_US);
+
+    while (current_frame < frame_count) {
+        
+        // detect non-blocking input 
+        if(getUart() == ESC){ 
+            draw_background();
+            draw_cli_window();
+            // Reset cursor position
+            cursorX = CLI_LEFT + 1;
+            cursorY = CLI_TOP + 1;
+            break;
+        }
+        // 1. Display current frame (implement your display function)
+        drawImageScaledAspect(x, y, frames[current_frame], src_width, src_height, max_width, max_height);
+        // 2. Wait for next frame time
+        set_wait_timer(0, 0); // Uses previously set expiration time
+        
+        // 3. Prepare timer for next frame
+        set_wait_timer(1, FRAME_US);
+        
+        // 4. Advance to next frame (with optional loop handling)
+        current_frame++;
+        if (current_frame >= frame_count) {
+            current_frame = 0; // Loop video if desired
+        }
     }
 }
 
