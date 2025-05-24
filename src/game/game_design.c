@@ -66,6 +66,7 @@ void design_screen_loop()
     // int turn_index = 0; // Track whose turn it is
 
     init_protagonists();
+    reset_ally_sprites();
     init_enemies();
     reset_enemy_sprites();
     while (1)
@@ -102,6 +103,8 @@ void design_screen_loop()
 
 void init_protagonists()
 {
+    num_protagonists = 4;
+
     strcpy(protagonists[0].name, "Hero");
     protagonists[0].is_main_character = 1;
     protagonists[0].current_hp = 100;
@@ -219,5 +222,42 @@ void reset_enemy_sprites() {
         uart_puts(" at index ");
         uart_dec(i);
         uart_puts("\n");
+    }
+}
+
+void reset_ally_sprites() {
+    for (int i = 0; i < MAX_PROTAGONISTS; i++) {
+        sprites[i].character = &protagonists[i];
+
+        // Set position from predefined positions array
+        sprites[i].pos_x = positions[i][0];
+        sprites[i].pos_y = positions[i][1];
+
+        // Assign bitmap and dimensions based on index or character name if needed
+        if (i == 0) {
+            sprites[i].bitmap = myBitmapprotag;
+            sprites[i].width = PROTAG_WIDTH;
+            sprites[i].height = PROTAG_HEIGHT;
+        } else if (i == 1) {
+            sprites[i].bitmap = char1;
+            sprites[i].width = PROTAG_WIDTH;
+            sprites[i].height = PROTAG_HEIGHT;
+        } else if (i == 2) {
+            sprites[i].bitmap = char2;
+            sprites[i].width = 80;
+            sprites[i].height = 88;
+        } else if (i == 3) {
+            sprites[i].bitmap = char3;
+            sprites[i].width = PROTAG_WIDTH;
+            sprites[i].height = PROTAG_HEIGHT;
+        }
+
+        uart_puts("[RESET_ALLY_SPRITES] Ally sprite reset for ");
+        uart_puts(protagonists[i].name);
+        uart_puts(" at (");
+        uart_dec(sprites[i].pos_x);
+        uart_puts(", ");
+        uart_dec(sprites[i].pos_y);
+        uart_puts(")\n");
     }
 }

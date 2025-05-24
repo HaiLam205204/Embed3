@@ -516,25 +516,6 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
         if (render_time < GAME_FRAME_US) {
             wait_us(GAME_FRAME_US - render_time);
         }
-
-        // if (num_enemies == 0) {
-        //     uart_puts("Number of enemy: ");
-        //     uart_putint(num_enemies);
-        //     uart_puts("\n");
-        //     uart_puts("[COMBAT] All enemies defeated. Exiting to exploration...\n");
-        //     protag_world_x -= 10; // or any direction away from the enemy
-        //     exit_ui = 1;
-        //     break;
-        // }
-
-        // if (num_protagonists == 0) {
-        //     uart_puts("[COMBAT] All allies defeated. Game over!\n");
-        //     // You could call game_over_screen(); or similar here
-        //     protag_world_x -= 10; // or any direction away from the enemy
-        //     exit_ui = 1;
-        //     break;
-        // }
-
         if (exit_ui) {
             exit_ui = 0;
             break;
