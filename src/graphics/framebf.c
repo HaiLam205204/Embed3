@@ -156,6 +156,99 @@ void framebf_init()
     uart_puts(" bytes\n");
 }
 
+/**
+ * Swap front and back buffers
+ */
+void swap_buffers()
+{
+
+    if (back_buffer == front_buffer)
+    {
+        uart_puts("Warning: No double buffering available\n");
+        return;
+    }
+
+    // Update virtual offset to switch buffers
+    mBuf[0] = 8 * 4;
+    mBuf[1] = MBOX_REQUEST;
+    mBuf[2] = MBOX_TAG_SETVIRTOFF;
+    mBuf[3] = 8; // Tag payload size
+    mBuf[4] = 0; // Request code
+    mBuf[5] = 0; // X offset always 0
+    // Toggle between 0 (front) and height (back)
+    mBuf[6] = (fb == front_buffer) ? height : 0; // Toggle Y offset
+    mBuf[7] = MBOX_TAG_LAST;
+
+    if (mbox_call(ADDR(mBuf), MBOX_CH_PROP))
+    {
+        fb = (fb == front_buffer) ? back_buffer : front_buffer;
+    }
+    else
+    {
+        uart_puts("Failed to swap buffers!\n");
+    }
+
+    current_buffer = !current_buffer; // Toggle buffer flag
+    // Check message
+    // uart_puts("Swapped to buffer ");
+    // uart_dec(current_buffer);
+    // uart_puts("\n");
+}
+
+// Clear entire back buffer
+void clear_screen(unsigned long color)
+{
+    unsigned long *buf = (unsigned long *)get_drawing_buffer();
+    for (int i = 0; i < (pitch / 4) * height; i++)
+    {
+        buf[i] = color;
+    }
+}
+
+/**
+ * Get pointer to the NOT currently displayed drawing at (back) buffer
+ */
+unsigned char *get_drawing_buffer()
+{
+    return (fb == front_buffer) ? back_buffer : front_buffer;
+}
+
+/**
+ * Double buffering draw function, writes to back buffer
+ */
+void drawPixelARGB32_double_buffering(int x, int y, unsigned int attr)
+{
+    // Calculate offset (same as before)
+    int offs = (y * pitch) + (COLOR_DEPTH / 8 * x);
+
+    // Draw to the CURRENTLY ACTIVE back buffer (not the displayed one)
+    unsigned char *draw_buffer = get_drawing_buffer();
+    *((unsigned int *)(draw_buffer + offs)) = attr;
+}
+
+void drawImage_double_buffering(int x, int y, const unsigned long *image, int image_width, int image_height)
+{
+    for (int j = 0; j < image_height; j++)
+    {
+        int screen_y = y + j;
+        if (screen_y < 0 || screen_y >= 768)
+            continue;
+
+        for (int i = 0; i < image_width; i++)
+        {
+            int screen_x = x + i;
+            if (screen_x < 0 || screen_x >= 1024)
+                continue;
+
+            unsigned int pixel = image[j * image_width + i];
+            if ((pixel & 0x00FFFFFF) != 0) //skip black
+            {
+                drawPixelARGB32_double_buffering(screen_x, screen_y, pixel);
+            }
+        }
+    }
+}
+
 void drawPixelARGB32(int x, int y, unsigned int attr)
 {
     int offs = (y * pitch) + (COLOR_DEPTH / 8 * x);
@@ -334,99 +427,6 @@ void drawImageScaledAspect(int x, int y, const unsigned long *image, int src_wid
 
     // Draw with scaling (using nearest-neighbor for efficiency)
     drawImageScaled(x, y, image, src_width, src_height, dest_width, dest_height);
-}
-
-/**
- * Swap front and back buffers
- */
-void swap_buffers()
-{
-
-    if (back_buffer == front_buffer)
-    {
-        uart_puts("Warning: No double buffering available\n");
-        return;
-    }
-
-    // Update virtual offset to switch buffers
-    mBuf[0] = 7 * 4;
-    mBuf[1] = MBOX_REQUEST;
-    mBuf[2] = MBOX_TAG_SETVIRTOFF;
-    mBuf[3] = 8; // Tag payload size
-    mBuf[4] = 0; // Request code
-    mBuf[5] = 0; // X offset always 0
-    // Toggle between 0 (front) and height (back)
-    mBuf[6] = (fb == front_buffer) ? height : 0; // Toggle Y offset
-    mBuf[7] = MBOX_TAG_LAST;
-
-    if (mbox_call(ADDR(mBuf), MBOX_CH_PROP))
-    {
-        fb = (fb == front_buffer) ? back_buffer : front_buffer;
-    }
-    else
-    {
-        uart_puts("Failed to swap buffers!\n");
-    }
-
-    current_buffer = !current_buffer; // Toggle buffer flag
-    // Check message
-    // uart_puts("Swapped to buffer ");
-    // uart_dec(current_buffer);
-    // uart_puts("\n");
-}
-
-// Clear entire back buffer
-void clear_screen(unsigned long color)
-{
-    unsigned long *buf = (unsigned long *)get_drawing_buffer();
-    for (int i = 0; i < (pitch / 4) * height; i++)
-    {
-        buf[i] = color;
-    }
-}
-
-/**
- * Get pointer to the NOT currently displayed drawing at (back) buffer
- */
-unsigned char *get_drawing_buffer()
-{
-    return (fb == front_buffer) ? back_buffer : front_buffer;
-}
-
-/**
- * Double buffering draw function, writes to back buffer
- */
-void drawPixelARGB32_double_buffering(int x, int y, unsigned int attr)
-{
-    // Calculate offset (same as before)
-    int offs = (y * pitch) + (COLOR_DEPTH / 8 * x);
-
-    // Draw to the CURRENTLY ACTIVE back buffer (not the displayed one)
-    unsigned char *draw_buffer = get_drawing_buffer();
-    *((unsigned int *)(draw_buffer + offs)) = attr;
-}
-
-void drawImage_double_buffering(int x, int y, const unsigned long *image, int image_width, int image_height)
-{
-    for (int j = 0; j < image_height; j++)
-    {
-        int screen_y = y + j;
-        if (screen_y < 0 || screen_y >= 768)
-            continue;
-
-        for (int i = 0; i < image_width; i++)
-        {
-            int screen_x = x + i;
-            if (screen_x < 0 || screen_x >= 1024)
-                continue;
-
-            unsigned int pixel = image[j * image_width + i];
-            if ((pixel & 0x00FFFFFF) != 0) //skip black
-            {
-                drawPixelARGB32_double_buffering(screen_x, screen_y, pixel);
-            }
-        }
-    }
 }
 
 void draw_rect_double_buffering(int x, int y, int width, int height, unsigned int color) {

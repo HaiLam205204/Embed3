@@ -57,6 +57,9 @@ typedef struct {
     int start_x, start_y;     // Where the player spawns in the level
 } Level;
 
+extern int protag_world_x;
+extern int protag_world_y;
+
 // --- Game API ---
 void game_loop();
 

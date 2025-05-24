@@ -8,10 +8,11 @@
 #include "../../include/uart0.h"
 #include "../../include/utils.h"
 #include "../../include/game_design.h"
+#include "../../include/game.h"
+#include "../../include/game_combat.h"
 
 int num_enemies = 3;  // <- THIS IS THE DEFINITION
 int num_protagonists = 4;
-
 void deal_damage(int index, int amount) {
     enemy[index].current_hp -= amount;
     if (enemy[index].current_hp < 0) {
@@ -56,7 +57,18 @@ void remove_enemy(int index) {
     }
 
     num_enemies--;
-    recalculate_enemy_sprite_positions();
+    // recalculate_enemy_sprite_positions();
+
+    uart_puts("Number of enemy: ");
+    uart_putint(num_enemies);
+    uart_puts("\n");
+
+    if (num_enemies == 0) {
+        uart_puts("[COMBAT] All enemies defeated. Exiting to exploration...\n");
+        protag_world_x -= 50; // or any direction away from the enemy
+        protag_world_y -= 50;
+        exit_ui = 1;
+    }
 }
 
 void recalculate_enemy_sprite_positions() {
@@ -151,8 +163,3 @@ void remove_protagonist(int index) {
 
     num_protagonists--;  // reduce the count
 }
-
-
-
-
-

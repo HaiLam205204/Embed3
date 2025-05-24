@@ -49,7 +49,6 @@ void add_to_history(char* command);
 int find_matches(char* partial, char* matches[], int max_matches);
 void autocomplete(char* buffer, int* index);
 void handle_command(char *command);
-void print_board_revision_info(unsigned int rev);
 void show_all_help();
 void show_command_help(char* command_name);
 

@@ -34,5 +34,6 @@
         "yellow_triangle.h": "c",
         "game_logic.h": "c",
         "stdio.h": "c"
+        "game_design.h": "c"
     }
 }
