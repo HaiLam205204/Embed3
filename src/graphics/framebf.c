@@ -25,6 +25,8 @@ static int current_buffer = 0; // 0 = front buffer visible, 1 = back buffer visi
 // Pre-allocate multiple channels for rendering purposes
 dma_channel *render_channels[MAX_DMA_RENDER_CHANNELS];
 
+int next_render_channel = 0;
+
 // Initialize A pool of DMA RENDER CHANNELS
 void init_dma_render_channels() {
     for (int i = 0; i < MAX_DMA_RENDER_CHANNELS; i++) {
@@ -37,40 +39,78 @@ void init_1_dma_render_channels() {
     uart_puts("1 DMA channel works");
 }
 
-void drawImage_double_buffering_parallel(int x, int y, const unsigned long *image, int w, int h)
-{
+void drawImage_double_buffering_parallel(int x, int y, const unsigned long *image, int w, int h) {
     unsigned char *draw_buf = get_drawing_buffer();
-    int dma_index = 0;
+    int pitch_bytes = pitch; // pitch is in bytes
+    int screen_width_bytes = width * 4;
+
+    // Ignore out-of-bounds completely
+    if (x < 0 || x + w > width || y < 0 || y + h > height)
+        return;
+
+    // Compute the destination offset in the framebuffer
+    int dst_offset = y * pitch_bytes + x * 4;
+
+    // Check if the image can be copied in one block (row-contiguous copy)
+    if (pitch_bytes == screen_width_bytes && w == width) {
+        // Full-width copy — can DMA in one shot
+        dma_channel *chan = render_channels[next_render_channel++ % MAX_DMA_RENDER_CHANNELS];
+        dma_wait(chan); // Wait before reusing the channel
+
+        dma_setup_mem_copy(chan,
+                           draw_buf + dst_offset,
+                           image,
+                           w * h * sizeof(unsigned long),
+                           15);
+        dma_start(chan);
+    } else {
+        // Fallback: copy per row (still safe and DMA-based)
+        for (int j = 0; j < h; j++) {
+            int screen_y = y + j;
+            int dst_line_offset = screen_y * pitch_bytes + x * 4;
+            int src_line_offset = j * w;
+
+            dma_channel *chan = render_channels[next_render_channel++ % MAX_DMA_RENDER_CHANNELS];
+            dma_wait(chan); // Wait for the channel to be free
+
+            dma_setup_mem_copy(chan,
+                               draw_buf + dst_line_offset,
+                               image + src_line_offset,
+                               w * sizeof(unsigned long),
+                               15);
+            dma_start(chan);
+        }
+    }
+}
+
+void drawImage_double_buffering_parallel_stride(
+    int x, int y,
+    const unsigned long* image,
+    int w, int h,
+    int src_stride // in pixels
+) {
+    unsigned char* draw_buf = get_drawing_buffer();
 
     for (int j = 0; j < h; j++) {
         int screen_y = y + j;
         if (screen_y < 0 || screen_y >= height)
             continue;
 
+        const unsigned long* src_row = image + j * src_stride;
         int dst_offset = screen_y * pitch + x * 4;
 
-        if (x >= 0 && x + w <= width) {
-            // Use next available DMA channel (round-robin)
-            dma_channel *chan = render_channels[dma_index++ % MAX_DMA_RENDER_CHANNELS];
+        dma_channel* chan = render_channels[next_render_channel++ % MAX_DMA_RENDER_CHANNELS];
+        dma_wait(chan);
 
-            dma_setup_mem_copy(chan, draw_buf + dst_offset, image + j * w, w * sizeof(unsigned long), 15);
-            dma_start(chan);
-        } 
-        // else {
-        //     // CPU fallback
-        //     for (int i = 0; i < w; i++) {
-        //         int screen_x = x + i;
-        //         if (screen_x < 0 || screen_x >= width)
-        //             continue;
-
-        //         unsigned int pixel = image[j * w + i];
-        //         if ((pixel & 0x00FFFFFF) != 0)
-        //             drawPixelARGB32_double_buffering(screen_x, screen_y, pixel);
-        //     }
-        // }
+        dma_setup_mem_copy(
+            chan,
+            draw_buf + dst_offset,
+            src_row,
+            w * sizeof(unsigned long),
+            15
+        );
+        dma_start(chan);
     }
-
-    // No dma_wait() here — handled in render_world()
 }
 
 /**

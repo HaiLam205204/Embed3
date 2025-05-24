@@ -193,13 +193,20 @@ const int total_levels = sizeof(levels) / sizeof(Level);
 Level* current_level = &levels[0]; // Start at level 1
 
 void render_world() {
+    next_render_channel = 0;
     if (current_level == NULL) return;
 
-    drawImage_double_buffering_parallel(
+    drawImage_double_buffering_parallel_stride(
         0, 0,
         gameMap4x + camera_y * GAME_MAP_WIDTH_4X + camera_x,
-        VIEWPORT_WIDTH, VIEWPORT_HEIGHT
+        VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
+        GAME_MAP_WIDTH_4X
     );
+
+    // // --- Wait for all DMA channels to complete ---
+    // for (int i = 0; i < MAX_DMA_RENDER_CHANNELS; i++) {
+    //     dma_wait(render_channels[i]);
+    // }
 
     // --- Draw walls using parallel DMA ---
     for (int i = 0; i < current_level->wall_count; i++) {
@@ -210,7 +217,7 @@ void render_world() {
 
         if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
             screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-            drawImage_double_buffering_parallel(
+            drawImage_double_buffering(
                 screen_x, screen_y,
                 wall->bitmap,
                 wall->width, wall->height
@@ -228,7 +235,7 @@ void render_world() {
 
         if (screen_x + enemy->width > 0 && screen_x < VIEWPORT_WIDTH &&
             screen_y + enemy->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-            drawImage_double_buffering_parallel(
+            drawImage_double_buffering(
                 screen_x, screen_y,
                 enemy->sprite,
                 enemy->width, enemy->height
@@ -246,17 +253,12 @@ void render_world() {
 
         if (screen_x + zone->width > 0 && screen_x < VIEWPORT_WIDTH &&
             screen_y + zone->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-            drawImage_double_buffering_parallel(
+            drawImage_double_buffering(
                 screen_x, screen_y,
                 zone->bitmap,
                 zone->width, zone->height
             );
         }
-    }
-
-    // --- Wait for all DMA channels to complete ---
-    for (int i = 0; i < MAX_DMA_RENDER_CHANNELS; i++) {
-        dma_wait(render_channels[i]);
     }
 }
 
@@ -282,7 +284,6 @@ void game_loop() {
                 render_world();
                 render_protagonist_with_animation();
                 swap_buffers();
-                wait_us(16000);
             }
             first_frame = 0;
         } else {
@@ -449,11 +450,12 @@ void load_level(Level* level) {
     // Double buffered render of initial level state
     for (int i = 0; i < 2; i++) {
 
-        drawImage_double_buffering_parallel(
-            0, 0,  // screen position
-            level->background + camera_y * level->bg_width + camera_x,  // source pixel pointer
+        drawImage_double_buffering_parallel_stride(
+            0, 0,
+            level->background + camera_y * level->bg_width + camera_x,
             VIEWPORT_WIDTH,
-            VIEWPORT_HEIGHT
+            VIEWPORT_HEIGHT,
+            level->bg_width // STRIDE in pixels
         );
 
         // --- Draw walls using parallel DMA ---
@@ -464,7 +466,7 @@ void load_level(Level* level) {
 
             if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
                 screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-                drawImage_double_buffering_parallel(
+                drawImage_double_buffering(
                     screen_x, screen_y,
                     wall->bitmap,
                     wall->width, wall->height
@@ -473,7 +475,7 @@ void load_level(Level* level) {
         }
 
         // --- Draw protagonist using parallel DMA ---
-        drawImage_double_buffering_parallel(
+        drawImage_double_buffering(
             protag_world_x - camera_x,
             protag_world_y - camera_y,
             myBitmapprotag,  // Default protagonist sprite
@@ -481,8 +483,7 @@ void load_level(Level* level) {
             PROTAG_HEIGHT
         );
 
-        swap_buffers();
-        wait_us(16000); // Small delay for smooth transition
+        swap_buffers(); // Small delay for smooth transition
     }
 
     uart_puts("\n[LEVEL] Loaded successfully");
