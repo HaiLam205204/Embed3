@@ -26,7 +26,8 @@ void screen_combat_loop();
 void draw_all_buttons();
 void combat_utility_UI();
 void clear_persona_option_screen(); 
-
+void build_item_text(char *item_text, int quantity);
+void draw_persona_option_screen(int selected_option);
 // void draw_skill_option_screen(int persona, int option);
 
 void draw_skill_option_screen(Character character, int option, int character_index);

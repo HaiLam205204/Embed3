@@ -12,7 +12,7 @@
 // #include "../include/Orpheus_Skill_Option.h"
 #include "../include/game_menu.h"
 
-
+#include "../include/game_design.h"
 #define DESIGN 0x18 //CTRL X
 #define OPEN_CLI 0x14 // CTRL T
 #define VIDEO 0x16 // CTRL V
@@ -54,9 +54,10 @@ void main()
 		} else if (c == VIDEO) {
             video_playback(video_allArray, video_allArray_LEN, 0, 0, VIDEO_WIDTH, VIDEO_HEIGHT, DESTINATION_WIDTH, DESTINATION_HEIGHT);
         } else if(c == GAME) {
-            game_loop();
+            displayRewardScreen();
+            //game_loop();
         } else if(c == DESIGN) {
-            design_screen_loop();
+            design_screen_loop();   
         } 
     }
 }
