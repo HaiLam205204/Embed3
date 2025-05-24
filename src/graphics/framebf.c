@@ -624,6 +624,10 @@ void dma_fb_copy(dma_framebuffer* fb, void* src,
     dma_start(channel);
     dma_wait(channel);
     dma_close_channel(channel);
+    uart_puts("DMA channel ");
+    uart_dec(channel->channel);
+    uart_puts(" closed.\n");
+
 }
 
 
@@ -648,4 +652,7 @@ void dma_fb_swap(dma_framebuffer* fb) {
     dma_start(channel);
     dma_wait(channel);
     dma_close_channel(channel);
+    uart_puts("DMA channel ");
+    uart_dec(channel->channel);
+    uart_puts(" closed.\n");
 }

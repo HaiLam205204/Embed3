@@ -8,7 +8,8 @@ static dma_channel *dma;
 
 dma_channel channels[15];
 
-static unsigned int channel_map = 0x1F35;
+// static unsigned int channel_map = 0x1F35;
+volatile unsigned int channel_map = 0xFFFF; // All channels initially available
 
 // Let the array as global to ultilize global memory region to avoid memory violation
 unsigned int src_data[SIZE_LARGE_DATA];
@@ -16,54 +17,114 @@ unsigned int dest_data_CPU[SIZE_LARGE_DATA];
 unsigned int dest_data_DMA[SIZE_LARGE_DATA];
 
 static unsigned int allocate_channel(unsigned int channel) {
+    uart_puts("Requested channel: ");
+    uart_dec(channel);
+    uart_puts("\n");
+
+    uart_puts("Initial channel_map: ");
+    uart_hex(channel_map);
+    uart_puts("\n");
+
+    // If it's a specific request (0–15), check if available
     if (!(channel & ~0x0F)) {
         if (channel_map & (1 << channel)) {
+            uart_puts("Allocating requested channel directly: ");
+            uart_dec(channel);
+            uart_puts("\n");
+
             channel_map &= ~(1 << channel);
             return channel;
         }
 
-        return -1;
+        uart_puts("Requested channel unavailable!\n");
+        return CT_NONE;
     }
 
-    unsigned int i = channel == CT_NORMAL ? 6 : 12;
+    // Fallback: search through default channel range
+    int i = channel == CT_NORMAL ? 6 : 12;
+
+    uart_puts("Fallback channel allocation: ");
+    uart_dec(i);
+    uart_puts(" down to 0\n");
 
     for (; i >= 0; i--) {
         if (channel_map & (1 << i)) {
+            uart_puts("Fallback found channel: ");
+            uart_dec(i);
+            uart_puts("\n");
+
             channel_map &= ~(1 << i);
             return i;
+        } else {
+            uart_puts("Channel ");
+            uart_dec(i);
+            uart_puts(" unavailable.\n");
         }
     }
+
+    uart_puts("No fallback channels available.\n");
     return CT_NONE;
 }
 
 dma_channel *dma_open_channel(unsigned int channel) {
+    uart_puts("dma_open_channel(): Opening channel...\n");
+
     unsigned int _channel = allocate_channel(channel);
 
     if (_channel == CT_NONE) {
-        uart_puts("INVALID CHANNEL!");
+        uart_puts("dma_open_channel(): INVALID CHANNEL!\n");
         return 0;
     }
 
     dma_channel *dma = (dma_channel *)&channels[_channel];
     dma->channel = _channel;
 
-    static dma_control_block __attribute__((aligned(32))) dma_block;
-    dma->block = &dma_block;
+    // Allocate a dedicated control block per channel
+    static dma_control_block __attribute__((aligned(32))) channel_blocks[15];
+    dma->block = &channel_blocks[_channel];
+
+    // Clear reserved fields
     dma->block->res[0] = 0;
     dma->block->res[1] = 0;
 
+    uart_puts("dma_open_channel(): Enabling DMA channel ");
+    uart_dec(dma->channel);
+    uart_puts("\n");
+
+    // Enable and reset the DMA channel
     REGS_DMA_ENABLE |= (1 << dma->channel);
     REGS_DMA(dma->channel)->control |= CS_RESET;
-    
-    while(REGS_DMA(dma->channel)->control & CS_RESET) ;
-    uart_puts("DMA open successfully!!!");
+
+    while (REGS_DMA(dma->channel)->control & CS_RESET);
+
+    uart_puts("dma_open_channel(): DMA channel ");
+    uart_dec(dma->channel);
+    uart_puts(" opened successfully.\n");
+
+    uart_puts("Remaining channel_map: ");
+    uart_hex(channel_map);
+    uart_puts("\n");
 
     return dma;
 }
 
+
 void dma_close_channel(dma_channel *channel) {
-    channel_map |= (1 << channel->channel);
+    if (!channel) return;
+
+    unsigned int ch = channel->channel;
+
+    // Reset the hardware DMA controller for this channel
+    REGS_DMA(ch)->control = CS_RESET;
+    while (REGS_DMA(ch)->control & CS_RESET);
+
+    // Mark the channel as available
+    channel_map |= (1 << ch);
+    uart_puts("dma_close_channel(): Releasing channel ");
+    uart_dec(channel->channel);
+    uart_puts("\n");
 }
+
 
 void dma_setup_mem_copy(dma_channel *channel, void *dest, const void *src, unsigned int length, unsigned int burst_length) {
     /* Current Transfer Info (TI) setting: 128-bit source read width, 
@@ -138,6 +199,8 @@ void do_dma(void *dest,const void *src, unsigned int total) {
     uart_puts("The ms take to copy using DMA: ");
     uart_dec((us_end - us_start));
     uart_puts("\n");
+
+    dma_close_channel(dma);  // <--- FIX: release the channel
 }
 
 // Test DMA functionality
