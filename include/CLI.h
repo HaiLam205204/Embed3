@@ -35,6 +35,8 @@
 // Define the ASCII code for Escape key
 #define ESC 27  
 
+extern int cursorX;
+extern int cursorY;
 
 void draw_cli_window();
 void cli_put_char(char ch, unsigned int attr, int zoom);

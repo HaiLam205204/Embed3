@@ -15,6 +15,7 @@
 #include "../../include/bitmaps/protagonist_animation.h"
 #include "../../include/bitmaps/transitionZone.h"
 #include "../../include/game_design.h"
+#include "../../include/CLI.h"
 
 // --- Constants ---
 #define STEP 10
@@ -223,6 +224,10 @@ void game_loop() {
             // detect non-blocking input 
             if(input == ESCAPE){ 
                 draw_background();
+                drawRectARGB32(CLI_LEFT, CLI_TOP, CLI_RIGHT, CLI_BOTTOM, BLUE, 1); 
+                // Reset cursor position
+                cursorX = CLI_LEFT + 1;
+                cursorY = CLI_TOP + 1;
                 break;
             }
 

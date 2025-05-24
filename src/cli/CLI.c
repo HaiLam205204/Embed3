@@ -11,9 +11,7 @@
 #include "../../include/bitmaps/welcomeScreen.h"
 #include "../../include/renderFrame.h"
 #include "../../include/bitmaps/video.h"
-// #include "../header/commands.h"
-// #include "../header/history.h"
-// #include "../header/autocomplete.h"
+#include "../../include/game.h"
 
 // CLI cursor position
 int cursorX = CLI_LEFT + 1;
@@ -131,7 +129,7 @@ void cli_loop() {
     int buffer_index = 0;
     // Print prompt
     for (int i = 0; PROMPT[i] != '\0'; i++) { 
-        cli_put_char(PROMPT[i], WHITE, ZOOM);  // Print each character
+        cli_put_char(PROMPT[i], 0x00FF0000, ZOOM);  // Print each character
     }
 
     while (1) {
@@ -156,7 +154,7 @@ void cli_loop() {
             buffer_index = 0;
             // Print prompt again
             for (int i = 0; PROMPT[i] != '\0'; i++) { 
-                cli_put_char(PROMPT[i], WHITE, ZOOM);  // Print each character
+                cli_put_char(PROMPT[i], 0x00FF0000, ZOOM);  // Print each character
             }
         } else if (c == '\b') {
             if (buffer_index > 0) {
@@ -340,7 +338,9 @@ static const char* commands[] = {
     "clear",
     "showinfo",
     "baudrate",
-    "handshake"
+    "handshake",
+    "video",
+    "game"
 };
 
 /**
@@ -395,7 +395,7 @@ void autocomplete(char* cli_buffer, int* index) {
                 cli_put_string("\nAmbiguous command, type more characters.\n", WHITE, ZOOM);
                 // Reprint prompt
                 for (int i = 0; PROMPT[i] != '\0'; i++) { 
-                    cli_put_char(PROMPT[i], WHITE, ZOOM);
+                    cli_put_char(PROMPT[i], 0x00FF0000, ZOOM);
                 }
                 return;
             }
@@ -519,6 +519,8 @@ void handle_command(char *command) {
     } else if(string_compare(command, "video") == 0) {
         draw_background(); 
         video_playback(video_allArray, video_allArray_LEN, 0, 0, VIDEO_WIDTH, VIDEO_HEIGHT, DESTINATION_WIDTH, DESTINATION_HEIGHT);
+    } else if(string_compare(command, "game") == 0) {
+        game_loop();
     } else {
         // Default: command not recognized
         const char *msg = "Unknown command\n";
@@ -539,6 +541,10 @@ void show_all_help(){
     cli_put_char('\n', WHITE, ZOOM);
     cli_put_string("handshake - turn on/off CTS/RTS handsharking on current UART", WHITE, ZOOM);
     cli_put_char('\n', WHITE, ZOOM);
+    cli_put_string("video - play video in a loop", WHITE, ZOOM);
+    cli_put_char('\n', WHITE, ZOOM);
+    cli_put_string("game - turn on the video game", WHITE, ZOOM);
+    cli_put_char('\n', WHITE, ZOOM);
 }
 
 void show_command_help(char* command_name){
@@ -556,6 +562,12 @@ void show_command_help(char* command_name){
         cli_put_char('\n', WHITE, ZOOM);
     } else if(string_compare(command_name, "handshake") == 0){
         cli_put_string("handshake - turn on/off CTS/RTS handsharking on current UART ", WHITE, ZOOM);
+        cli_put_char('\n', WHITE, ZOOM);
+    } else if(string_compare(command_name, "video") == 0){
+        cli_put_string("video - play video in a loop", WHITE, ZOOM);
+        cli_put_char('\n', WHITE, ZOOM);
+    } else if(string_compare(command_name, "game") == 0){
+        cli_put_string("game - turn on the video game", WHITE, ZOOM);
         cli_put_char('\n', WHITE, ZOOM);
     }
 }
