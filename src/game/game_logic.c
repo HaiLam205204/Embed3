@@ -161,6 +161,13 @@ void remove_protagonist(int index) {
     }
 
     num_protagonists--;  // reduce the count
+
+    if (num_protagonists == 0) {
+        uart_puts("[COMBAT] All enemies defeated. Exiting to exploration...\n");
+        protag_world_x -= 50; // or any direction away from the enemy
+        protag_world_y -= 50;
+        exit_ui = 1;
+    }
 }
 
 void use_single_target_skill(Character *user, int enemy_index) {
