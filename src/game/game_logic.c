@@ -7,10 +7,11 @@
 #include "../../include/uart0.h"
 #include "../../include/utils.h"
 #include "../../include/game_design.h"
+#include "../../include/game.h"
+#include "../../include/game_combat.h"
 
 int num_enemies = 3;  // <- THIS IS THE DEFINITION
 int num_protagonists = 4;
-
 void deal_damage(int index, int amount) {
     enemy[index].current_hp -= amount;
     if (enemy[index].current_hp < 0) {
@@ -55,7 +56,18 @@ void remove_enemy(int index) {
     }
 
     num_enemies--;
-    recalculate_enemy_sprite_positions();
+    // recalculate_enemy_sprite_positions();
+
+    uart_puts("Number of enemy: ");
+    uart_putint(num_enemies);
+    uart_puts("\n");
+
+    if (num_enemies == 0) {
+        uart_puts("[COMBAT] All enemies defeated. Exiting to exploration...\n");
+        protag_world_x -= 50; // or any direction away from the enemy
+        protag_world_y -= 50;
+        exit_ui = 1;
+    }
 }
 
 void recalculate_enemy_sprite_positions() {
@@ -149,4 +161,77 @@ void remove_protagonist(int index) {
     }
 
     num_protagonists--;  // reduce the count
+
+    if (num_protagonists == 0) {
+        uart_puts("[COMBAT] All enemies defeated. Exiting to exploration...\n");
+        protag_world_x -= 50; // or any direction away from the enemy
+        protag_world_y -= 50;
+        exit_ui = 1;
+    }
+}
+
+void use_single_target_skill(Character *user, int enemy_index) {
+    int skill_cost = 12;
+    int skill_damage = 30;  // You can tweak this
+
+    if (user->current_hp < skill_cost) {
+        uart_puts("[SKILL] Not enough HP to use single-target skill.\n");
+        return;
+    }
+
+    user->current_hp -= skill_cost;
+    uart_puts("[SKILL] Using single-target skill. Remaining HP: ");
+    uart_dec(user->current_hp);
+    uart_puts("\n");
+
+    deal_damage(enemy_index, skill_damage);
+}
+
+void use_aoe_skill(Character *user) {
+    int skill_cost = 20;
+    int aoe_damage = 15;  // You can tweak this
+
+    if (user->current_hp < skill_cost) {
+        uart_puts("[SKILL] Not enough HP to use AoE skill.\n");
+        return;
+    }
+
+    user->current_hp -= skill_cost;
+    uart_puts("[SKILL] Using AoE skill. Remaining HP: ");
+    uart_dec(user->current_hp);
+    uart_puts("\n");
+
+    for (int i = num_enemies - 1; i >= 0; i--) {
+        deal_damage(i, aoe_damage);
+    }
+}
+
+int is_enemy_alive(int enemy_index) {
+    return enemy[enemy_index].current_hp > 0;
+}
+
+int all_enemies_defeated(EnemyModel enemies[], int num_enemies) {
+    for (int i = 0; i < num_enemies; i++) {
+        uart_puts("[DEBUG] Enemy ");
+        uart_putint(i);
+        uart_puts(" HP: ");
+        uart_putint(enemies[i].current_hp);
+        uart_puts("\n");
+        if (enemies[i].current_hp > 0) return 0;
+    }
+    uart_puts("[DEBUG] All enemies are defeated.\n");
+    return 1;
+}
+
+int all_allies_defeated(Character allies[], int num_allies) {
+    for (int i = 0; i < num_allies; i++) {
+        uart_puts("[DEBUG] Ally ");
+        uart_putint(i);
+        uart_puts(" HP: ");
+        uart_putint(allies[i].current_hp);
+        uart_puts("\n");
+        if (allies[i].current_hp > 0) return 0;
+    }
+    uart_puts("[DEBUG] All allies are defeated.\n");
+    return 1;
 }
