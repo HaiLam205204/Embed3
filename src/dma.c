@@ -19,6 +19,24 @@ unsigned int src_data[SIZE_LARGE_DATA];
 unsigned int dest_data_CPU[SIZE_LARGE_DATA];
 unsigned int dest_data_DMA[SIZE_LARGE_DATA];
 
+void dma_setup_2d_copy(dma_channel *channel, void *dest, const void *src,
+                       unsigned int width, unsigned int height,
+                       unsigned int dest_stride, unsigned int src_stride,
+                       unsigned int burst_length) {
+    channel->block->transfer_info = (burst_length << TI_BURST_LENGTH_SHIFT)
+                                   | TI_SRC_WIDTH
+                                   | TI_DEST_WIDTH
+                                   | TI_SRC_INC
+                                   | TI_DEST_INC
+                                   | TI_TDMODE;  // Enable 2D transfer
+
+    channel->block->src_addr = (unsigned long)src;
+    channel->block->dest_addr = (unsigned long)dest;
+    channel->block->transfer_length = width;
+    channel->block->mode_2d_stride = (src_stride << 16) | dest_stride;
+    channel->block->next_block_addr = 0;
+}
+
 /**
  * Allocate a DMA channel.
  * channel: Specific channel requested or CT_NORMAL/CT_PERIPHERAL for automatic selection.
@@ -32,7 +50,7 @@ static unsigned int allocate_channel(unsigned int channel) {
             // Mark it as used
             channel_map &= ~(1 << channel);
             uart_puts("[DMA ALLOCATION] Channel allocated: ");
-            uart_puts(channel);
+            uart_dec(channel);
             uart_puts("\n");
             return channel;
         }
@@ -128,17 +146,6 @@ void dma_close_channel(dma_channel *channel) {
  * burst_length: Number of words per burst (performance tuning)
  */
 void dma_setup_mem_copy(dma_channel *channel, void *dest, const void *src, unsigned int length, unsigned int burst_length) {
-    
-    uart_puts("[DMA MEM COPY] dma_setup_mem_copy\n");
-    uart_puts("    Source Addr: ");
-    uart_hex((unsigned int)src);
-    uart_puts("\n    Dest Addr: ");
-    uart_hex((unsigned int)dest);
-    uart_puts("\n    Length: ");
-    uart_dec(length);
-    uart_puts("\n    Burst Length: ");
-    uart_dec(burst_length);
-    uart_puts("\n");
 
     /* Current Transfer Info (TI) setting: 128-bit source read width, 
                                             Source address increments after each read. The address will increment by 4, if SRC_WIDTH=0 else by 32
@@ -204,19 +211,6 @@ int dma_wait(dma_channel *channel) {
 }
 
 /**
- * Initializes the DMA subsystem and performs a basic test.
- */
-void dma_init(){
-    dma = dma_open_channel(5);
-
-    uart_puts("DMA CHANNEL: ");
-    uart_dec(dma->channel);
-    uart_puts("\n");
-
-    test_dma();
-}
-
-/**
  * Performs DMA copy with performance timing.
  */
 // Call DMA to start memory transfer with brust_length = 16 word
@@ -234,25 +228,37 @@ void do_dma(void *dest,const void *src, unsigned int total) {
     uart_puts("\n");
 }
 
-/**
- * Test function to verify that DMA correctly copies memory.
- */
-void test_dma() {
-    uart_puts("Testing DMA...\n");
+// /**
+//  * Initializes the DMA subsystem and performs a basic test.
+//  */
+// void dma_init(){
+//     dma = dma_open_channel(5);
 
-    const unsigned int src_data[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    unsigned int dest_data[10]; // Initialize destination array with zeros
+//     uart_puts("Opened DMA CHANNEL: ");
+//     uart_puts("\n");
 
-    // Perform DMA operation (assuming size is in bytes)
-    do_dma(dest_data, src_data, sizeof(src_data));
-    uart_puts("After do_dma\n");
-    // Verify the copy
-    if (compare_memory(src_data, dest_data, sizeof(src_data)/sizeof(unsigned int))) {
-        uart_puts("\nDMA Test PassedVVVV.\n");
-    } else {
-        uart_puts("\nDMA Test Failed.\n");
-    }
-}
+//     test_dma();
+// }
+
+// /**
+//  * Test function to verify that DMA correctly copies memory.
+//  */
+// void test_dma() {
+//     uart_puts("Testing DMA...\n");
+
+//     const unsigned int src_data[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+//     unsigned int dest_data[10]; // Initialize destination array with zeros
+
+//     // Perform DMA operation (assuming size is in bytes)
+//     do_dma(dest_data, src_data, sizeof(src_data));
+//     uart_puts("After do_dma\n");
+//     // Verify the copy
+//     if (compare_memory(src_data, dest_data, sizeof(src_data)/sizeof(unsigned int))) {
+//         uart_puts("\nDMA Test PassedVVVV.\n");
+//     } else {
+//         uart_puts("\nDMA Test Failed.\n");
+//     }
+// }
 
 // // Test DMA functionality
 // int compare_memory(const unsigned int *a, const unsigned int *b, unsigned int size) {

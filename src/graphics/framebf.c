@@ -3,6 +3,8 @@
 #include "../../include/uart0.h"
 #include "../../include/framebf.h"
 
+#define NULL ((void*)0)
+
 // Use RGBA32 (32 bits for each pixel)
 #define COLOR_DEPTH 32
 
@@ -19,6 +21,84 @@ unsigned char *fb;
 unsigned char *front_buffer;
 unsigned char *back_buffer;
 static int current_buffer = 0; // 0 = front buffer visible, 1 = back buffer visible
+
+// Pre-allocate multiple channels for rendering purposes
+#define MAX_DMA_RENDER_CHANNELS 8
+dma_channel *render_channels[MAX_DMA_RENDER_CHANNELS];
+
+// Initialize A pool of DMA RENDER CHANNELS
+void init_dma_render_channels() {
+    for (int i = 0; i < MAX_DMA_RENDER_CHANNELS; i++) {
+        render_channels[i] = dma_open_channel(CT_NORMAL);
+    }
+}
+
+void drawImage_double_buffering_parallel(int x, int y, const unsigned long *image, int w, int h)
+{
+    unsigned char *draw_buf = get_drawing_buffer();
+    int dma_index = 0;
+
+    for (int j = 0; j < h; j++) {
+        int screen_y = y + j;
+        if (screen_y < 0 || screen_y >= height)
+            continue;
+
+        int dst_offset = screen_y * pitch + x * 4;
+
+        if (x >= 0 && x + w <= width) {
+            // Use next available DMA channel (round-robin)
+            dma_channel *chan = render_channels[dma_index++ % MAX_DMA_RENDER_CHANNELS];
+
+            dma_setup_mem_copy(chan, draw_buf + dst_offset, image + j * w, w * sizeof(unsigned long), 15);
+            dma_start(chan);
+        } else {
+            // CPU fallback
+            for (int i = 0; i < w; i++) {
+                int screen_x = x + i;
+                if (screen_x < 0 || screen_x >= width)
+                    continue;
+
+                unsigned int pixel = image[j * w + i];
+                if ((pixel & 0x00FFFFFF) != 0)
+                    drawPixelARGB32_double_buffering(screen_x, screen_y, pixel);
+            }
+        }
+    }
+
+    // No dma_wait() here — handled in render_world()
+}
+
+dma_channel* draw_map_dma_stride_parallel(
+    int x, int y,
+    const unsigned long *src,
+    int w, int h,
+    int src_stride
+) {
+    unsigned char *draw_buf = get_drawing_buffer();
+
+    int dst_offset = y * pitch + x * 4;
+
+    if (x >= 0 && x + w <= width && y >= 0 && y + h <= height) {
+        dma_channel *chan = render_channels[0]; // or reserve a specific index
+
+        dma_setup_2d_copy(
+            chan,
+            draw_buf + dst_offset,
+            src,
+            w * sizeof(unsigned long),   // width in bytes
+            h,
+            pitch,                        // destination stride in bytes
+            src_stride * sizeof(unsigned long),  // source stride in bytes
+            15                            // burst length
+        );
+
+        dma_start(chan);
+        return chan;
+    }
+
+    return NULL; // fallback if skipped due to out-of-bounds
+}
+
 
 /**
  * Set screen resolution to 1024x768
@@ -195,15 +275,6 @@ void swap_buffers()
     // uart_puts("\n");
 }
 
-// Clear entire back buffer
-void clear_screen(unsigned long color)
-{
-    unsigned long *buf = (unsigned long *)get_drawing_buffer();
-    for (int i = 0; i < (pitch / 4) * height; i++)
-    {
-        buf[i] = color;
-    }
-}
 
 /**
  * Get pointer to the NOT currently displayed drawing at (back) buffer
@@ -224,6 +295,16 @@ void drawPixelARGB32_double_buffering(int x, int y, unsigned int attr)
     // Draw to the CURRENTLY ACTIVE back buffer (not the displayed one)
     unsigned char *draw_buffer = get_drawing_buffer();
     *((unsigned int *)(draw_buffer + offs)) = attr;
+}
+
+// Clear entire back buffer
+void clear_screen(unsigned long color)
+{
+    unsigned long *buf = (unsigned long *)get_drawing_buffer();
+    for (int i = 0; i < (pitch / 4) * height; i++)
+    {
+        buf[i] = color;
+    }
 }
 
 void drawImage_double_buffering(int x, int y, const unsigned long *image, int image_width, int image_height)
@@ -436,30 +517,6 @@ void draw_rect_double_buffering(int x, int y, int width, int height, unsigned in
         }
     }
 }
-
-void drawImage_double_buffering_stride(int x, int y, const unsigned long *image, int image_width, int image_height, int image_stride) {
-    for (int j = 0; j < image_height; j++) {
-        for (int i = 0; i < image_width; i++) {
-            unsigned int pixel = image[j * image_stride + i];
-            if ((pixel & 0x00FFFFFF) != 0) { // skip black
-                drawPixelARGB32_double_buffering(x + i, y + j, pixel);
-            }
-        }
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void drawRectARGB32_double_buffering(int x1, int y1, int x2, int y2, unsigned int attr, int fill)
 {

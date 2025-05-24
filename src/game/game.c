@@ -192,6 +192,78 @@ Level levels[MAX_LEVELS] = {
 const int total_levels = sizeof(levels) / sizeof(Level);
 Level* current_level = &levels[0]; // Start at level 1
 
+void render_world() {
+    if (current_level == NULL) return;
+
+    // Draw map with fast 2d stride-based DMA 
+    dma_channel *map_dma = draw_map_dma_stride_parallel(
+        0, 0,
+        gameMap4x + camera_y * GAME_MAP_WIDTH_4X + camera_x,
+        VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
+        GAME_MAP_WIDTH_4X
+    );
+
+    // --- Draw walls using parallel DMA ---
+    for (int i = 0; i < current_level->wall_count; i++) {
+        Wall* wall = &current_level->walls[i];
+
+        int screen_x = wall->world_x - camera_x;
+        int screen_y = wall->world_y - camera_y;
+
+        if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
+            screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+            drawImage_double_buffering_parallel(
+                screen_x, screen_y,
+                wall->bitmap,
+                wall->width, wall->height
+            );
+        }
+    }
+
+    // --- Draw enemies using parallel DMA ---
+    for (int i = 0; i < current_level->enemy_count; i++) {
+        Enemy* enemy = &current_level->enemies[i];
+        if (!enemy->active) continue;
+
+        int screen_x = enemy->world_x - camera_x;
+        int screen_y = enemy->world_y - camera_y;
+
+        if (screen_x + enemy->width > 0 && screen_x < VIEWPORT_WIDTH &&
+            screen_y + enemy->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+            drawImage_double_buffering_parallel(
+                screen_x, screen_y,
+                enemy->sprite,
+                enemy->width, enemy->height
+            );
+        }
+    }
+
+    // --- Draw zones using parallel DMA ---
+    for (int i = 0; i < current_level->zone_count; i++) {
+        Zone* zone = &current_level->zones[i];
+        if (!zone->bitmap) continue;
+
+        int screen_x = zone->x - camera_x;
+        int screen_y = zone->y - camera_y;
+
+        if (screen_x + zone->width > 0 && screen_x < VIEWPORT_WIDTH &&
+            screen_y + zone->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+            drawImage_double_buffering_parallel(
+                screen_x, screen_y,
+                zone->bitmap,
+                zone->width, zone->height
+            );
+        }
+    }
+
+    // --- Wait for all DMA channels to complete ---
+    for (int i = 0; i < MAX_DMA_RENDER_CHANNELS; i++) {
+        dma_wait(render_channels[i]);
+    }
+
+    dma_wait(map_dma);  // Wait for the map at the end
+}
+
 // --- Game Loop ---
 void game_loop() {
     int first_frame = 1;
@@ -381,23 +453,22 @@ void load_level(Level* level) {
     // Double buffered render of initial level state
     for (int i = 0; i < 2; i++) {
 
-        // Draw background
-        drawImage_double_buffering_stride(
+        draw_map_dma_stride_parallel(
             0, 0,
             level->background + camera_y * level->bg_width + camera_x,
             VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
             level->bg_width
-        );
+            );
 
-        // Draw walls
+        // --- Draw walls using parallel DMA ---
         for (int j = 0; j < level->wall_count; j++) {
             Wall* wall = &level->walls[j];
             int screen_x = wall->world_x - camera_x;
             int screen_y = wall->world_y - camera_y;
-            
+
             if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
                 screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-                drawImage_double_buffering(
+                drawImage_double_buffering_parallel(
                     screen_x, screen_y,
                     wall->bitmap,
                     wall->width, wall->height
@@ -405,8 +476,8 @@ void load_level(Level* level) {
             }
         }
 
-        // Draw protagonist
-        drawImage_double_buffering(
+        // --- Draw protagonist using parallel DMA ---
+        drawImage_double_buffering_parallel(
             protag_world_x - camera_x,
             protag_world_y - camera_y,
             myBitmapprotag,  // Default protagonist sprite
@@ -466,71 +537,71 @@ int check_enemy_collision() {
 }
 
 
-// --- Rendering ---
-void render_world() {
-    if (current_level == NULL) return;
+// // --- Rendering ---
+// void render_world() {
+//     if (current_level == NULL) return;
 
-    // Draw map
-    drawImage_double_buffering_stride(
-        0, 0,
-        gameMap4x + camera_y * GAME_MAP_WIDTH_4X + camera_x,
-        VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
-        GAME_MAP_WIDTH_4X
-    );
+//     // Draw map
+//     drawImage_double_buffering_stride(
+//         0, 0,
+//         gameMap4x + camera_y * GAME_MAP_WIDTH_4X + camera_x,
+//         VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
+//         GAME_MAP_WIDTH_4X
+//     );
 
-    // --- Draw walls ---
-    for (int i = 0; i < current_level->wall_count; i++) {
-        Wall* wall = &current_level->walls[i];
+//     // --- Draw walls ---
+//     for (int i = 0; i < current_level->wall_count; i++) {
+//         Wall* wall = &current_level->walls[i];
 
-        int screen_x = wall->world_x - camera_x;
-        int screen_y = wall->world_y - camera_y;
+//         int screen_x = wall->world_x - camera_x;
+//         int screen_y = wall->world_y - camera_y;
 
-        if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
-            screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-            drawImage_double_buffering(
-                screen_x, screen_y,
-                wall->bitmap,
-                wall->width, wall->height
-            );
-        }
-    }
+//         if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
+//             screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+//             drawImage_double_buffering(
+//                 screen_x, screen_y,
+//                 wall->bitmap,
+//                 wall->width, wall->height
+//             );
+//         }
+//     }
 
-    // --- Draw enemies ---
-    for (int i = 0; i < current_level->enemy_count; i++) {
-        Enemy* enemy = &current_level->enemies[i];
-        if (!enemy->active) continue;
+//     // --- Draw enemies ---
+//     for (int i = 0; i < current_level->enemy_count; i++) {
+//         Enemy* enemy = &current_level->enemies[i];
+//         if (!enemy->active) continue;
 
-        int screen_x = enemy->world_x - camera_x;
-        int screen_y = enemy->world_y - camera_y;
+//         int screen_x = enemy->world_x - camera_x;
+//         int screen_y = enemy->world_y - camera_y;
 
-        if (screen_x + enemy->width > 0 && screen_x < VIEWPORT_WIDTH &&
-            screen_y + enemy->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-            drawImage_double_buffering(
-                screen_x, screen_y,
-                enemy->sprite,
-                enemy->width, enemy->height
-            );
-        }
-    }
+//         if (screen_x + enemy->width > 0 && screen_x < VIEWPORT_WIDTH &&
+//             screen_y + enemy->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+//             drawImage_double_buffering(
+//                 screen_x, screen_y,
+//                 enemy->sprite,
+//                 enemy->width, enemy->height
+//             );
+//         }
+//     }
 
-    // --- Draw zones ---
-    for (int i = 0; i < current_level->zone_count; i++) {
-        Zone* zone = &current_level->zones[i];
-        if (!zone->bitmap) continue;
+//     // --- Draw zones ---
+//     for (int i = 0; i < current_level->zone_count; i++) {
+//         Zone* zone = &current_level->zones[i];
+//         if (!zone->bitmap) continue;
 
-        int screen_x = zone->x - camera_x;
-        int screen_y = zone->y - camera_y;
+//         int screen_x = zone->x - camera_x;
+//         int screen_y = zone->y - camera_y;
 
-        if (screen_x + zone->width > 0 && screen_x < VIEWPORT_WIDTH &&
-            screen_y + zone->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-            drawImage_double_buffering(
-                screen_x, screen_y,
-                zone->bitmap,
-                zone->width, zone->height
-            );
-        }
-    }
-}
+//         if (screen_x + zone->width > 0 && screen_x < VIEWPORT_WIDTH &&
+//             screen_y + zone->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+//             drawImage_double_buffering(
+//                 screen_x, screen_y,
+//                 zone->bitmap,
+//                 zone->width, zone->height
+//             );
+//         }
+//     }
+// }
 
 // --- Draw walking animation ---
 void render_protagonist_with_animation() {

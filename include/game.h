@@ -1,5 +1,3 @@
-#include "framebf.h"
-
 // Define keyboard key codes (ASCII or custom)
 #define UP 0x77  // 'w'
 #define LEFT 0x61  // 'a'

@@ -1,4 +1,4 @@
-#include "timer.h"
+#include "../include/timer.h"
 
 // Timer and counter to get current ticks
 void timer_init() {

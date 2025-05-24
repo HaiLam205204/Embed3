@@ -30,6 +30,9 @@ void main()
 	// Initialize frame buffer
 	framebf_init();
 
+    // Initialize DMA
+    init_dma_render_channels();
+
     // draw_skill_option_screen(0, 1);
     // drawImage_double_buffering(
     //             ORPHEUS_SKILL_OPTION_SCRREN_X,

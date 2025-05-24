@@ -1,4 +1,11 @@
 // ----------------------------------- framebf.h -------------------------------------
+#ifndef FRAMEBF_H
+#define FRAMEBF_H
+#include "dma.h"
+
+#define MAX_DMA_RENDER_CHANNELS 8
+extern dma_channel *render_channels[MAX_DMA_RENDER_CHANNELS];
+
 #define SCREEN_WIDTH 1024
 #define SCREEN_HEIGHT 768
 
@@ -15,5 +22,13 @@ void drawPixelARGB32_double_buffering(int x, int y, unsigned int attr);
 void drawImage_double_buffering(int x, int y, const unsigned long *image, int image_width, int image_height);
 void draw_rect_double_buffering(int x, int y, int width, int height, unsigned int color);
 void drawRectARGB32_double_buffering(int x1, int y1, int x2, int y2, unsigned int attr, int fill);
-void drawImage_double_buffering_stride(int x, int y, const unsigned long *image, int image_width, int image_height, int image_stride);
 
+void init_dma_render_channels();
+void drawImage_double_buffering_parallel(int x, int y, const unsigned long *image, int w, int h);
+dma_channel* draw_map_dma_stride_parallel(
+    int x, int y,
+    const unsigned long *src,
+    int w, int h,
+    int src_stride
+);
+#endif

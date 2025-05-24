@@ -86,9 +86,13 @@ void dma_close_channel(dma_channel *channel);
 void dma_setup_mem_copy(dma_channel *channel, void *dest, const void *src, unsigned int length, unsigned int burst_length);
 void dma_start(dma_channel *channel);
 int dma_wait(dma_channel *channel);
-void dma_init();
-void test_dma();
-// void do_dma(void *dest,const void *src, unsigned int total);
+void do_dma(void *dest,const void *src, unsigned int total);
+// void dma_init();
+// void test_dma();
 // void compare_CPU_DMA();
+void dma_setup_2d_copy(dma_channel *channel, void *dest, const void *src,
+                       unsigned int width, unsigned int height,
+                       unsigned int dest_stride, unsigned int src_stride,
+                       unsigned int burst_length);
 
 #endif

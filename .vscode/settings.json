@@ -26,6 +26,9 @@
         "protagonist_animation.h": "c",
         "enemy_sprite.h": "c",
         "character_sprite.h": "c",
-        "constants.h": "c"
+        "constants.h": "c",
+        "game_design.h": "c",
+        "enemy2.h": "c",
+        "display_skill.h": "c"
     }
 }
