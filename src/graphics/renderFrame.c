@@ -1,5 +1,4 @@
 #include "../../include/renderFrame.h"
-#include "../../include/timer.h"
 #include "../../include/framebf.h"
 #include "../../include/utils.h"
 #include "../../include/uart0.h"

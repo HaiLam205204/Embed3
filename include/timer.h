@@ -1,16 +1,15 @@
 #include "gpio.h"
 
-#define SYSTEM_TIMER_OFFSET 0x3000
-#define SYSTEM_TIMER_BASE (MMIO_BASE + SYSTEM_TIMER_OFFSET)
+// 10.2
+struct timer_regs
+{
+    unsigned int control_status;
+    unsigned int counter_lo;
+    unsigned int counter_hi;
+    unsigned int compare[4];
+};
 
-// define system timer GPIO based on their address
+#define REGS_TIMER ((volatile struct timer_regs *)(unsigned long)(MMIO_BASE + 0x00003000))
 
-#define SYSTEM_TIMER_CS (* (volatile unsigned int*)(TIMER_BASE+0x0))
-#define SYSTEM_TIMER_CLO (* (volatile unsigned int*)(TIMER_BASE+0x4))
-#define SYSTEM_TIMER_CHI (* (volatile unsigned int*)(TIMER_BASE+0x8))
-#define SYSTEM_TIMER_C0 (* (volatile unsigned int*)(TIMER_BASE+0xc))
-#define SYSTEM_TIMER_C1 (* (volatile unsigned int*)(TIMER_BASE+0x10))
-#define SYSTEM_TIMER_C2 (* (volatile unsigned int*)(TIMER_BASE+0x14))
-#define SYSTEM_TIMER_C3 (* (volatile unsigned int*)(TIMER_BASE+0x18))
-
-
+void timer_init();
+unsigned long timer_get_ticks();
