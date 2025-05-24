@@ -37,9 +37,9 @@ int positions[MAX_PROTAGONISTS][2] = {
 };
 
 int enemy_positions[MAX_ENEMIES][2] = {
-    {370, 270},   // Enemy 1
-    {475, 360},   // Enemy 2
-    {520, 270}   // Enemy 3
+    {370, 270}, // Enemy 1
+    {475, 360}, // Enemy 2
+    {520, 270}  // Enemy 3
 };
 
 Character protagonists[MAX_PROTAGONISTS];
@@ -124,7 +124,7 @@ void init_protagonists()
 
     strcpy(protagonists[0].name, "Hero");
     protagonists[0].is_main_character = 1;
-    protagonists[0].current_hp = 50;
+    protagonists[0].current_hp = 100;
     protagonists[0].max_hp = 100;
     protagonists[0].healing_item_quantity = 1;
 
@@ -146,7 +146,7 @@ void init_protagonists()
 
 void init_enemies()
 {
-    num_enemies = 3;  // or however many you want
+    num_enemies = 3; // or however many you want
 
     uart_puts("[DEBUG] init_enemies called\n");
     strcpy(enemy[0].name, "Enemy1");
@@ -210,8 +210,10 @@ void redraw_combat_screen(int current_player_turn, int selected_enemy_index)
     swap_buffers();
 }
 
-void reset_enemy_sprites() {
-    for (int i = 0; i < MAX_ENEMIES; i++) {
+void reset_enemy_sprites()
+{
+    for (int i = 0; i < MAX_ENEMIES; i++)
+    {
         enemy_sprites[i].enemy = &enemy[i];
 
         // Set position from predefined array
@@ -219,15 +221,20 @@ void reset_enemy_sprites() {
         enemy_sprites[i].pos_y = enemy_positions[i][1];
 
         // Bitmap and dimensions based on enemy type
-        if (enemy[i].enemy_type == 1) {
+        if (enemy[i].enemy_type == 1)
+        {
             enemy_sprites[i].bitmap = shadow1;
             enemy_sprites[i].width = 136;
             enemy_sprites[i].height = 88;
-        } else if (enemy[i].enemy_type == 2) {
+        }
+        else if (enemy[i].enemy_type == 2)
+        {
             enemy_sprites[i].bitmap = shadow2;
             enemy_sprites[i].width = 68;
             enemy_sprites[i].height = 100;
-        } else {
+        }
+        else
+        {
             uart_puts("[RESET_ENEMY_SPRITES] Unknown enemy type: ");
             uart_dec(enemy[i].enemy_type);
             uart_puts("\n");
@@ -245,8 +252,10 @@ void reset_enemy_sprites() {
     }
 }
 
-void reset_ally_sprites() {
-    for (int i = 0; i < MAX_PROTAGONISTS; i++) {
+void reset_ally_sprites()
+{
+    for (int i = 0; i < MAX_PROTAGONISTS; i++)
+    {
         sprites[i].character = &protagonists[i];
 
         // Set position from predefined positions array
@@ -254,19 +263,26 @@ void reset_ally_sprites() {
         sprites[i].pos_y = positions[i][1];
 
         // Assign bitmap and dimensions based on index or character name if needed
-        if (i == 0) {
+        if (i == 0)
+        {
             sprites[i].bitmap = myBitmapprotag;
             sprites[i].width = PROTAG_WIDTH;
             sprites[i].height = PROTAG_HEIGHT;
-        } else if (i == 1) {
+        }
+        else if (i == 1)
+        {
             sprites[i].bitmap = char1;
             sprites[i].width = PROTAG_WIDTH;
             sprites[i].height = PROTAG_HEIGHT;
-        } else if (i == 2) {
+        }
+        else if (i == 2)
+        {
             sprites[i].bitmap = char2;
             sprites[i].width = 80;
             sprites[i].height = 88;
-        } else if (i == 3) {
+        }
+        else if (i == 3)
+        {
             sprites[i].bitmap = char3;
             sprites[i].width = PROTAG_WIDTH;
             sprites[i].height = PROTAG_HEIGHT;
@@ -387,6 +403,36 @@ void drawRewardPanel(int selected_index)
     drawString_double_buffering(right_btn_x, right_btn_y, right_btn, TEXT_COLOR, TEXT_ZOOM);
     drawString_double_buffering(700, bottom_btn_y + 10, bottom_btn, TEXT_COLOR, TEXT_ZOOM);
 }
+void updateRewardPanel(int isSelected){
+       // Button positions
+    char *left_btn = "Collect Item";
+    char *right_btn = "New Persona";
+    char *bottom_btn = "Enter";
+    int rect_width = 700;
+    int rect_height = 250;
+    int screen_width = 1024;
+    int screen_height = 768;
+
+    int panel_x = (screen_width - rect_width) / 2;
+    int panel_y = (screen_height - rect_height) / 2;
+    int left_btn_x = panel_x + 30;
+    int left_btn_y = panel_y + 100;
+
+    int right_btn_x = panel_x + rect_width - 180;
+    int right_btn_y = panel_y + 100;
+
+    int bottom_btn_y = panel_y + rect_height - 40;
+    // Draw button backgrounds
+    drawRectARGB32_double_buffering_rewardScreen(
+        left_btn_x - 10, left_btn_y - 10, BTN_WIDTH_REWARD + 50, BTN_HEIGHT_REWARD,
+        isSelected == 0 ? BTN_SELECTED_COLOR : BTN_NORMAL_COLOR, 1);
+    drawRectARGB32_double_buffering_rewardScreen(
+        right_btn_x - 10, right_btn_y - 10, BTN_WIDTH_REWARD + 20, BTN_HEIGHT_REWARD,
+        isSelected == 1 ? BTN_SELECTED_COLOR : BTN_NORMAL_COLOR, 1);
+    drawString_double_buffering(left_btn_x, left_btn_y, left_btn, TEXT_COLOR, TEXT_ZOOM);
+    drawString_double_buffering(right_btn_x, right_btn_y, right_btn, TEXT_COLOR, TEXT_ZOOM);
+    drawString_double_buffering(700, bottom_btn_y + 10, bottom_btn, TEXT_COLOR, TEXT_ZOOM);
+}
 void clear_screen_buffer()
 {
     for (int y = 0; y < SCREEN_HEIGHT; y++)
@@ -399,43 +445,57 @@ void clear_screen_buffer()
 }
 void displayRewardScreen()
 {
-    int selected = 0;
 
+    int firstframe = 1;
+    int selected = 0;
     while (1)
     {
-        for (int i = 0; i < 2; i++)
+        if (firstframe)
         {
-            drawRewardPanel(selected); // draw based on current selection
-            swap_buffers();
-            wait_us(16000);
-        }
 
-        char ch = getUart();
+            for (int i = 0; i < 2; i++)
+            {
 
-        if (ch == 'a' || ch == 'A')
-        {
-            selected = 0;
-        }
-        else if (ch == 'd' || ch == 'D')
-        {
-            selected = 1;
-        }
-        else if (ch == '\r' || ch == '\n')
-        {
-            // Do something based on selection
-            if (selected == 0)
-            { // Collect Item
-                protagonists[0].healing_item_quantity += 1;
-                uart_puts("Collected item! Healing item quantity increased.\n");
+                drawRewardPanel(selected); // draw based on current selection
+                swap_buffers();
+                wait_us(16000);
             }
-            else if (selected == 1)
-            { // New Persona
-                
-                uart_puts("New Persona selected. (Not implemented yet)\n");
-            }
+            firstframe = 0;
+        }
+        else
+        {
+            
+            char ch = getUart();
 
-            // Exit the reward panel
-            break;
+            if (ch == 'a' || ch == 'A')
+            {
+                selected = 0;
+                updateRewardPanel(selected);
+                swap_buffers();
+            }
+            else if (ch == 'd' || ch == 'D')
+            {
+                selected = 1;
+                updateRewardPanel(selected);
+                swap_buffers();
+            }
+            else if (ch == '\r' || ch == '\n')
+            {
+                // Do something based on selection
+                if (selected == 0)
+                { // Collect Item
+                    protagonists[0].healing_item_quantity += 1;
+                    uart_puts("Collected item! Healing item quantity increased.\n");
+                     break;
+                }
+                else if (selected == 1)
+                { // New Persona
+
+                    uart_puts("New Persona selected. (Not implemented yet)\n");
+                     break;
+                }
+            }
+            
         }
     }
 }

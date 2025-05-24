@@ -67,6 +67,7 @@ void remove_enemy(int index) {
         uart_puts("[COMBAT] All enemies defeated. Exiting to exploration...\n");
         protag_world_x -= 50; // or any direction away from the enemy
         protag_world_y -= 50;
+        displayRewardScreen();
         exit_ui = 1;
     }
 }

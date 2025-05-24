@@ -54,8 +54,8 @@ void main()
 		} else if (c == VIDEO) {
             video_playback(video_allArray, video_allArray_LEN, 0, 0, VIDEO_WIDTH, VIDEO_HEIGHT, DESTINATION_WIDTH, DESTINATION_HEIGHT);
         } else if(c == GAME) {
-            displayRewardScreen();
-            //game_loop();
+            //displayRewardScreen();
+            game_loop();
         } else if(c == DESIGN) {
             design_screen_loop();   
         } 

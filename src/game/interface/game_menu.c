@@ -93,7 +93,7 @@ void int_to_string(int num, char *str)
 
 void draw_stats_panel(Character *ch)
 {
-    const char *name = "Pontagolist";
+    const char *name = "Protagonist";
     const char *level = "Level: 0";
 
     // Manually build "HP: current_hp / max_hp"
@@ -129,23 +129,19 @@ void draw_stats_panel(Character *ch)
     }
 
     hp[i] = '\0'; // null-terminate
-
-    const char *mp = "MP: 30 / 50";
-
     int panel_x = BUTTON_START_X;
     int panel_y = BUTTON_START_Y + (BUTTON_HEIGHT + BUTTON_SPACING) * MENU_ITEM_COUNT + 80;
-
     int panel_width = 320;
     int panel_height = 120;
-
     drawRectARGB32_double_buffering_menu(panel_x, panel_y, panel_width, panel_height, COLOR_STATS_BG, 1);
     drawString_double_buffering(panel_x + 10, panel_y + 10, (char *)name, COLOR_STATS_TEXT, 2);
     drawString_double_buffering(panel_x + 10, panel_y + 40, (char *)level, COLOR_STATS_TEXT, 2);
     drawString_double_buffering(panel_x + 10, panel_y + 70, hp, COLOR_STATS_TEXT, 2);
-    drawString_double_buffering(panel_x + 10, panel_y + 100, (char *)mp, COLOR_STATS_TEXT, 2);
 }
-void draw_item_panel()
+void draw_item_panel(Character *ch)
 {
+    char item_text[20];
+    build_item_text(item_text, ch->healing_item_quantity);
     const char *line1 = "ITEM";
     const char *line2 = "Function: healing 25% the maximun HP";
     const char *line3 = "Objective: Only for the main Character";
@@ -157,7 +153,7 @@ void draw_item_panel()
     int panel_height = 120;
 
     drawRectARGB32_double_buffering_menu(panel_x + 20 + panel_width , panel_y, panel_width * 2, panel_height, COLOR_STATS_BG, 1);
-    drawString_double_buffering(panel_x + 10+ 20 + panel_width, panel_y + 10, (char *)line1, COLOR_STATS_TEXT, 2);
+    drawString_double_buffering(panel_x + 10+ 20 + panel_width, panel_y + 10, item_text, COLOR_STATS_TEXT, 2);
     drawString_double_buffering(panel_x + 10+ 20 + panel_width, panel_y + 40, (char *)line2, COLOR_STATS_TEXT, 2);
     drawString_double_buffering(panel_x + 10+ 20 + panel_width, panel_y + 70, (char *)line3, COLOR_STATS_TEXT, 2);
 }
@@ -235,7 +231,7 @@ void displayLobbyScreen()
     // Conditionally overlay skill/persona panels
     if (is_Item)
     {
-        draw_item_panel(); // You can overlay this somewhere visible
+        draw_item_panel(&protagonists[0]); // You can overlay this somewhere visible
     }
 
     if (is_persona)

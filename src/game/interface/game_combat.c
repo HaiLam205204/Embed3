@@ -33,9 +33,6 @@
 #define BOX_COLOR 0xFF007700  // dark green
 #define RED_COLOR 0xFFFF0000
 
-int is_50_pressed = 0;
-int is_100_pressed = 0;
-
 GameScreen current_screen = SCREEN_COMBAT;
 int persona_option = 0;
 int selected_persona = 0; // 0 for Orpheus, 1 for Pixie
@@ -356,6 +353,8 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     heal_character_25_percent(&protagonists[0]);
                     button_pressed_item = 1;
                     button_pressed_time = start_time;
+                    redraw_combat_screen(current_player_turn, 0);
+                    redraw_combat_screen(current_player_turn, 0);
                     uart_puts("ITEM\n");
                     // exit_ui = 0;
                 }

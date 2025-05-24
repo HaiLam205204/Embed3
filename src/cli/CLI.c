@@ -10,6 +10,7 @@
 #include "../../include/mbox.h"
 #include "../../include/bitmaps/welcomeScreen.h"
 #include "../../include/renderFrame.h"
+#include "../../include/bitmaps/video.h"
 // #include "../header/commands.h"
 // #include "../header/history.h"
 // #include "../header/autocomplete.h"
@@ -515,7 +516,11 @@ void handle_command(char *command) {
             cli_put_string("Invalid input. Input 0 to disable handshake, 1 to enable handshake.\n", WHITE, ZOOM);
         }
         cli_put_char('\n', WHITE, ZOOM);
-    } else {
+    }else if(string_compare(command, "video") == 0){
+            //drawRectARGB32(CLI_LEFT, CLI_TOP, CLI_RIGHT, CLI_BOTTOM, BLUE, 1);
+            draw_background();
+            video_playback(video_allArray, video_allArray_LEN, 0, 0, VIDEO_WIDTH, VIDEO_HEIGHT, DESTINATION_WIDTH, DESTINATION_HEIGHT);
+    }else {
         // Default: command not recognized
         const char *msg = "Unknown command\n";
         for (int i = 0; msg[i] != '\0'; i++) {
