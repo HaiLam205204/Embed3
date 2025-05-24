@@ -31,9 +31,9 @@ int positions[MAX_PROTAGONISTS][2] = {
 };
 
 int enemy_positions[MAX_ENEMIES][2] = {
-    {350, 320},   // Enemy 1
-    {400, 370},   // Enemy 2
-    {450, 320}   // Enemy 3
+    {370, 270},   // Enemy 1
+    {475, 360},   // Enemy 2
+    {520, 270}   // Enemy 3
 };
 
 Character protagonists[MAX_PROTAGONISTS];
@@ -43,6 +43,7 @@ EnemyModel enemy[MAX_ENEMIES];
 void init_protagonists();
 void init_enemies();
 void take_turn(int character_index);
+void reset_enemy_sprites();
 
 CharacterSprite sprites[MAX_PROTAGONISTS] = {
         {&protagonists[0], myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT, 452, 500},
@@ -60,11 +61,13 @@ EnemySprite enemy_sprites[MAX_ENEMIES] = {
 void design_screen_loop()
 {
     uart_puts("[DESIGN_SCREEN] Entering Design Screen...\n");
-    static int first_frame = 1;
+    int first_frame = 1;
+    // static int first_frame_respwan = 0;
     // int turn_index = 0; // Track whose turn it is
 
     init_protagonists();
     init_enemies();
+    reset_enemy_sprites();
     while (1)
     {
         if (first_frame)
@@ -122,6 +125,9 @@ void init_protagonists()
 
 void init_enemies()
 {
+    num_enemies = 3;  // or however many you want
+
+    uart_puts("[DEBUG] init_enemies called\n");
     strcpy(enemy[0].name, "Enemy1");
     enemy[0].current_hp = 100;
     enemy[0].max_hp = 100;
@@ -179,4 +185,39 @@ void redraw_combat_screen(int current_player_turn, int selected_enemy_index)
     }
     // Show updated buffer
     swap_buffers();
+}
+
+void reset_enemy_sprites() {
+    for (int i = 0; i < MAX_ENEMIES; i++) {
+        enemy_sprites[i].enemy = &enemy[i];
+
+        // Set position from predefined array
+        enemy_sprites[i].pos_x = enemy_positions[i][0];
+        enemy_sprites[i].pos_y = enemy_positions[i][1];
+
+        // Bitmap and dimensions based on enemy type
+        if (enemy[i].enemy_type == 1) {
+            enemy_sprites[i].bitmap = shadow1;
+            enemy_sprites[i].width = 136;
+            enemy_sprites[i].height = 88;
+        } else if (enemy[i].enemy_type == 2) {
+            enemy_sprites[i].bitmap = shadow2;
+            enemy_sprites[i].width = 68;
+            enemy_sprites[i].height = 100;
+        } else {
+            uart_puts("[RESET_ENEMY_SPRITES] Unknown enemy type: ");
+            uart_dec(enemy[i].enemy_type);
+            uart_puts("\n");
+
+            enemy_sprites[i].bitmap = shadow1; // fallback
+            enemy_sprites[i].width = 136;
+            enemy_sprites[i].height = 88;
+        }
+
+        uart_puts("[RESET_ENEMY_SPRITES] Enemy sprite reset for type ");
+        uart_dec(enemy[i].enemy_type);
+        uart_puts(" at index ");
+        uart_dec(i);
+        uart_puts("\n");
+    }
 }
