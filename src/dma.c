@@ -42,7 +42,7 @@ void dma_setup_2d_copy(dma_channel *channel, void *dest, const void *src,
  * channel: Specific channel requested or CT_NORMAL/CT_PERIPHERAL for automatic selection.
  * Allocated channel index, or CT_NONE (-1) if none are available.
  */
-static unsigned int allocate_channel(unsigned int channel) {
+static unsigned int allocate_channel(int channel) {
     // If a specific channel (0–15) is requested
     if (!(channel & ~0x0F)) {
         // Check if it is available in channel_map
@@ -60,16 +60,24 @@ static unsigned int allocate_channel(unsigned int channel) {
     }
 
     // For automatic selection: prefer different ranges depending on context
-    unsigned int i = channel == CT_NORMAL ? 6 : 12;
+    int i = channel == CT_NORMAL ? 6 : 12;
 
     // Try to allocate from preferred range
     for (; i >= 0; i--) {
         // Check if it is available in channel_map
+        uart_puts("Before allocation, channel_map: ");
+        uart_hex(channel_map);
+        uart_puts("\n");
+
         if (channel_map & (1 << i)) {
             // Mark it as used
             channel_map &= ~(1 << i);
             uart_puts("[DMA ALLOCATION] Auto-allocated channel: ");
             uart_dec(i);
+            uart_puts("\n");
+            channel_map &= ~(1 << i);
+            uart_puts("After allocation, channel_map: ");
+            uart_hex(channel_map);
             uart_puts("\n");
             return i;
         }

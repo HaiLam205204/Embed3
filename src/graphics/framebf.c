@@ -23,7 +23,6 @@ unsigned char *back_buffer;
 static int current_buffer = 0; // 0 = front buffer visible, 1 = back buffer visible
 
 // Pre-allocate multiple channels for rendering purposes
-#define MAX_DMA_RENDER_CHANNELS 8
 dma_channel *render_channels[MAX_DMA_RENDER_CHANNELS];
 
 // Initialize A pool of DMA RENDER CHANNELS
@@ -31,6 +30,11 @@ void init_dma_render_channels() {
     for (int i = 0; i < MAX_DMA_RENDER_CHANNELS; i++) {
         render_channels[i] = dma_open_channel(CT_NORMAL);
     }
+}
+
+void init_1_dma_render_channels() {
+    render_channels[0] = dma_open_channel(CT_NORMAL);
+    uart_puts("1 DMA channel works");
 }
 
 void drawImage_double_buffering_parallel(int x, int y, const unsigned long *image, int w, int h)
