@@ -80,8 +80,6 @@ void uart_init()
 	UART0_CR = 0x301;     // enable Tx, Rx, FIFO
 }
 
-
-
 /**
  * Send a character
  */
@@ -309,55 +307,34 @@ int convert(char s[])
 * Function to set baudrate.
 */
 void set_baudrate(int baudrate) {
-    // Assuming a 4MHz UART clock (common for Raspberry Pi)
-    // You may need to adjust UART_CLK based on your specific hardware
-    unsigned int UART_CLK = 4000000;
-    
-    // Calculate the baud rate divisor (16 * baudrate)
-    // The formula is: BAUDDIV = (UART_CLK / (16 * baudrate))
-    unsigned int divisor = (UART_CLK << 2) / baudrate;  // <<2 is same as *4, to maintain precision
-    
-    // Split into integer and fractional parts
-    unsigned int ibrd = divisor >> 6;       // Integer part (top 16 bits)
-    unsigned int fbrd = divisor & 0x3F;     // Fractional part (bottom 6 bits)
-    
-    // Disable UART before changing baud rate
-    UART0_CR &= ~UART0_CR_UARTEN;
-    
-    // Set baud rate divisors
-    UART0_IBRD = ibrd;
-    UART0_FBRD = fbrd;
-    
-    // Re-enable UART
-    UART0_CR |= UART0_CR_UARTEN;
-}
+    const unsigned int UART_CLK = 4000000; // 4MHz (as mailbox setup)
 
-// void set_baudrate(int baudrate) {
-//     // Assuming a 4MHz UART clock 
-//     // You may need to adjust UART_CLK based on your specific hardware
-//     unsigned int UART_CLK = 4000000;
-    
-//     // Calculate the baud rate divisor (16 * baudrate)
-//     // The formula is: BAUDDIV = (UART_CLK / (16 * baudrate))
-// 	//Integer part register UART0_IBRD  = integer part of BAUDDIV 
-// 	//Fraction part register UART0_FBRD = (Fractional part * 64) + 0.5
-//     unsigned int divisor = UART_CLK / (16 * baudrate);  
-// 	unsigned int fraction = (UART_CLK % (16 * baudrate)) * 64 / (16 * baudrate);
-    
-//     // Split into integer and fractional parts
-//     unsigned int ibrd = divisor;       // Integer part 
-//     unsigned int fbrd = fraction;     // Fractional part 
-    
-//     // Disable UART before changing baud rate
-//     UART0_CR &= ~UART0_CR_UARTEN;
-    
-//     // Set baud rate divisors
-//     UART0_IBRD = ibrd;
-//     UART0_FBRD = fbrd;
-    
-//     // Re-enable UART
-//     UART0_CR |= UART0_CR_UARTEN;
-// }
+    // Disable UART and wait for end of transmission
+    UART0_CR &= ~UART0_CR_UARTEN;
+    while (UART0_FR & UART0_FR_BUSY); // Wait until UART isn't busy
+
+    // Flush FIFOs (clear stale data)
+    UART0_LCRH &= ~UART0_LCRH_FEN; // Disable FIFOs
+    UART0_LCRH |= UART0_LCRH_FEN;  // Re-enable FIFOs
+
+    // Calculate divisors (with rounding)
+    unsigned int divisor = UART_CLK / (16 * baudrate);
+    unsigned int remainder = UART_CLK % (16 * baudrate);
+    unsigned int fbrd = (remainder * 64 + 8 * baudrate) / (16 * baudrate);
+
+    // Set baud rate registers
+    UART0_IBRD = divisor;
+    UART0_FBRD = fbrd;
+
+    // Reconfigure line control (8N1, FIFOs enabled)
+    UART0_LCRH = UART0_LCRH_WLEN_8BIT | UART0_LCRH_FEN;
+
+    // Clear all pending interrupts and errors (PL011-specific)
+    UART0_ICR = 0x7FF; // Writing 1s clears interrupts/errors
+
+    // Re-enable UART (with TX/RX enabled)
+    UART0_CR = UART0_CR_UARTEN | UART0_CR_TXE | UART0_CR_RXE;
+}
 
 void uart_set_flow_control(int enable) {
     if (enable == 1) {
