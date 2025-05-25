@@ -17,6 +17,7 @@ typedef struct {
     int current_hp;
     int max_hp;
     int has_acted;  // 0 = not acted, 1 = acted this turn
+    int healing_item_quantity;  // NEW: Number of healing items
     Action current_action;
     PersonaType current_persona; // New field
 } Character;

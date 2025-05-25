@@ -16,7 +16,7 @@
 #define KEY_ESC         0x1B      // quit selection scrren
 
 void draw_attack_button(int is_pressed);
-void draw_item_button(int is_pressed);
+void draw_item_button(int is_pressed, Character *ch);
 void draw_persona_button(int is_pressed);
 void draw_run_button(int is_pressed);
 void draw_skill_button(int is_pressed);
@@ -26,7 +26,8 @@ void screen_combat_loop();
 void draw_all_buttons();
 void combat_utility_UI();
 void clear_persona_option_screen(); 
-
+void build_item_text(char *item_text, int quantity);
+void draw_persona_option_screen(int selected_option);
 // void draw_skill_option_screen(int persona, int option);
 
 void draw_skill_option_screen(Character character, int option, int character_index);
@@ -48,6 +49,7 @@ typedef enum {
 } GameScreen;
 
 extern GameScreen current_screen;  // <-- extern declaration
+extern int exit_ui;
 
 extern int current_player_turn;
 

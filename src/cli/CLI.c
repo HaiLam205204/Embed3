@@ -10,9 +10,8 @@
 #include "../../include/mbox.h"
 #include "../../include/bitmaps/welcomeScreen.h"
 #include "../../include/renderFrame.h"
-// #include "../header/commands.h"
-// #include "../header/history.h"
-// #include "../header/autocomplete.h"
+#include "../../include/bitmaps/video.h"
+#include "../../include/game.h"
 
 // CLI cursor position
 int cursorX = CLI_LEFT + 1;
@@ -130,7 +129,7 @@ void cli_loop() {
     int buffer_index = 0;
     // Print prompt
     for (int i = 0; PROMPT[i] != '\0'; i++) { 
-        cli_put_char(PROMPT[i], WHITE, ZOOM);  // Print each character
+        cli_put_char(PROMPT[i], 0x00FF0000, ZOOM);  // Print each character
     }
 
     while (1) {
@@ -155,7 +154,7 @@ void cli_loop() {
             buffer_index = 0;
             // Print prompt again
             for (int i = 0; PROMPT[i] != '\0'; i++) { 
-                cli_put_char(PROMPT[i], WHITE, ZOOM);  // Print each character
+                cli_put_char(PROMPT[i], 0x00FF0000, ZOOM);  // Print each character
             }
         } else if (c == '\b') {
             if (buffer_index > 0) {
@@ -339,7 +338,9 @@ static const char* commands[] = {
     "clear",
     "showinfo",
     "baudrate",
-    "handshake"
+    "handshake",
+    "video",
+    "game"
 };
 
 /**
@@ -394,7 +395,7 @@ void autocomplete(char* cli_buffer, int* index) {
                 cli_put_string("\nAmbiguous command, type more characters.\n", WHITE, ZOOM);
                 // Reprint prompt
                 for (int i = 0; PROMPT[i] != '\0'; i++) { 
-                    cli_put_char(PROMPT[i], WHITE, ZOOM);
+                    cli_put_char(PROMPT[i], 0x00FF0000, ZOOM);
                 }
                 return;
             }
@@ -450,9 +451,7 @@ void handle_command(char *command) {
         cli_put_string("Board Revision: ", WHITE, ZOOM);
         cli_put_hex(rev,  WHITE, ZOOM);
         cli_put_char('\n', WHITE, ZOOM);
-        print_board_revision_info(rev);
-        cli_put_char('\n', WHITE, ZOOM);
-        
+
         // MAC Address
         unsigned char mac[6];
         if (get_mac_address(mac)) {
@@ -461,7 +460,6 @@ void handle_command(char *command) {
             for (int i = 0; i < 6; i++) { 
                 if (i > 0) cli_put_char(':', WHITE, ZOOM);
                 cli_put_hex8(mac[i], WHITE, ZOOM);
-                cli_put_char('\n', WHITE, ZOOM);
             }
         } else {
             cli_put_string("Failed to retrieve MAC address\n", WHITE, ZOOM);
@@ -518,6 +516,11 @@ void handle_command(char *command) {
             cli_put_string("Invalid input. Input 0 to disable handshake, 1 to enable handshake.\n", WHITE, ZOOM);
         }
         cli_put_char('\n', WHITE, ZOOM);
+    } else if(string_compare(command, "video") == 0) {
+        draw_background(); 
+        video_playback(video_allArray, video_allArray_LEN, 0, 0, VIDEO_WIDTH, VIDEO_HEIGHT, DESTINATION_WIDTH, DESTINATION_HEIGHT);
+    } else if(string_compare(command, "game") == 0) {
+        game_loop();
     } else {
         // Default: command not recognized
         const char *msg = "Unknown command\n";
@@ -525,71 +528,6 @@ void handle_command(char *command) {
             cli_put_char(msg[i], WHITE, ZOOM);
         }
     }
-}
-
-/**
- * Parses and prints human-readable information from the board revision code
- * retrieved from the mailbox property interface.
- */
-void print_board_revision_info(unsigned int rev) {
-    // Check if it's a new-style revision (bit 23 should be 1)
-    if ((rev & (1 << 23)) == 0) {
-        cli_put_string("Old-style revision, no decoding available.\n", WHITE, ZOOM);
-        return;
-    }
-
-    // Extract fields from revision code
-    unsigned int type = (rev >> 4) & 0xFF;      // Bits 4–11: Board type
-    unsigned int proc = (rev >> 12) & 0xF;      // Bits 12–15: Processor type
-    unsigned int manuf = (rev >> 16) & 0xF;     // Bits 16–19: Manufacturer
-    unsigned int mem = (rev >> 20) & 0x7;       // Bits 20–22: Memory size
-    unsigned int rev_num = rev & 0xF;           // Bits 0–3: Revision number
-
-    // Lookup table: Board model types based on the 'type' field
-    const char* types[] = {
-        "A", "B", "A+", "B+", "2B", "Alpha", "CM1", "3B", "Zero", "CM3",
-        "Zero W", "3B+", "3A+", "Internal", "CM3+", "4B"
-    };
-    if (type < sizeof(types) / sizeof(types[0])) {
-        cli_put_string("Model: Raspberry Pi ", WHITE, ZOOM);
-        cli_put_string(types[type], WHITE, ZOOM);
-        cli_put_char('\n', WHITE, ZOOM);
-    }
-
-    // Lookup table: Processor types
-    const char* procs[] = {
-        "BCM2835", "BCM2836", "BCM2837", "BCM2711"
-    };
-    if (proc < sizeof(procs) / sizeof(procs[0])) {
-        cli_put_string("Processor: ", WHITE, ZOOM);
-        cli_put_string(procs[proc], WHITE, ZOOM);
-        cli_put_char('\n', WHITE, ZOOM);
-    }
-
-    // Lookup table: Manufacturers
-    const char* manufs[] = {
-        "Sony UK", "Egoman", "Embest", "Sony Japan", "Embest (China)", "Stadium"
-    };
-    if (manuf < sizeof(manufs) / sizeof(manufs[0])) {
-        cli_put_string("Manufacturer: ", WHITE, ZOOM);
-        cli_put_string(manufs[manuf], WHITE, ZOOM);
-        cli_put_char('\n', WHITE, ZOOM);
-    }
-
-    // Lookup table: Memory sizes
-    const char* mems[] = {
-        "256 MB", "512 MB", "1 GB", "2 GB", "4 GB", "8 GB"
-    };
-    if (mem < sizeof(mems) / sizeof(mems[0])) {
-        cli_put_string("Memory Size: ", WHITE, ZOOM);
-        cli_put_string(mems[mem], WHITE, ZOOM);
-        cli_put_char('\n', WHITE, ZOOM);
-    }
-
-    // Print the raw revision number from the lowest 4 bits
-    cli_put_string("PCB Revision: ", WHITE, ZOOM);
-    cli_put_hex(rev_num, WHITE, ZOOM);
-    cli_put_char('\n', WHITE, ZOOM);
 }
 
 void show_all_help(){
@@ -602,6 +540,10 @@ void show_all_help(){
     cli_put_string("baudrate - change the baudrate of UART", WHITE, ZOOM);
     cli_put_char('\n', WHITE, ZOOM);
     cli_put_string("handshake - turn on/off CTS/RTS handsharking on current UART", WHITE, ZOOM);
+    cli_put_char('\n', WHITE, ZOOM);
+    cli_put_string("video - play video in a loop", WHITE, ZOOM);
+    cli_put_char('\n', WHITE, ZOOM);
+    cli_put_string("game - turn on the video game", WHITE, ZOOM);
     cli_put_char('\n', WHITE, ZOOM);
 }
 
@@ -621,6 +563,45 @@ void show_command_help(char* command_name){
     } else if(string_compare(command_name, "handshake") == 0){
         cli_put_string("handshake - turn on/off CTS/RTS handsharking on current UART ", WHITE, ZOOM);
         cli_put_char('\n', WHITE, ZOOM);
+    } else if(string_compare(command_name, "video") == 0){
+        cli_put_string("video - play video in a loop", WHITE, ZOOM);
+        cli_put_char('\n', WHITE, ZOOM);
+    } else if(string_compare(command_name, "game") == 0){
+        cli_put_string("game - turn on the video game", WHITE, ZOOM);
+        cli_put_char('\n', WHITE, ZOOM);
+    }
+}
+
+void video_playback(const unsigned long** frames, uint32_t frame_count, int x, int y, int src_width, int src_height, int max_width, int max_height) {
+    uint32_t current_frame = 0;
+    
+    // Initialize timer for first frame
+    set_wait_timer(1, FRAME_US);
+
+    while (current_frame < frame_count) {
+        
+        // detect non-blocking input 
+        if(getUart() == ESC){ 
+            draw_background();
+            draw_cli_window();
+            // Reset cursor position
+            cursorX = CLI_LEFT + 1;
+            cursorY = CLI_TOP + 1;
+            break;
+        }
+        // 1. Display current frame (implement your display function)
+        drawImageScaledAspect(x, y, frames[current_frame], src_width, src_height, max_width, max_height);
+        // 2. Wait for next frame time
+        set_wait_timer(0, 0); // Uses previously set expiration time
+        
+        // 3. Prepare timer for next frame
+        set_wait_timer(1, FRAME_US);
+        
+        // 4. Advance to next frame (with optional loop handling)
+        current_frame++;
+        if (current_frame >= frame_count) {
+            current_frame = 0; // Loop video if desired
+        }
     }
 }
 

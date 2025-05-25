@@ -15,6 +15,7 @@
 #include "../../include/bitmaps/protagonist_animation.h"
 #include "../../include/bitmaps/transitionZone.h"
 #include "../../include/game_design.h"
+#include "../../include/CLI.h"
 
 // --- Constants ---
 #define STEP 10
@@ -28,7 +29,6 @@
 #define GAME_FRAME_US (1000000 / FRAME_RATE)
 #define MAX_LEVELS 3
 
-#define NULL ((void*)0)
 #define ESCAPE 0x1B // ESC
 
 // --- Protagonist ---
@@ -49,18 +49,15 @@ Enemy level1_enemies[MAX_ENEMIES] = {
     {1300, 1000, shadow1, 136, 88, 
         1, // active
         4, 4, // hitbox 
-        //1 //enemy type
     },
-    {1800, 450, shadow2, 68, 100, 1, 4, 4, 
-        //1 //enemy type
-    },
+    {1800, 450, shadow2, 68, 100, 1, 4, 4,},
 };
 
 // --- Level 2 Enemies ---
 Enemy level2_enemies[MAX_ENEMIES] = {
     {500, 300, shadow1, 136, 88, 1, 4, 4},
-    {900, 700, shadow2, 68, 100, 1, 4, 4},
-    {1500, 1200, shadow2, 68, 100, 1, 4, 4},
+    {900, 800, shadow2, 68, 100, 1, 4, 4},
+    {1500, 1300, shadow2, 68, 100, 1, 4, 4},
 };
 
 // --- Level 3 Enemies ---
@@ -223,6 +220,13 @@ void game_loop() {
             // detect non-blocking input 
             if(input == ESCAPE){ 
                 draw_background();
+                drawRectARGB32(CLI_LEFT, CLI_TOP, CLI_RIGHT, CLI_BOTTOM, BLUE, 1); 
+                // Reset CLI cursor position
+                cursorX = CLI_LEFT + 1;
+                cursorY = CLI_TOP + 1;
+                uart_puts("\n");
+                uart_puts("[GAME_LOOP] Game loop ended.");
+                uart_puts("\n");
                 break;
             }
 
@@ -243,24 +247,17 @@ void game_loop() {
             // Update game state
             update_protagonist_position(input);
             
-            // Check enemy collisions
-            for (int i = 0; i < current_level->enemy_count; i++) {
-                Enemy* enemy = &current_level->enemies[i];
-                if (!enemy->active) continue;
+            // Check enemy collision just once
+            int collided_index = check_enemy_collision_index();
+            if (collided_index != -1) {
+                uart_puts("\n[COMBAT] Enemy contact!");
+                design_screen_loop();
 
-                if (check_enemy_collision(
-                    protag_world_x, protag_world_y, PROTAG_WIDTH, PROTAG_HEIGHT,
-                    enemy->world_x + enemy->collision_offset_x,
-                    enemy->world_y + enemy->collision_offset_y,
-                    enemy->width - 2 * enemy->collision_offset_x,
-                    enemy->height - 2 * enemy->collision_offset_y
-                )) {
-                    uart_puts("\n[COMBAT] Enemy contact!");
-                    // battle_screen_loop(enemy->enemy_type);
-                    design_screen_loop();
-                    first_frame = 1;
-                    break;
-                }
+                current_level->enemies[collided_index].active = 0;
+                uart_puts("\n[Map] Erased enemy from map...");
+
+                first_frame = 1;
+                continue;
             }
 
             // Update camera
@@ -287,6 +284,26 @@ void game_loop() {
             uart_puts("\n[WARNING] Frame took too long!");
         }
     }
+}
+
+int check_enemy_collision_index() {
+    for (int i = 0; i < current_level->enemy_count; i++) {
+        Enemy* enemy = &current_level->enemies[i];
+        if (!enemy->active) continue;
+
+        int ex = enemy->world_x + enemy->collision_offset_x;
+        int ey = enemy->world_y + enemy->collision_offset_y;
+        int ew = enemy->width - 2 * enemy->collision_offset_x;
+        int eh = enemy->height - 2 * enemy->collision_offset_y;
+
+        if (protag_world_x < ex + ew &&
+            protag_world_x + PROTAG_WIDTH > ex &&
+            protag_world_y < ey + eh &&
+            protag_world_y + PROTAG_HEIGHT > ey) {
+            return i; // Return index of collided enemy
+        }
+    }
+    return -1; // No collision
 }
 
 // --- Movement ---
@@ -444,28 +461,6 @@ void update_camera() {
     if (camera_y > WORLD_HEIGHT - VIEWPORT_HEIGHT) camera_y = WORLD_HEIGHT - VIEWPORT_HEIGHT;
 }
 
-// --- Collision ---
-int check_enemy_collision() {
-    for (int i = 0; i < current_level->enemy_count; i++) {
-        Enemy* enemy = &current_level->enemies[i];
-        if (!enemy->active) continue;
-
-        int ex = enemy->world_x + enemy->collision_offset_x;
-        int ey = enemy->world_y + enemy->collision_offset_y;
-        int ew = enemy->width - 2 * enemy->collision_offset_x;
-        int eh = enemy->height - 2 * enemy->collision_offset_y;
-
-        if (protag_world_x < ex + ew &&
-            protag_world_x + PROTAG_WIDTH > ex &&
-            protag_world_y < ey + eh &&
-            protag_world_y + PROTAG_HEIGHT > ey) {
-            return 1; // Collision detected
-        }
-    }
-    return 0; // No collision
-}
-
-
 // --- Rendering ---
 void render_world() {
     if (current_level == NULL) return;
@@ -550,23 +545,5 @@ void render_protagonist_with_animation() {
     } else {
         drawImage_double_buffering(screen_x, screen_y, 
             myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
-    }
-}
-
-// --- Animation ---
-void start_animation() {
-    anim_playing = 1;
-}
-
-// --- Battle Screen ---
-void battle_screen_loop(int enemy_type) {
-    uart_puts("\n[BATTLE] Entering battle screen");
-    swap_buffers();
-    while (1) {
-        char input = uart_getc();
-        if (input == 'q' || input == 'Q') {
-            uart_puts("\n[BATTLE] Quitting battle");
-            return;
-        }
     }
 }

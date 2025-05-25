@@ -64,10 +64,6 @@ void uart_init()
 	Integer part register UART0_IBRD  = integer part of Divider 
 	Fraction part register UART0_FBRD = (Fractional part * 64) + 0.5 */
 
-	//115200 baud
-	// UART0_IBRD = 26;       
-	// UART0_FBRD = 3;
-
 	//NEW: with UART_CLOCK = 4MHz as set by mailbox:
 	//115200 baud
 	UART0_IBRD = 2;       

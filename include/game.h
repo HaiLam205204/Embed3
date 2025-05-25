@@ -15,7 +15,6 @@ typedef struct {
     int active;         // 1 if enemy is active/alive
     int collision_offset_x; // Fine-tune hitbox
     int collision_offset_y;
-    int enemy_type; // For battle screen variety
 } Enemy;
 
 typedef struct {
@@ -57,6 +56,9 @@ typedef struct {
     int start_x, start_y;     // Where the player spawns in the level
 } Level;
 
+extern int protag_world_x;
+extern int protag_world_y;
+
 // --- Game API ---
 void game_loop();
 
@@ -71,6 +73,4 @@ void render_protagonist_with_animation();
 void render_world();
 
 // --- Logic ---
-int check_enemy_collision();
-void battle_screen_loop(int enemy_type);
-void start_animation();
+int check_enemy_collision_index();

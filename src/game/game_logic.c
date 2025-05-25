@@ -1,3 +1,4 @@
+
 #include "../../include/game_logic.h"
 #include "../../include/models/enemy.h"
 #include "../../include/models/character.h"
@@ -7,10 +8,11 @@
 #include "../../include/uart0.h"
 #include "../../include/utils.h"
 #include "../../include/game_design.h"
+#include "../../include/game.h"
+#include "../../include/game_combat.h"
 
 int num_enemies = 3;  // <- THIS IS THE DEFINITION
 int num_protagonists = 4;
-
 void deal_damage(int index, int amount) {
     enemy[index].current_hp -= amount;
     if (enemy[index].current_hp < 0) {
@@ -51,11 +53,22 @@ void remove_enemy(int index) {
     for (int i = index; i < num_enemies - 1; i++) {
         enemy[i] = enemy[i + 1];
         enemy_sprites[i] = enemy_sprites[i + 1];
-        enemy_sprites[i].enemy = &enemy[i];  // FIX: Update pointer to correct enemy
+        enemy_sprites[i].enemy = &enemy[i];  
     }
 
     num_enemies--;
-    recalculate_enemy_sprite_positions();
+
+    uart_puts("Number of enemy: ");
+    uart_putint(num_enemies);
+    uart_puts("\n");
+
+    if (num_enemies == 0) {
+        uart_puts("[COMBAT] All enemies defeated. Exiting to exploration...\n");
+        protag_world_x -= 50; // or any direction away from the enemy
+        protag_world_y -= 50;
+        displayRewardScreen();
+        exit_ui = 1;
+    }
 }
 
 void recalculate_enemy_sprite_positions() {
@@ -79,7 +92,7 @@ void enemy_turn(Character *protagonists, int num_protagonists) {
         if (attack_type == 0) {
             // Single-target attack
             int target_index = rand_0_to_3();
-            int damage = 30;  // Example damage
+            int damage = 30;  // damage of attack
 
             protagonists[target_index].current_hp -= damage;
                 if (protagonists[target_index].current_hp <= 0) {
@@ -114,8 +127,7 @@ void enemy_turn(Character *protagonists, int num_protagonists) {
         redraw_combat_screen(0, 0);
         redraw_combat_screen(0, 0);
 
-        // print_number(attack_type);
-        wait_us(2000000ULL);  // wait 2,000,000 microseconds = 2 seconds
+        wait_us(500000);  
     }
 }
 
