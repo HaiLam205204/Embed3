@@ -74,6 +74,6 @@ void render_protagonist_with_animation();
 void render_world();
 
 // --- Logic ---
-int check_enemy_collision();
+int check_enemy_collision_index();
 void battle_screen_loop(int enemy_type);
 void start_animation();

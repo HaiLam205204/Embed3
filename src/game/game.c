@@ -248,24 +248,17 @@ void game_loop() {
             // Update game state
             update_protagonist_position(input);
             
-            // Check enemy collisions
-            for (int i = 0; i < current_level->enemy_count; i++) {
-                Enemy* enemy = &current_level->enemies[i];
-                if (!enemy->active) continue;
+            // Check enemy collision just once
+            int collided_index = check_enemy_collision_index();
+            if (collided_index != -1) {
+                uart_puts("\n[COMBAT] Enemy contact!");
+                design_screen_loop();
 
-                if (check_enemy_collision(
-                    protag_world_x, protag_world_y, PROTAG_WIDTH, PROTAG_HEIGHT,
-                    enemy->world_x + enemy->collision_offset_x,
-                    enemy->world_y + enemy->collision_offset_y,
-                    enemy->width - 2 * enemy->collision_offset_x,
-                    enemy->height - 2 * enemy->collision_offset_y
-                )) {
-                    uart_puts("\n[COMBAT] Enemy contact!");
-                    // battle_screen_loop(enemy->enemy_type);
-                    design_screen_loop();
-                    first_frame = 1;
-                    break;
-                }
+                current_level->enemies[collided_index].active = 0;
+                uart_puts("\n[Map] Erased enemy from map...");
+
+                first_frame = 1;
+                continue;
             }
 
             // Update camera
@@ -292,6 +285,26 @@ void game_loop() {
             uart_puts("\n[WARNING] Frame took too long!");
         }
     }
+}
+
+int check_enemy_collision_index() {
+    for (int i = 0; i < current_level->enemy_count; i++) {
+        Enemy* enemy = &current_level->enemies[i];
+        if (!enemy->active) continue;
+
+        int ex = enemy->world_x + enemy->collision_offset_x;
+        int ey = enemy->world_y + enemy->collision_offset_y;
+        int ew = enemy->width - 2 * enemy->collision_offset_x;
+        int eh = enemy->height - 2 * enemy->collision_offset_y;
+
+        if (protag_world_x < ex + ew &&
+            protag_world_x + PROTAG_WIDTH > ex &&
+            protag_world_y < ey + eh &&
+            protag_world_y + PROTAG_HEIGHT > ey) {
+            return i; // Return index of collided enemy
+        }
+    }
+    return -1; // No collision
 }
 
 // --- Movement ---
@@ -448,28 +461,6 @@ void update_camera() {
     if (camera_x > WORLD_WIDTH - VIEWPORT_WIDTH) camera_x = WORLD_WIDTH - VIEWPORT_WIDTH;
     if (camera_y > WORLD_HEIGHT - VIEWPORT_HEIGHT) camera_y = WORLD_HEIGHT - VIEWPORT_HEIGHT;
 }
-
-// --- Collision ---
-int check_enemy_collision() {
-    for (int i = 0; i < current_level->enemy_count; i++) {
-        Enemy* enemy = &current_level->enemies[i];
-        if (!enemy->active) continue;
-
-        int ex = enemy->world_x + enemy->collision_offset_x;
-        int ey = enemy->world_y + enemy->collision_offset_y;
-        int ew = enemy->width - 2 * enemy->collision_offset_x;
-        int eh = enemy->height - 2 * enemy->collision_offset_y;
-
-        if (protag_world_x < ex + ew &&
-            protag_world_x + PROTAG_WIDTH > ex &&
-            protag_world_y < ey + eh &&
-            protag_world_y + PROTAG_HEIGHT > ey) {
-            return 1; // Collision detected
-        }
-    }
-    return 0; // No collision
-}
-
 
 // --- Rendering ---
 void render_world() {
