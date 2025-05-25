@@ -251,7 +251,8 @@ const char* welcome_message =
     "Developed by <NGUYEN HAI LAM> - <S3979802>\n"
     "             <UNG XUAN DAT> - <S3932156>\n"
     "             <NGUYEN DUC ANH> - <S3878010>\n"
-    "             <NGUYEN TRONG KHOA> - <S3978477>\n";                                               
+    "             <NGUYEN TRONG KHOA> - <S3978477>\n"
+    "             Press 'CTRL T' to open terminal\n";                                               
 
 
 // Your PRNG from before

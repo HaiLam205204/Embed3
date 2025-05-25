@@ -29,7 +29,6 @@
 #define GAME_FRAME_US (1000000 / FRAME_RATE)
 #define MAX_LEVELS 3
 
-#define NULL ((void*)0)
 #define ESCAPE 0x1B // ESC
 
 // --- Protagonist ---
@@ -50,18 +49,15 @@ Enemy level1_enemies[MAX_ENEMIES] = {
     {1300, 1000, shadow1, 136, 88, 
         1, // active
         4, 4, // hitbox 
-        //1 //enemy type
     },
-    {1800, 450, shadow2, 68, 100, 1, 4, 4, 
-        //1 //enemy type
-    },
+    {1800, 450, shadow2, 68, 100, 1, 4, 4,},
 };
 
 // --- Level 2 Enemies ---
 Enemy level2_enemies[MAX_ENEMIES] = {
     {500, 300, shadow1, 136, 88, 1, 4, 4},
-    {900, 700, shadow2, 68, 100, 1, 4, 4},
-    {1500, 1200, shadow2, 68, 100, 1, 4, 4},
+    {900, 800, shadow2, 68, 100, 1, 4, 4},
+    {1500, 1300, shadow2, 68, 100, 1, 4, 4},
 };
 
 // --- Level 3 Enemies ---
@@ -225,9 +221,12 @@ void game_loop() {
             if(input == ESCAPE){ 
                 draw_background();
                 drawRectARGB32(CLI_LEFT, CLI_TOP, CLI_RIGHT, CLI_BOTTOM, BLUE, 1); 
-                // Reset cursor position
+                // Reset CLI cursor position
                 cursorX = CLI_LEFT + 1;
                 cursorY = CLI_TOP + 1;
+                uart_puts("\n");
+                uart_puts("[GAME_LOOP] Game loop ended.");
+                uart_puts("\n");
                 break;
             }
 
@@ -546,23 +545,5 @@ void render_protagonist_with_animation() {
     } else {
         drawImage_double_buffering(screen_x, screen_y, 
             myBitmapprotag, PROTAG_WIDTH, PROTAG_HEIGHT);
-    }
-}
-
-// --- Animation ---
-void start_animation() {
-    anim_playing = 1;
-}
-
-// --- Battle Screen ---
-void battle_screen_loop(int enemy_type) {
-    uart_puts("\n[BATTLE] Entering battle screen");
-    swap_buffers();
-    while (1) {
-        char input = uart_getc();
-        if (input == 'q' || input == 'Q') {
-            uart_puts("\n[BATTLE] Quitting battle");
-            return;
-        }
     }
 }

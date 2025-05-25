@@ -249,6 +249,37 @@ void drawImage_double_buffering(int x, int y, const unsigned long *image, int im
     }
 }
 
+void draw_rect_double_buffering(int x, int y, int width, int height, unsigned int color) {
+    for (int j = 0; j < height; j++) {
+        for (int i = 0; i < width; i++) {
+            drawPixelARGB32_double_buffering(x + i, y + j, color);
+        }
+    }
+}
+
+void drawImage_double_buffering_stride(int x, int y, const unsigned long *image, int image_width, int image_height, int image_stride) {
+    for (int j = 0; j < image_height; j++) {
+        for (int i = 0; i < image_width; i++) {
+            unsigned int pixel = image[j * image_stride + i];
+            if ((pixel & 0x00FFFFFF) != 0) { // skip black
+                drawPixelARGB32_double_buffering(x + i, y + j, pixel);
+            }
+        }
+    }
+}
+
+void drawRectARGB32_double_buffering(int x1, int y1, int x2, int y2, unsigned int attr, int fill)
+{
+    for (int y = y1; y <= y2; y++)
+        for (int x = x1; x <= x2; x++)
+        {
+            if ((x == x1 || x == x2) || (y == y1 || y == y2))
+                drawPixelARGB32_double_buffering(x, y, attr);
+            else if (fill)
+                drawPixelARGB32_double_buffering(x, y, attr);
+        }
+}
+
 void drawPixelARGB32(int x, int y, unsigned int attr)
 {
     int offs = (y * pitch) + (COLOR_DEPTH / 8 * x);
@@ -429,46 +460,4 @@ void drawImageScaledAspect(int x, int y, const unsigned long *image, int src_wid
     drawImageScaled(x, y, image, src_width, src_height, dest_width, dest_height);
 }
 
-void draw_rect_double_buffering(int x, int y, int width, int height, unsigned int color) {
-    for (int j = 0; j < height; j++) {
-        for (int i = 0; i < width; i++) {
-            drawPixelARGB32_double_buffering(x + i, y + j, color);
-        }
-    }
-}
 
-void drawImage_double_buffering_stride(int x, int y, const unsigned long *image, int image_width, int image_height, int image_stride) {
-    for (int j = 0; j < image_height; j++) {
-        for (int i = 0; i < image_width; i++) {
-            unsigned int pixel = image[j * image_stride + i];
-            if ((pixel & 0x00FFFFFF) != 0) { // skip black
-                drawPixelARGB32_double_buffering(x + i, y + j, pixel);
-            }
-        }
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void drawRectARGB32_double_buffering(int x1, int y1, int x2, int y2, unsigned int attr, int fill)
-{
-    for (int y = y1; y <= y2; y++)
-        for (int x = x1; x <= x2; x++)
-        {
-            if ((x == x1 || x == x2) || (y == y1 || y == y2))
-                drawPixelARGB32_double_buffering(x, y, attr);
-            else if (fill)
-                drawPixelARGB32_double_buffering(x, y, attr);
-        }
-}

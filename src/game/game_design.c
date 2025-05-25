@@ -15,13 +15,10 @@
 #include "../../include/models/character_sprite.h"
 #include "../../include/models/enemy_sprite.h"
 #include "../../include/models/skill.h"
-// #include "../../include/bitmaps/yellow_triangle.h"
 #include "../../include/game_logic.h"
 #include "../../include/game_menu.h"
 #include "../../include/utils.h"
 
-// #define MAX_PROTAGONISTS 4
-// #define MAX_ENEMIES 3
 #define BTN_WIDTH_REWARD 150
 #define BTN_HEIGHT_REWARD 40
 #define BTN_SELECTED_COLOR 0xFF00509E // Dark blue
@@ -68,8 +65,6 @@ void design_screen_loop()
     char input;
     uart_puts("[DESIGN_SCREEN] Entering Design Screen...\n");
     int first_frame = 1;
-    // static int first_frame_respwan = 0;
-    // int turn_index = 0; // Track whose turn it is
 
     init_protagonists();
     reset_ally_sprites();
@@ -167,8 +162,6 @@ void init_enemies()
 
 void redraw_combat_screen(int current_player_turn, int selected_enemy_index)
 {
-    // uart_puts("[REDRAW_COMBAT_UI] Redrawing combat screen...\n");
-    // uart_puts("Current player turn: ");
     uart_putint(current_player_turn);
     uart_puts("\n");
     // Draw background
@@ -433,6 +426,7 @@ void updateRewardPanel(int isSelected){
     drawString_double_buffering(right_btn_x, right_btn_y, right_btn, TEXT_COLOR, TEXT_ZOOM);
     drawString_double_buffering(700, bottom_btn_y + 10, bottom_btn, TEXT_COLOR, TEXT_ZOOM);
 }
+
 void clear_screen_buffer()
 {
     for (int y = 0; y < SCREEN_HEIGHT; y++)
@@ -443,6 +437,7 @@ void clear_screen_buffer()
         }
     }
 }
+
 void displayRewardScreen()
 {
 

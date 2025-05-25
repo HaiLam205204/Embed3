@@ -13,15 +13,6 @@ void draw_background() {
     drawString(0, 600, "Ung Xuan Dat", 0x00FFAC00, 7);
 }
 
-// // GPU sync frame rendering
-// // Use when hardware interaction (GPU, interrupts) are needed
-// void render_frame() {
-//     uint64_t start = get_system_timer(); // From 0x3F003000
-//     draw_graphics();
-//     uint64_t elapsed = get_system_timer() - start;
-//     if (elapsed < 16667) delay_us(16667 - elapsed); // 60 FPS
-// }
-
 // Get the timer frequency (Hz)
 uint64_t get_arm_timer_freq() {
     uint64_t freq;
