@@ -19,9 +19,9 @@ void deal_damage(int index, int amount) {
         enemy[index].current_hp = 0;
     }
 
-    uart_puts("[DEBUG] Enemy HP after attack: ");
-    uart_dec(enemy[index].current_hp);
-    uart_puts("\n");
+    // uart_puts("[DEBUG] Enemy HP after attack: ");
+    // uart_dec(enemy[index].current_hp);
+    // uart_puts("\n");
 
     // If the enemy is dead, remove them
     if (enemy[index].current_hp == 0) {
@@ -33,21 +33,21 @@ void deal_damage(int index, int amount) {
         draw_enemy_sprite(&enemy_sprites[i]);
     }
 
-    for (int i = 0; i < num_enemies; i++) {
-    uart_puts("[DEBUG] Enemy: ");
-    uart_puts(enemy[i].name);
-    uart_puts(" Sprite pos_x: ");
-    uart_dec(enemy_sprites[i].pos_x); 
-    uart_puts("\n");
-    }
+    // for (int i = 0; i < num_enemies; i++) {
+    // uart_puts("[DEBUG] Enemy: ");
+    // uart_puts(enemy[i].name);
+    // uart_puts(" Sprite pos_x: ");
+    // uart_dec(enemy_sprites[i].pos_x); 
+    // uart_puts("\n");
+    // }
 }
 
 void remove_enemy(int index) {
     if (index < 0 || index >= num_enemies) return;
 
-    uart_puts("[DEBUG] Removing enemy: ");
-    uart_puts(enemy[index].name);
-    uart_puts("\n");
+    // uart_puts("[DEBUG] Removing enemy: ");
+    // uart_puts(enemy[index].name);
+    // uart_puts("\n");
 
     // Shift enemy data
     for (int i = index; i < num_enemies - 1; i++) {
@@ -149,9 +149,9 @@ int all_characters_have_acted(Character *protagonists, int num_protagonists) {
 void remove_protagonist(int index) {
     if (index < 0 || index >= num_protagonists) return;
 
-    uart_puts("[DEBUG] Removing protagonist: ");
-    uart_puts(protagonists[index].name);
-    uart_puts("\n");
+    // uart_puts("[DEBUG] Removing protagonist: ");
+    // uart_puts(protagonists[index].name);
+    // uart_puts("\n");
 
     // Shift the array left
     for (int i = index; i < num_protagonists - 1; i++) {

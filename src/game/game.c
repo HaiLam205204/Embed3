@@ -203,7 +203,7 @@ void game_loop() {
 
     while (1) {
         uint64_t start_time = get_arm_system_time();
-        uart_puts("\n[FRAME] ---- NEW FRAME ----");
+        // uart_puts("\n[FRAME] ---- NEW FRAME ----");
 
         if (first_frame) {
             //Display first frame (double buffered)
@@ -272,17 +272,17 @@ void game_loop() {
         // Frame timing control
         uint64_t end_time = get_arm_system_time();
         uint64_t render_time_us = ticks_to_us(end_time - start_time);
-        uart_puts("\n[TIMING] Frame render time (us): ");
-        uart_dec(render_time_us);
+        // uart_puts("\n[TIMING] Frame render time (us): ");
+        // uart_dec(render_time_us);
 
         if (render_time_us < GAME_FRAME_US) {
             uint64_t wait_time = GAME_FRAME_US - render_time_us;
-            uart_puts("\n[TIMING] Waiting (us): ");
-            uart_dec(wait_time);
+            // uart_puts("\n[TIMING] Waiting (us): ");
+            // uart_dec(wait_time);
             wait_us(wait_time);
-        } else {
-            uart_puts("\n[WARNING] Frame took too long!");
-        }
+        } //else {
+        //     uart_puts("\n[WARNING] Frame took too long!");
+        // }
     }
 }
 

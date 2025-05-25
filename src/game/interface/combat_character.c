@@ -23,9 +23,9 @@ void draw_hp_bar(int x, int y, int hp)
         drawRectARGB32_double_buffering(x + green_width, y - 10, x + green_width + red_width, y - 10 + HP_BAR_HEIGHT, RED, 1);
     }
 
-    uart_puts("[COMBAT_SCREEN] Drawn hp bar: ");
-    uart_dec(hp);
-    uart_puts("\n");
+    // uart_puts("[COMBAT_SCREEN] Drawn hp bar: ");
+    // uart_dec(hp);
+    // uart_puts("\n");
 }
 
 void draw_combat_character(int pos_x, int pos_y, const unsigned long *character_bitmap, int image_width, int image_height)
@@ -61,11 +61,11 @@ void draw_combat_character(int pos_x, int pos_y, const unsigned long *character_
     }
 
     drawImage_double_buffering(pos_x, pos_y, character_bitmap, image_width, image_height);
-    uart_puts("[COMBAT_SCREEN] Drawn character at (");
-    uart_dec(pos_x);
-    uart_puts(", ");
-    uart_dec(pos_y);
-    uart_puts(")\n");
+    // uart_puts("[COMBAT_SCREEN] Drawn character at (");
+    // uart_dec(pos_x);
+    // uart_puts(", ");
+    // uart_dec(pos_y);
+    // uart_puts(")\n");
 }
 
 void draw_combat_enemies1(int pos_x, int pos_y, const unsigned long *character_bitmap, int image_width, int image_height)
@@ -101,11 +101,11 @@ void draw_combat_enemies1(int pos_x, int pos_y, const unsigned long *character_b
     }
 
     drawImage_double_buffering(pos_x, pos_y, character_bitmap, image_width, image_height);
-    uart_puts("[COMBAT_SCREEN] Drawn character at (");
-    uart_dec(pos_x);
-    uart_puts(", ");
-    uart_dec(pos_y);
-    uart_puts(")\n");
+    // uart_puts("[COMBAT_SCREEN] Drawn character at (");
+    // uart_dec(pos_x);
+    // uart_puts(", ");
+    // uart_dec(pos_y);
+    // uart_puts(")\n");
 }
 
 void draw_combat_enemies2(int pos_x, int pos_y, const unsigned long *character_bitmap, int image_width, int image_height)
@@ -141,11 +141,11 @@ void draw_combat_enemies2(int pos_x, int pos_y, const unsigned long *character_b
     }
 
     drawImage_double_buffering(pos_x, pos_y, character_bitmap, image_width, image_height);
-    uart_puts("[COMBAT_SCREEN] Drawn character at (");
-    uart_dec(pos_x);
-    uart_puts(", ");
-    uart_dec(pos_y);
-    uart_puts(")\n");
+    // uart_puts("[COMBAT_SCREEN] Drawn character at (");
+    // uart_dec(pos_x);
+    // uart_puts(", ");
+    // uart_dec(pos_y);
+    // uart_puts(")\n");
 }
 
 void draw_character_sprite(CharacterSprite *sprite)
@@ -159,22 +159,22 @@ void draw_character_sprite(CharacterSprite *sprite)
     draw_combat_character(sprite->pos_x, sprite->pos_y, sprite->bitmap, sprite->width, sprite->height);
     draw_hp_bar(sprite->pos_x, sprite->pos_y, (sprite->character->current_hp * 100) / sprite->character->max_hp);
 
-    uart_puts("[COMBAT_SCREEN] Drawn character '");
-    uart_puts(sprite->character->name);
-    uart_puts("' at (");
-    uart_dec(sprite->pos_x);
-    uart_puts(", ");
-    uart_dec(sprite->pos_y);
-    uart_puts(")\n");
+    // uart_puts("[COMBAT_SCREEN] Drawn character '");
+    // uart_puts(sprite->character->name);
+    // uart_puts("' at (");
+    // uart_dec(sprite->pos_x);
+    // uart_puts(", ");
+    // uart_dec(sprite->pos_y);
+    // uart_puts(")\n");
 }
 
 void draw_enemy_sprite(EnemySprite *sprite)
 {
     if (!sprite || !sprite->enemy || !sprite->bitmap) return;
 
-    uart_puts("[DEBUG] Enemy type: ");
-    uart_dec(sprite->enemy->enemy_type);
-    uart_puts("\n");
+    // uart_puts("[DEBUG] Enemy type: ");
+    // uart_dec(sprite->enemy->enemy_type);
+    // uart_puts("\n");
 
     if (sprite->enemy->enemy_type == 1) {
         draw_combat_enemies1(sprite->pos_x, sprite->pos_y, sprite->bitmap, sprite->width, sprite->height);
