@@ -83,36 +83,6 @@ void drawImage_double_buffering_parallel(int x, int y, const unsigned long *imag
     }
 }
 
-void drawImage_double_buffering_parallel_stride(
-    int x, int y,
-    const unsigned long* image,
-    int w, int h,
-    int src_stride // in pixels
-) {
-    unsigned char* draw_buf = get_drawing_buffer();
-
-    for (int j = 0; j < h; j++) {
-        int screen_y = y + j;
-        if (screen_y < 0 || screen_y >= height)
-            continue;
-
-        const unsigned long* src_row = image + j * src_stride;
-        int dst_offset = screen_y * pitch + x * 4;
-
-        dma_channel* chan = render_channels[next_render_channel++ % MAX_DMA_RENDER_CHANNELS];
-        dma_wait(chan);
-
-        dma_setup_mem_copy(
-            chan,
-            draw_buf + dst_offset,
-            src_row,
-            w * sizeof(unsigned long),
-            15
-        );
-        dma_start(chan);
-    }
-}
-
 /**
  * Set screen resolution to 1024x768
  */

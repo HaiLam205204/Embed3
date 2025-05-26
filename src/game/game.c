@@ -196,17 +196,17 @@ void render_world() {
     next_render_channel = 0;
     if (current_level == NULL) return;
 
-    drawImage_double_buffering_parallel_stride(
+    drawImage_double_buffering_parallel(
         0, 0,
         gameMap4x + camera_y * GAME_MAP_WIDTH_4X + camera_x,
-        VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
-        GAME_MAP_WIDTH_4X
+        VIEWPORT_WIDTH, VIEWPORT_HEIGHT
+        //GAME_MAP_WIDTH_4X
     );
 
-    // // --- Wait for all DMA channels to complete ---
-    // for (int i = 0; i < MAX_DMA_RENDER_CHANNELS; i++) {
-    //     dma_wait(render_channels[i]);
-    // }
+    // --- Wait for all DMA channels to complete ---
+    for (int i = 0; i < MAX_DMA_RENDER_CHANNELS; i++) {
+        dma_wait(render_channels[i]);
+    }
 
     // --- Draw walls using parallel DMA ---
     for (int i = 0; i < current_level->wall_count; i++) {
@@ -260,6 +260,90 @@ void render_world() {
             );
         }
     }
+}
+
+// --- Level tranisition ---
+void load_level(Level* level) {
+    if (!level) return;
+
+    uart_puts("\n[LEVEL] Loading level ");
+    uart_dec(level->level_number);
+
+    // Set current level
+    current_level = level;
+
+    // Reset protagonist position to level's start position
+    protag_world_x = level->start_x;
+    protag_world_y = level->start_y;
+
+    // Reset camera
+    update_camera();
+
+    // Activate all enemies and walls in the level
+    for (int i = 0; i < level->enemy_count; i++) {
+        level->enemies[i].active = 1;
+    }
+    for (int i = 0; i < level->wall_count; i++) {
+        level->walls[i].is_solid = 1;
+    }
+
+    // Double buffered render of initial level state
+    for (int i = 0; i < 2; i++) {
+
+        drawImage_double_buffering_parallel(
+            0, 0,
+            level->background + camera_y * level->bg_width + camera_x,
+            VIEWPORT_WIDTH,
+            VIEWPORT_HEIGHT
+           //level->bg_width // STRIDE in pixels
+        );
+
+        // --- Wait for all DMA channels to complete ---
+        for (int i = 0; i < MAX_DMA_RENDER_CHANNELS; i++) {
+            dma_wait(render_channels[i]);
+        }
+
+        // --- Draw walls using parallel DMA ---
+        for (int j = 0; j < level->wall_count; j++) {
+            Wall* wall = &level->walls[j];
+            int screen_x = wall->world_x - camera_x;
+            int screen_y = wall->world_y - camera_y;
+
+            if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
+                screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
+                drawImage_double_buffering(
+                    screen_x, screen_y,
+                    wall->bitmap,
+                    wall->width, wall->height
+                );
+            }
+        }
+
+        // --- Draw protagonist using parallel DMA ---
+        drawImage_double_buffering(
+            protag_world_x - camera_x,
+            protag_world_y - camera_y,
+            myBitmapprotag,  // Default protagonist sprite
+            PROTAG_WIDTH,
+            PROTAG_HEIGHT
+        );
+
+        swap_buffers(); // Small delay for smooth transition
+    }
+
+    uart_puts("\n[LEVEL] Loaded successfully");
+}
+
+Level* get_level_by_number(int number) {
+    for (int i = 0; i < total_levels; i++) {
+        if (levels[i].level_number == number) {
+            return &levels[i];
+        }
+    }
+
+    uart_puts("\n[ERROR] Level not found: ");
+    uart_dec(number);
+    return NULL;
 }
 
 // --- Game Loop ---
@@ -420,85 +504,6 @@ void update_protagonist_position(char input) {
     // Update position if no collisions
     protag_world_x = new_x;
     protag_world_y = new_y;
-}
-
-// --- Level tranisition ---
-void load_level(Level* level) {
-    if (!level) return;
-
-    uart_puts("\n[LEVEL] Loading level ");
-    uart_dec(level->level_number);
-
-    // Set current level
-    current_level = level;
-
-    // Reset protagonist position to level's start position
-    protag_world_x = level->start_x;
-    protag_world_y = level->start_y;
-
-    // Reset camera
-    update_camera();
-
-    // Activate all enemies and walls in the level
-    for (int i = 0; i < level->enemy_count; i++) {
-        level->enemies[i].active = 1;
-    }
-    for (int i = 0; i < level->wall_count; i++) {
-        level->walls[i].is_solid = 1;
-    }
-
-    // Double buffered render of initial level state
-    for (int i = 0; i < 2; i++) {
-
-        drawImage_double_buffering_parallel_stride(
-            0, 0,
-            level->background + camera_y * level->bg_width + camera_x,
-            VIEWPORT_WIDTH,
-            VIEWPORT_HEIGHT,
-            level->bg_width // STRIDE in pixels
-        );
-
-        // --- Draw walls using parallel DMA ---
-        for (int j = 0; j < level->wall_count; j++) {
-            Wall* wall = &level->walls[j];
-            int screen_x = wall->world_x - camera_x;
-            int screen_y = wall->world_y - camera_y;
-
-            if (screen_x + wall->width > 0 && screen_x < VIEWPORT_WIDTH &&
-                screen_y + wall->height > 0 && screen_y < VIEWPORT_HEIGHT) {
-                drawImage_double_buffering(
-                    screen_x, screen_y,
-                    wall->bitmap,
-                    wall->width, wall->height
-                );
-            }
-        }
-
-        // --- Draw protagonist using parallel DMA ---
-        drawImage_double_buffering(
-            protag_world_x - camera_x,
-            protag_world_y - camera_y,
-            myBitmapprotag,  // Default protagonist sprite
-            PROTAG_WIDTH,
-            PROTAG_HEIGHT
-        );
-
-        swap_buffers(); // Small delay for smooth transition
-    }
-
-    uart_puts("\n[LEVEL] Loaded successfully");
-}
-
-Level* get_level_by_number(int number) {
-    for (int i = 0; i < total_levels; i++) {
-        if (levels[i].level_number == number) {
-            return &levels[i];
-        }
-    }
-
-    uart_puts("\n[ERROR] Level not found: ");
-    uart_dec(number);
-    return NULL;
 }
 
 // --- Camera ---
