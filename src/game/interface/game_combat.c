@@ -38,6 +38,19 @@ int persona_option = 0;
 int selected_persona = 0; // 0 for Orpheus, 1 for Pixie
 int skill_option = 0;
 
+
+int str_equals(const char *a, const char *b)
+{
+    while (*a && *b)
+    {
+        if (*a != *b)
+            return 0;
+        a++;
+        b++;
+    }
+    return (*a == '\0' && *b == '\0');
+}
+
 void int_to_str(int num, char *buffer)
 {
     if (num == 0)
@@ -170,67 +183,67 @@ void draw_persona_option_screen(int selected_option)
     // swap_buffers();
 }
 
-void draw_skill_option_screen(Character character, int option, int character_index)
+void draw_skill_option_screen(Character character, int option)
 {
-    if (character.is_main_character)
+    if (str_equals(character.name, "Hero") == 1)
     {
         if (character.current_persona == PERSONA_ORPHEUS)
         {
             if (option == 0)
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options1_For_Orpheus, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options1_For_Orpheus,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
             else
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options2_For_Orpheus, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options2_For_Orpheus,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
         }
         else
         {
             if (option == 0)
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options1_For_Pixie, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options1_For_Pixie,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
             else
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options2_For_Pixie, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options2_For_Pixie,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
         }
     }
     else
     {
-        switch (character_index)
+        if (str_equals(character.name, "Ally1") == 1)
         {
-        case 1:
             if (option == 0)
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options1_For_Ally1, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options1_For_Ally1,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
             else
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options2_For_Ally1, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
-            break;
-        case 2:
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options2_For_Ally1,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
+        }
+        else if (str_equals(character.name, "Ally2") == 1)
+        {
             if (option == 0)
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options1_For_Ally2, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options1_For_Ally2,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
             else
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options2_For_Ally2, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
-            break;
-        case 3:
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options2_For_Ally2,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
+        }
+        else if (str_equals(character.name, "Ally3") == 1)
+        {
             if (option == 0)
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options1_For_Ally3, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options1_For_Ally3,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
             else
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options2_For_Ally3, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
-            break;
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options2_For_Ally3,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
         }
     }
 }
@@ -388,7 +401,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     button_pressed_skill = 1;
                     button_pressed_time = start_time;
                     skill_option = 0; // Start at top
-                    draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
+                    draw_skill_option_screen(protagonists[current_player_turn], skill_option);
                     current_screen = SCREEN_SKILL_MENU;
                     uart_puts("SKILL\n");
                     // exit_ui = 0;
@@ -456,13 +469,13 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     max_skills = 2; 
                 }
 
-                draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
+                draw_skill_option_screen(protagonists[current_player_turn], skill_option);
                 if (input == 'o' && skill_option > 0) {
                     skill_option = 0;
-                    draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
+                    draw_skill_option_screen(protagonists[current_player_turn], skill_option);
                 } else if (input == 'l' && skill_option < max_skills - 1) {
                     skill_option = 1;
-                    draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
+                    draw_skill_option_screen(protagonists[current_player_turn], skill_option);
                 }
                 else if (input == KEY_ESC)
                 {
@@ -656,7 +669,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
 
         if (current_screen == SCREEN_SKILL_MENU)
         {
-            draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
+            draw_skill_option_screen(protagonists[current_player_turn], skill_option);
         }
 
         swap_buffers();

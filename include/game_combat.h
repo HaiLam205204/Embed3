@@ -30,7 +30,9 @@ void build_item_text(char *item_text, int quantity);
 void draw_persona_option_screen(int selected_option);
 // void draw_skill_option_screen(int persona, int option);
 
-void draw_skill_option_screen(Character character, int option, int character_index);
+// void draw_skill_option_screen(Character character, int option, int character_index);
+
+void draw_skill_option_screen(Character character, int option);
 
 void wait_for_button_release_animation();
 
@@ -40,6 +42,7 @@ void draw_attack_target_screen(int target_index);
 
 void draw_turn_indicator(CharacterSprite* sprite, int triangle_x, int triangle_y);
 void draw_enemy_selected(EnemySprite *sprite, int triangle_x, int triangle_y );
+int str_equals(const char *a, const char *b);
 typedef enum {
     SCREEN_COMBAT,
     SCREEN_PERSONA_MENU,
