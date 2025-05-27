@@ -567,8 +567,17 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                                 if (protagonists[current_player_turn].current_hp >= 12) {
                                     protagonists[current_player_turn].current_hp -= 12;
                                     deal_damage(selected_enemy, skill_damage);
-                                    if(enemy[selected_enemy].current_hp <= 0){ 
+                                    if(enemy[selected_enemy].current_hp <= 0){
+                                        for (int i = selected_enemy; i < num_enemies - 1; i++) {
+                                            enemy[i] = enemy[i + 1];
+                                            enemy_sprites[i] = enemy_sprites[i + 1];
+                                            enemy_sprites[i].enemy = &enemy[i];  
+                                        } 
                                         num_enemies--;
+                                    }
+
+                                    if (selected_enemy >= num_enemies && num_enemies > 0) {
+                                        selected_enemy = num_enemies - 1;
                                     }
                                     redraw_combat_screen(current_player_turn, selected_enemy);
                                     redraw_combat_screen(current_player_turn, selected_enemy);
@@ -580,7 +589,16 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                             } else {
                                 deal_damage(selected_enemy, base_damage);
                                 if(enemy[selected_enemy].current_hp <= 0){
+                                    for (int i = selected_enemy; i < num_enemies - 1; i++) {
+                                        enemy[i] = enemy[i + 1];
+                                        enemy_sprites[i] = enemy_sprites[i + 1];
+                                        enemy_sprites[i].enemy = &enemy[i];  
+                                    } 
                                     num_enemies--;
+
+                                    if (selected_enemy >= num_enemies && num_enemies > 0) {
+                                        selected_enemy = num_enemies - 1;
+                                    }
                                 }
                                 redraw_combat_screen(current_player_turn, selected_enemy);
                                 redraw_combat_screen(current_player_turn, selected_enemy);
