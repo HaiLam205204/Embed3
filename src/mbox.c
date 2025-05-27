@@ -82,11 +82,11 @@ int mbox_call(unsigned int buffer_addr, unsigned char channel)
 }
 
 /**
-* 
+* Retrieve board revision through malibox
 */
 uint32_t get_board_revision() {
     // Total size of the buffer in bytes (8 words × 4 bytes/word)
-    mBuf[0] = 8 * 4;
+    mBuf[0] = 7 * 4;
 
     // Mailbox request code (0x00000000 indicates a request)
     mBuf[1] = MBOX_REQUEST;
@@ -104,7 +104,7 @@ uint32_t get_board_revision() {
     mBuf[5] = 0;
 
     // Marks the end of the message buffer (as per protocol)
-    mBuf[6] = 0;
+    mBuf[6] = MBOX_TAG_LAST;
 
     // Call the mailbox (channel 8 is for property tags)
     if (mbox_call((uint32_t)((uint64_t)mBuf), 8)) {
@@ -117,7 +117,7 @@ uint32_t get_board_revision() {
 }
 
 /**
-* 
+* Retrieve MAC address through malibox
 */
 int get_mac_address(uint8_t mac[6]) {
     // Total buffer size: 8 words = 32 bytes
@@ -142,7 +142,7 @@ int get_mac_address(uint8_t mac[6]) {
     mBuf[6] = 0;
 
     // End tag (required by the protocol)
-    mBuf[7] = 0;
+    mBuf[7] = MBOX_TAG_LAST;
 
     // Make the mailbox call to channel 8
     if (mbox_call((uint32_t)((uint64_t)mBuf), 8)) {

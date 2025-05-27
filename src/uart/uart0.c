@@ -8,13 +8,6 @@ void uart_init()
 {
     unsigned int r;
 
-	/* Enable UART0 */
-	UART0_CR =  (1 << 0)  |  // UARTEN
-				(1 << 8)  |  // TXE
-				(1 << 9)  |  // RXE
-				(1 << 14) |  // RTSEN (RTS auto flow control)
-				(1 << 15);   // CTSEN (CTS auto flow control)
-
  
 	/* NEW: set up UART clock for consistent divisor values 
 	--> may not work with QEMU, but will work with real board */ 
@@ -76,8 +69,22 @@ void uart_init()
 	/* Defaults for other bit are No parity, 1 stop bit */
 	UART0_LCRH = UART0_LCRH_FEN | UART0_LCRH_WLEN_8BIT;
 
-	/* Enable UART0, receive, and transmit */
-	UART0_CR = 0x301;     // enable Tx, Rx, FIFO
+    /* Enable UART0 */
+	UART0_CR |=  (1 << 0)  |  // UARTEN
+				 (1 << 8)  |  // TXE
+				 (1 << 9)  |  // RXE
+				 (1 << 14) |  // RTSEN (RTS auto flow control)
+				 (1 << 15);   // CTSEN (CTS auto flow control)
+}
+
+void uart_set_flow_control(int enable) {
+    if (enable == 1) {
+        // Enable both CTS (Clear To Send) and RTS (Request To Send) flow control
+        UART0_CR |= UART0_CR_CTSEN | UART0_CR_RTSEN;
+    } else if (enable == 0) {
+        // Disable both CTS and RTS flow control
+        UART0_CR &= ~(UART0_CR_CTSEN | UART0_CR_RTSEN);
+    }
 }
 
 /**
@@ -293,12 +300,16 @@ char* strcpy(char *dest, char *src) {
 /**
 * Convert string char to int.
 */
-int convert(char s[])
-{
-    int i, n = 0;
+int convert(char s[]) {
+    int i = 0, n = 0;
+    if (s[0] == '\0') return -1; // empty input
 
-    for (i = 0; s[i] >= '0' && s[i] <= '9'; i++)
+    while (s[i] >= '0' && s[i] <= '9') {
         n = 10 * n + (s[i] - '0');
+        i++;
+    }
+
+    if (s[i] != '\0') return -1; // invalid character found
 
     return n;
 }
@@ -334,16 +345,6 @@ void set_baudrate(int baudrate) {
 
     // Re-enable UART (with TX/RX enabled)
     UART0_CR = UART0_CR_UARTEN | UART0_CR_TXE | UART0_CR_RXE;
-}
-
-void uart_set_flow_control(int enable) {
-    if (enable == 1) {
-        // Enable both CTS (Clear To Send) and RTS (Request To Send) flow control
-        UART0_CR |= UART0_CR_CTSEN | UART0_CR_RTSEN;
-    } else {
-        // Disable both CTS and RTS flow control
-        UART0_CR &= ~(UART0_CR_CTSEN | UART0_CR_RTSEN);
-    }
 }
 
 int uart_input_available() {

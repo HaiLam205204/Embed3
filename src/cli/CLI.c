@@ -127,73 +127,86 @@ void cli_loop() {
     // Store input
     char input_buffer[MAX_BUFFER]; 
     int buffer_index = 0;
+
+    // For CTS/RTS testing
+    char CTS_RTS_test = 'a';
+    uint64_t last_send_time = ticks_to_us(get_arm_system_time());
+    const unsigned long send_interval_us = 1000000; // 1 second
+
     // Print prompt
     for (int i = 0; PROMPT[i] != '\0'; i++) { 
         cli_put_char(PROMPT[i], 0x00FF0000, ZOOM);  // Print each character
     }
 
     while (1) {
-        char c = uart_getc();  // Get character input from UART
-
-        // Check exit key FIRST
-        if (c == ESC) {
-            // Reset cursor position
-            cursorX = CLI_LEFT + 1;
-            cursorY = CLI_TOP + 1;
-            // Draw background image
-            draw_background();
-            return;              // Exit CLI mode
+        // Check if it's time to send test character (polling) CTS/RTS
+        if (ticks_to_us(get_arm_system_time()) - last_send_time >= send_interval_us) {
+            uart_sendc(CTS_RTS_test);
+            last_send_time = ticks_to_us(get_arm_system_time());
         }
 
-        if (c == '\r' || c == '\n') { // Enter input
-            
-            input_buffer[buffer_index] = '\0';  // End of command
-            cli_put_char('\n', WHITE, ZOOM); // go to next line
-            add_to_history(input_buffer); // add to list of commands in history
-            handle_command(input_buffer);  // Process the command
-            buffer_index = 0;
-            // Print prompt again
-            for (int i = 0; PROMPT[i] != '\0'; i++) { 
-                cli_put_char(PROMPT[i], 0x00FF0000, ZOOM);  // Print each character
+        if (uart_isReadByteReady()) {
+            char c = uart_getc();  // Get character input from UART
+            // Check exit key FIRST
+            if (c == ESC) {
+                // Reset cursor position
+                cursorX = CLI_LEFT + 1;
+                cursorY = CLI_TOP + 1;
+                // Draw background image
+                draw_background();
+                return;              // Exit CLI mode
             }
-        } else if (c == '\b') {
-            if (buffer_index > 0) {
-                buffer_index--;
-                cli_put_char('\b', WHITE, ZOOM);
-            }
-        } else if (c == '_') { // get previous command in the history
-            char* cmd = get_prev_command(input_buffer);
-            if (cmd) {
-                // Clear current line
-                while (buffer_index > 0) {
-                    cli_put_char('\b', WHITE, ZOOM);
-                    buffer_index--;
+
+            if (c == '\r' || c == '\n') { // Enter input
+                
+                input_buffer[buffer_index] = '\0';  // End of command
+                cli_put_char('\n', WHITE, ZOOM); // go to next line
+                add_to_history(input_buffer); // add to list of commands in history
+                handle_command(input_buffer);  // Process the command
+                buffer_index = 0;
+                // Print prompt again
+                for (int i = 0; PROMPT[i] != '\0'; i++) { 
+                    cli_put_char(PROMPT[i], 0x00FF0000, ZOOM);  // Print each character
                 }
-                strcpy(input_buffer, cmd);
-                buffer_index = strlen(cmd);
-                cli_put_string(cmd, WHITE, ZOOM);
-            }
-        } else if (c == '+') { // get next command in the history
-            char* cmd = get_next_command();
-            if (cmd) {
-                // Clear current line
-                while (buffer_index > 0) {
-                    cli_put_char('\b', WHITE, ZOOM);
+            } else if (c == '\b') {
+                if (buffer_index > 0) {
                     buffer_index--;
+                    cli_put_char('\b', WHITE, ZOOM);
                 }
-                strcpy(input_buffer, cmd);
-                buffer_index = strlen(cmd);
-                cli_put_string(cmd, WHITE, ZOOM);
+            } else if (c == '_') { // get previous command in the history
+                char* cmd = get_prev_command(input_buffer);
+                if (cmd) {
+                    // Clear current line
+                    while (buffer_index > 0) {
+                        cli_put_char('\b', WHITE, ZOOM);
+                        buffer_index--;
+                    }
+                    strcpy(input_buffer, cmd);
+                    buffer_index = strlen(cmd);
+                    cli_put_string(cmd, WHITE, ZOOM);
+                }
+            } else if (c == '+') { // get next command in the history
+                char* cmd = get_next_command();
+                if (cmd) {
+                    // Clear current line
+                    while (buffer_index > 0) {
+                        cli_put_char('\b', WHITE, ZOOM);
+                        buffer_index--;
+                    }
+                    strcpy(input_buffer, cmd);
+                    buffer_index = strlen(cmd);
+                    cli_put_string(cmd, WHITE, ZOOM);
+                }
+            } else if (c == '\t') { // tab to autocomplete
+                autocomplete(input_buffer, &buffer_index);
+            } else {
+                // If we're typing after recalling a command, mark as modified
+                if (history_index != -1) {
+                    history_index = -1;
+                }
+                input_buffer[buffer_index++] = c;  // Store character in buffer
+                cli_put_char(c, WHITE, ZOOM);  // Display character
             }
-        } else if (c == '\t') { // tab to autocomplete
-            autocomplete(input_buffer, &buffer_index);
-        } else {
-            // If we're typing after recalling a command, mark as modified
-            if (history_index != -1) {
-                history_index = -1;
-            }
-            input_buffer[buffer_index++] = c;  // Store character in buffer
-            cli_put_char(c, WHITE, ZOOM);  // Display character
         }
     }
 }
@@ -572,7 +585,8 @@ void show_command_help(char* command_name){
     }
 }
 
-void video_playback(const unsigned long** frames, uint32_t frame_count, int x, int y, int src_width, int src_height, int max_width, int max_height) {
+void video_playback(const unsigned long** frames, uint32_t frame_count, int x, int y, int src_width, int src_height, int max_width, int max_height) 
+{
     uint32_t current_frame = 0;
     
     // Initialize timer for first frame
@@ -597,7 +611,7 @@ void video_playback(const unsigned long** frames, uint32_t frame_count, int x, i
         // 3. Prepare timer for next frame
         set_wait_timer(1, FRAME_US);
         
-        // 4. Advance to next frame (with optional loop handling)
+        // 4. Advance to next frame 
         current_frame++;
         if (current_frame >= frame_count) {
             current_frame = 0; // Loop video if desired
