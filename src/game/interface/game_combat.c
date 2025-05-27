@@ -567,6 +567,11 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                                 if (protagonists[current_player_turn].current_hp >= 12) {
                                     protagonists[current_player_turn].current_hp -= 12;
                                     deal_damage(selected_enemy, skill_damage);
+                                    if(enemy[selected_enemy].current_hp <= 0){ 
+                                        num_enemies--;
+                                    }
+                                    redraw_combat_screen(current_player_turn, selected_enemy);
+                                    redraw_combat_screen(current_player_turn, selected_enemy);
                                 } else {
                                     uart_puts("[DEBUG] Not enough HP for Skill 1, fallback to normal attack\n");
                                     deal_damage(selected_enemy, base_damage);
@@ -574,6 +579,11 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                                 is_previous_screen_skill_menu = 0;
                             } else {
                                 deal_damage(selected_enemy, base_damage);
+                                if(enemy[selected_enemy].current_hp <= 0){
+                                    num_enemies--;
+                                }
+                                redraw_combat_screen(current_player_turn, selected_enemy);
+                                redraw_combat_screen(current_player_turn, selected_enemy);
                             }
 
                             protagonists[current_player_turn].has_acted = 1;  
@@ -585,8 +595,8 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                             }
                             
                             // Redraw the screen
-                            redraw_combat_screen(current_player_turn, 0);
-                            redraw_combat_screen(current_player_turn, 0);
+                            redraw_combat_screen(current_player_turn, selected_enemy);
+                            redraw_combat_screen(current_player_turn, selected_enemy);
                             // uart_puts("[DEBUG] Attack target confirmed\n");
                         } else if (input == KEY_ESC) {
                             current_screen = SCREEN_COMBAT;
