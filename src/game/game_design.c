@@ -70,6 +70,8 @@ void design_screen_loop()
     reset_ally_sprites();
     init_enemies();
     reset_enemy_sprites();
+    current_player_turn = 0;
+    reset_player_turns(protagonists, num_protagonists);
     while (1)
     {
         if (first_frame)
@@ -162,8 +164,8 @@ void init_enemies()
 
 void redraw_combat_screen(int current_player_turn, int selected_enemy_index)
 {
-    uart_putint(current_player_turn);
-    uart_puts("\n");
+    // uart_putint(current_player_turn);
+    //uart_puts("\n");
     // Draw background
     drawImage_double_buffering(MAP_START_X, MAP_START_Y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
 

@@ -38,6 +38,19 @@ int persona_option = 0;
 int selected_persona = 0; // 0 for Orpheus, 1 for Pixie
 int skill_option = 0;
 
+
+int str_equals(const char *a, const char *b)
+{
+    while (*a && *b)
+    {
+        if (*a != *b)
+            return 0;
+        a++;
+        b++;
+    }
+    return (*a == '\0' && *b == '\0');
+}
+
 void int_to_str(int num, char *buffer)
 {
     if (num == 0)
@@ -170,67 +183,67 @@ void draw_persona_option_screen(int selected_option)
     // swap_buffers();
 }
 
-void draw_skill_option_screen(Character character, int option, int character_index)
+void draw_skill_option_screen(Character character, int option)
 {
-    if (character.is_main_character)
+    if (str_equals(character.name, "Hero") == 1)
     {
         if (character.current_persona == PERSONA_ORPHEUS)
         {
             if (option == 0)
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options1_For_Orpheus, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options1_For_Orpheus,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
             else
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options2_For_Orpheus, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options2_For_Orpheus,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
         }
         else
         {
             if (option == 0)
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options1_For_Pixie, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options1_For_Pixie,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
             else
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options2_For_Pixie, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options2_For_Pixie,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
         }
     }
     else
     {
-        switch (character_index)
+        if (str_equals(character.name, "Ally1") == 1)
         {
-        case 1:
             if (option == 0)
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options1_For_Ally1, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options1_For_Ally1,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
             else
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options2_For_Ally1, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
-            break;
-        case 2:
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options2_For_Ally1,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
+        }
+        else if (str_equals(character.name, "Ally2") == 1)
+        {
             if (option == 0)
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options1_For_Ally2, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options1_For_Ally2,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
             else
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options2_For_Ally2, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
-            break;
-        case 3:
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options2_For_Ally2,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
+        }
+        else if (str_equals(character.name, "Ally3") == 1)
+        {
             if (option == 0)
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options1_For_Ally3, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options1_For_Ally3,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
             else
-                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X,
-                                           PIXIE_SKILL_OPTION_SCRREN_Y, epd_bitmap_Display_Skil_Options2_For_Ally3, PIXIE_SKILL_OPTION_WIDTH,
-                                           PIXIE_SKILL_OPTION_HEIGHT);
-            break;
+                drawImage_double_buffering(PIXIE_SKILL_OPTION_SCRREN_X, PIXIE_SKILL_OPTION_SCRREN_Y,
+                                           epd_bitmap_Display_Skil_Options2_For_Ally3,
+                                           PIXIE_SKILL_OPTION_WIDTH, PIXIE_SKILL_OPTION_HEIGHT);
         }
     }
 }
@@ -274,10 +287,16 @@ int current_player_turn = 0; // 0 to 3 for 4 characters
 int selected_enemy = 0;
 int is_previous_screen_skill_menu = 0;
 int exit_ui = 0;  // <-- Flag to exit loop
+int display_one_time_screen_combat = 1;
+int display_one_time_persona_menu = 1;
+int display_one_time_skill_menu = 1;
+int display_one_time_select_enemy_menu = 1;
 
 void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyModel enemy[], int num_enemies) {
     redraw_combat_screen(current_player_turn, 0);
     redraw_combat_screen(current_player_turn, 0);
+    current_player_turn = 0;
+    reset_player_turns(protagonists, num_protagonists);
     int button_pressed_attack = 0;
     int button_pressed_item = 0;
     int button_pressed_persona = 0;
@@ -312,7 +331,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
         uart_puts(" HP\n");
     }
 
-    // uart_puts("[DEBUG] Current screen: ");
+    // uart_puts(" Current screen: ");
     // uart_dec(current_screen);
     // uart_puts("\n");
 
@@ -330,17 +349,29 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
         // Read input
         if (uart_input_available())
         {
-            uart_puts("[DEBUG] Input detected\n");
+            // uart_puts(" Input detected\n");
             char input = uart_getc();
             if (current_screen == SCREEN_COMBAT)
             {
                 // Character *current = &protagonists[current_player_turn];
-                // uart_puts("[DEBUG] Switched to SCREEN_COMBAT\n");
+                if(display_one_time_screen_combat){
+                    uart_puts("Switched to SCREEN_COMBAT\n");
+                    uart_puts("Please select an action you would like ");
+                    uart_puts(protagonists[current_player_turn].name);
+                    uart_puts(" to perform \n");
+                    uart_puts("Press q to attack\n");
+                    uart_puts("Press w to select item\n");
+                    uart_puts("Press e to select persona (only main character can use this feature)\n");
+                    uart_puts("Press r to run \n");
+                    uart_puts("Press t to select a skill \n");
+                    display_one_time_screen_combat = 0;
+                }
+                
                 if (input == ATTACK) {
                     button_pressed_attack = 1;
                     button_pressed_time = start_time;
-                    uart_puts("ATTACK\n");
-
+                    uart_puts("YOU SELECT ATTACK\n");
+                    uart_puts("YOU MAY NOW SELECT AN ENEMY TO ATTACK\n");
                     selected_enemy = 0;  // Default target
                     current_screen = SCREEN_SELECT_ENEMY;
                     redraw_combat_screen(current_player_turn, 0);
@@ -349,16 +380,20 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                 }
                 if (input == ITEM)
                 {
+                    uart_puts("YOU SELECT ITEM\n");
+                    uart_puts("YOU ARE NOW HEALLING\n");
                     heal_character_25_percent(&protagonists[0]);
                     button_pressed_item = 1;
                     button_pressed_time = start_time;
                     redraw_combat_screen(current_player_turn, 0);
                     redraw_combat_screen(current_player_turn, 0);
-                    uart_puts("ITEM\n");
+                    // uart_puts("ITEM\n");
                     // exit_ui = 0;
                 }
                 if (input == PERSONA)
                 {
+                    uart_puts("YOU SELECT PERSONA\n");
+                    uart_puts("PLEASE CHOOSE A PERSONA\n");
                     if (protagonists[current_player_turn].is_main_character)
                     {
                         button_pressed_persona = 1;
@@ -366,11 +401,11 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                         persona_option = protagonists[current_player_turn].current_persona;
                         draw_persona_option_screen(persona_option);
                         current_screen = SCREEN_PERSONA_MENU;
-                        uart_puts("PERSONA\n");
+                        // uart_puts("PERSONA\n");
                     }
                     else
                     {
-                        uart_puts("[DEBUG] Ally cannot use persona\n");
+                        uart_puts("Ally cannot use persona\n");
                     }
                     // exit_ui = 0;
                 }
@@ -378,19 +413,23 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                 {
                     button_pressed_run = 1;
                     button_pressed_time = start_time;
-                    uart_puts("RUN\n");
+                    uart_puts("YOU SELECT RUN\n");
+                    uart_puts("EXIT BATTLE SCRREN\n");
                     protag_world_x -= 50; // or any direction away from the enemy
                     protag_world_y -= 50;
                     exit_ui = 1;
                 }
                 if (input == SKILL)
                 {
+                    uart_puts("YOU SELECT SKILL\n");
+                    uart_puts("PLEASE CHOOSE A SKILL TO USE\n");
                     button_pressed_skill = 1;
                     button_pressed_time = start_time;
                     skill_option = 0; // Start at top
-                    draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
+                    draw_skill_option_screen(protagonists[current_player_turn], skill_option);
                     current_screen = SCREEN_SKILL_MENU;
-                    uart_puts("SKILL\n");
+                    
+                    // uart_puts("SKILL\n");
                     // exit_ui = 0;
                 }
                 if (current_player_turn >= num_protagonists)
@@ -402,16 +441,26 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
             }
             else if (current_screen == SCREEN_PERSONA_MENU)
             {
-                uart_puts("[DEBUG] Switched to SCREEN_PERSONA_MENU\n");
+                if(display_one_time_persona_menu){
+                    uart_puts("Switched to SCREEN_PERSONA_MENU\n");
+                    uart_puts("Press O to scroll up\n");
+                    uart_puts("Press L to scroll down\n");
+                    uart_puts("Press Enter to confirm\n");
+                    uart_puts("Press Esc to escapt the select screen\n");
+                    display_one_time_persona_menu = 0;
+                }
+                
                 draw_persona_option_screen(persona_option);
                 if (input == 'o' && persona_option > 0)
                 {
                     persona_option--;
+                    uart_puts("Yoou select Orpheuse\n");
                     draw_persona_option_screen(persona_option);
                 }
                 else if (input == 'l' && persona_option < 1)
                 {
                     persona_option++;
+                    uart_puts("Yoou select Pixie\n");
                     draw_persona_option_screen(persona_option);
                 }
                 else if (input == KEY_ENTER)
@@ -424,7 +473,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     button_pressed_persona = 0;
                     redraw_combat_screen(current_player_turn, 0);
                     redraw_combat_screen(current_player_turn, 0);
-                    uart_puts("[DEBUG] Persona Confirmed, returning to combat\n");
+                    uart_puts("Persona Confirmed, returning to combat\n");
                 }
                 else if (input == KEY_ESC)
                 { // ESC to cancel
@@ -432,13 +481,21 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     button_pressed_persona = 0; // <-- reset state
                     redraw_combat_screen(current_player_turn, 0);
                     redraw_combat_screen(current_player_turn, 0);
-                    uart_puts("[DEBUG] Persona Cancelled, returning to combat\n");
+                    uart_puts("Persona Cancelled, returning to combat\n");
                 }
             }
             else if (current_screen == SCREEN_SKILL_MENU)
             {
                 // int max_skills = (selected_persona == 0) ? orpheus_skill_bitmap_allArray_LEN : pixie_skill_bitmap_allArray_LEN;
-                uart_puts("[DEBUG] Switched to SCREEN_SKILL_MENU\n");
+                if(display_one_time_skill_menu){
+                    uart_puts("Switched to SCREEN_SKILL_MENU\n");
+                    uart_puts("Press O to scroll up\n");
+                    uart_puts("Press L to scroll down\n");
+                    uart_puts("Press Enter to confirm\n");
+                    uart_puts("Press Esc to escapt the skill select screen\n");
+                    display_one_time_skill_menu = 0;
+                }
+                
                 int is_main = protagonists[current_player_turn].is_main_character;
                 int max_skills = 2;
 
@@ -456,13 +513,15 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     max_skills = 2; 
                 }
 
-                draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
+                draw_skill_option_screen(protagonists[current_player_turn], skill_option);
                 if (input == 'o' && skill_option > 0) {
                     skill_option = 0;
-                    draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
+                    uart_puts("You select single target attack\n");
+                    draw_skill_option_screen(protagonists[current_player_turn], skill_option);
                 } else if (input == 'l' && skill_option < max_skills - 1) {
                     skill_option = 1;
-                    draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
+                    uart_puts("You select all enemy attack\n");
+                    draw_skill_option_screen(protagonists[current_player_turn], skill_option);
                 }
                 else if (input == KEY_ESC)
                 {
@@ -470,7 +529,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     button_pressed_skill = 0;
                     redraw_combat_screen(current_player_turn, 0);
                     redraw_combat_screen(current_player_turn, 0);
-                    // uart_puts("[DEBUG] Skill Menu Cancelled, returning to combat\n");
+                    // uart_puts(" Skill Menu Cancelled, returning to combat\n");
                 } else if (input == KEY_ENTER) {  // Enter
                     // selected_persona = persona_option; // <-- Save selected persona
                     if (skill_option == 0) {
@@ -479,7 +538,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                         is_previous_screen_skill_menu = 1;
                         current_screen = SCREEN_SELECT_ENEMY;
                     } else {
-                        uart_puts("[DEBUG] Not enough HP for Skill 1\n");
+                        uart_puts("Not enough HP for Skill 1\n");
                     }
                     } else if (skill_option == 1) {
                         // Skill 2: AoE Skill
@@ -506,86 +565,119 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                             redraw_combat_screen(current_player_turn, 0);
                             redraw_combat_screen(current_player_turn, 0);
                         } else {
-                            uart_puts("[DEBUG] Not enough HP for Skill 2\n");
+                            uart_puts("Not enough HP for Skill 2\n");
                         }
                     }
                     button_pressed_persona = 0; // <-- ensure button state is reset 
                     redraw_combat_screen(current_player_turn, 0);
                     redraw_combat_screen(current_player_turn, 0);  
-                    // uart_puts("[DEBUG] Skill Menu Confirmed, returning to combat\n");
+                    // uart_puts(" Skill Menu Confirmed, returning to combat\n");
                 }
             }
             else if (current_screen == SCREEN_SELECT_ENEMY && selected_enemy >= 0) {
-                uart_puts("[DEBUG] Switched to SCREEN_SELECT_ENEMY\n");
-                int selecting = 1;
+                if(display_one_time_select_enemy_menu){
+                    uart_puts("Switched to SCREEN_SELECT_ENEMY\n");
+                    uart_puts("Press P to move to the next enemy\n");
+                    uart_puts("Press I to move to the previous enemy\n");
+                    uart_puts("Press Enter to confirm\n");
+                    uart_puts("Press Esc to escape the enemy select screen\n");
+                    display_one_time_select_enemy_menu = 0;
+                }
+                
                 redraw_combat_screen(current_player_turn, selected_enemy);
                 redraw_combat_screen(current_player_turn, selected_enemy);
-                while (selecting)
+                if (input == 'i' && selected_enemy > 0)
                 {
-                    if (uart_input_available())
-                    {
-                        char input = uart_getc(); // <--- Get input each loop
-                        if (input == 'i' && selected_enemy > 0)
-                        {
-                            selected_enemy--;
-                            redraw_combat_screen(current_player_turn, selected_enemy);
-                            redraw_combat_screen(current_player_turn, selected_enemy);
-                        }
-                        else if (input == 'p' && selected_enemy < num_enemies - 1)
-                        {
-                            selected_enemy++;
-                            redraw_combat_screen(current_player_turn, selected_enemy);
-                            redraw_combat_screen(current_player_turn, selected_enemy);
-                        }
-                        else if (input == KEY_ENTER)
-                        {
-                            protagonists[current_player_turn].current_action.type = ACTION_ATTACK;
-                            protagonists[current_player_turn].current_action.target_enemy = selected_enemy;
-                            current_screen = SCREEN_COMBAT;
-                            button_pressed_attack = 0;
-                            selecting = 0;
-                            // === Apply attack/skill BEFORE changing player turn ===
-                            int base_damage = 20;
-                            int skill_damage = 50;
+                    selected_enemy--;
+                    uart_puts("You select ");
+                    uart_puts(enemy[selected_enemy].name);
+                    uart_puts("\n");
+                    redraw_combat_screen(current_player_turn, selected_enemy);
+                    redraw_combat_screen(current_player_turn, selected_enemy);
+                }
+                else if (input == 'p' && selected_enemy < num_enemies - 1)
+                {
+                    selected_enemy++;
+                    uart_puts("You select ");
+                    uart_puts(enemy[selected_enemy].name);
+                    uart_puts("\n");
+                    redraw_combat_screen(current_player_turn, selected_enemy);
+                    redraw_combat_screen(current_player_turn, selected_enemy);
+                }
+                else if (input == KEY_ENTER)
+                {
+                    protagonists[current_player_turn].current_action.type = ACTION_ATTACK;
+                    protagonists[current_player_turn].current_action.target_enemy = selected_enemy;
+                    current_screen = SCREEN_COMBAT;
+                    button_pressed_attack = 0;
+                    // === Apply attack/skill BEFORE changing player turn ===
+                    int base_damage = 20;
+                    int skill_damage = 50;
 
-                            if (is_previous_screen_skill_menu == 1) {
-                                if (protagonists[current_player_turn].current_hp >= 12) {
-                                    protagonists[current_player_turn].current_hp -= 12;
-                                    deal_damage(selected_enemy, skill_damage);
-                                } else {
-                                    uart_puts("[DEBUG] Not enough HP for Skill 1, fallback to normal attack\n");
-                                    deal_damage(selected_enemy, base_damage);
-                                }
-                                is_previous_screen_skill_menu = 0;
-                            } else {
-                                deal_damage(selected_enemy, base_damage);
+                    if (is_previous_screen_skill_menu == 1) {
+                        if (protagonists[current_player_turn].current_hp >= 12) {
+                            protagonists[current_player_turn].current_hp -= 12;
+                            deal_damage(selected_enemy, skill_damage);
+                            if(enemy[selected_enemy].current_hp <= 0){
+                                for (int i = selected_enemy; i < num_enemies - 1; i++) {
+                                    enemy[i] = enemy[i + 1];
+                                    enemy_sprites[i] = enemy_sprites[i + 1];
+                                    enemy_sprites[i].enemy = &enemy[i];  
+                                } 
+                                num_enemies--;
                             }
 
-                            protagonists[current_player_turn].has_acted = 1;  
-                            current_player_turn = (current_player_turn + 1) % num_protagonists;
-                            if (all_characters_have_acted(protagonists, num_protagonists)) {
-                                current_screen = SCREEN_ENEMY_COUNTER_ATTACK;
-                            } else {
-                                current_screen = SCREEN_COMBAT;
+                            if (selected_enemy >= num_enemies && num_enemies > 0) {
+                                selected_enemy = num_enemies - 1;
                             }
-                            
-                            // Redraw the screen
-                            redraw_combat_screen(current_player_turn, 0);
-                            redraw_combat_screen(current_player_turn, 0);
-                            // uart_puts("[DEBUG] Attack target confirmed\n");
-                        } else if (input == KEY_ESC) {
-                            current_screen = SCREEN_COMBAT;
-                            button_pressed_attack = 0;
-                            selecting = 0;
-                            redraw_combat_screen(current_player_turn, 0);
-                            redraw_combat_screen(current_player_turn, 0);
-                            // uart_puts("[DEBUG] Attack target cancelled\n");
+                            redraw_combat_screen(current_player_turn, selected_enemy);
+                            redraw_combat_screen(current_player_turn, selected_enemy);
+                        } else {
+                            uart_puts("Not enough HP for Skill 1, fallback to normal attack\n");
+                            deal_damage(selected_enemy, base_damage);
                         }
+                        is_previous_screen_skill_menu = 0;
+                    } else {
+                        deal_damage(selected_enemy, base_damage);
+                        if(enemy[selected_enemy].current_hp <= 0){
+                            for (int i = selected_enemy; i < num_enemies - 1; i++) {
+                                enemy[i] = enemy[i + 1];
+                                enemy_sprites[i] = enemy_sprites[i + 1];
+                                enemy_sprites[i].enemy = &enemy[i];  
+                            } 
+                            num_enemies--;
+
+                            if (selected_enemy >= num_enemies && num_enemies > 0) {
+                                selected_enemy = num_enemies - 1;
+                            }
+                        }
+                        redraw_combat_screen(current_player_turn, selected_enemy);
+                        redraw_combat_screen(current_player_turn, selected_enemy);
                     }
+
+                    protagonists[current_player_turn].has_acted = 1;  
+                    current_player_turn = (current_player_turn + 1) % num_protagonists;
+                    if (all_characters_have_acted(protagonists, num_protagonists)) {
+                        current_screen = SCREEN_ENEMY_COUNTER_ATTACK;
+                    } else {
+                        current_screen = SCREEN_COMBAT;
+                    }
+                    
+                    // Redraw the screen
+                    redraw_combat_screen(current_player_turn, selected_enemy);
+                    redraw_combat_screen(current_player_turn, selected_enemy);
+                    uart_puts("Attack target confirmed\n");
+                } else if (input == KEY_ESC) {
+                    current_screen = SCREEN_COMBAT;
+                    button_pressed_attack = 0;
+                    redraw_combat_screen(current_player_turn, 0);
+                    redraw_combat_screen(current_player_turn, 0);
+                    uart_puts("Attack target cancelled\n");
                 }
             }
             else if (current_screen == SCREEN_ENEMY_COUNTER_ATTACK)
             {
+                uart_puts("Enemy counter attack");
                 enemy_turn(protagonists, num_protagonists);
                 reset_player_turns(protagonists, num_protagonists);
                 current_screen = SCREEN_COMBAT;
@@ -656,7 +748,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
 
         if (current_screen == SCREEN_SKILL_MENU)
         {
-            draw_skill_option_screen(protagonists[current_player_turn], skill_option, current_player_turn);
+            draw_skill_option_screen(protagonists[current_player_turn], skill_option);
         }
 
         swap_buffers();

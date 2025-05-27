@@ -5,11 +5,13 @@
 #include "../../include/models/character_sprite.h"
 #include "../../include/bitmaps/enemy1.h"
 #include "../../include/bitmaps/enemy2.h"
+#include "../../include/bitmaps/game_over_screen.h"
 #include "../../include/uart0.h"
 #include "../../include/utils.h"
 #include "../../include/game_design.h"
 #include "../../include/game.h"
 #include "../../include/game_combat.h"
+#include "../../include/framebf.h"
 
 int num_enemies = 3;  // <- THIS IS THE DEFINITION
 int num_protagonists = 4;
@@ -127,13 +129,14 @@ void enemy_turn(Character *protagonists, int num_protagonists) {
         redraw_combat_screen(0, 0);
         redraw_combat_screen(0, 0);
 
-        wait_us(500000);  
+        wait_us(500000);
     }
 }
 
 void reset_player_turns(Character *protagonists, int num_protagonists) {
     for (int i = 0; i < num_protagonists; ++i) {
         protagonists[i].has_acted = 0;
+        current_player_turn = 0;
     }
 }
 
@@ -161,4 +164,13 @@ void remove_protagonist(int index) {
     }
 
     num_protagonists--;  // reduce the count
+
+
+    if(num_protagonists == 0) {
+        while (1)
+        {
+            drawImage_double_buffering(0, 0, epd_bitmap_game_over_screen, 1024, 768);
+        }
+        
+    }
 }
