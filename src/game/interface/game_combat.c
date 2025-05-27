@@ -532,99 +532,89 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
             }
             else if (current_screen == SCREEN_SELECT_ENEMY && selected_enemy >= 0) {
                 uart_puts("[DEBUG] Switched to SCREEN_SELECT_ENEMY\n");
-                int selecting = 1;
                 redraw_combat_screen(current_player_turn, selected_enemy);
                 redraw_combat_screen(current_player_turn, selected_enemy);
-                while (selecting)
+                if (input == 'i' && selected_enemy > 0)
                 {
-                    if (uart_input_available())
-                    {
-                        char input = uart_getc(); // <--- Get input each loop
-                        if (input == 'i' && selected_enemy > 0)
-                        {
-                            selected_enemy--;
-                            redraw_combat_screen(current_player_turn, selected_enemy);
-                            redraw_combat_screen(current_player_turn, selected_enemy);
-                        }
-                        else if (input == 'p' && selected_enemy < num_enemies - 1)
-                        {
-                            selected_enemy++;
-                            redraw_combat_screen(current_player_turn, selected_enemy);
-                            redraw_combat_screen(current_player_turn, selected_enemy);
-                        }
-                        else if (input == KEY_ENTER)
-                        {
-                            protagonists[current_player_turn].current_action.type = ACTION_ATTACK;
-                            protagonists[current_player_turn].current_action.target_enemy = selected_enemy;
-                            current_screen = SCREEN_COMBAT;
-                            button_pressed_attack = 0;
-                            selecting = 0;
-                            // === Apply attack/skill BEFORE changing player turn ===
-                            int base_damage = 20;
-                            int skill_damage = 50;
+                    selected_enemy--;
+                    redraw_combat_screen(current_player_turn, selected_enemy);
+                    redraw_combat_screen(current_player_turn, selected_enemy);
+                }
+                else if (input == 'p' && selected_enemy < num_enemies - 1)
+                {
+                    selected_enemy++;
+                    redraw_combat_screen(current_player_turn, selected_enemy);
+                    redraw_combat_screen(current_player_turn, selected_enemy);
+                }
+                else if (input == KEY_ENTER)
+                {
+                    protagonists[current_player_turn].current_action.type = ACTION_ATTACK;
+                    protagonists[current_player_turn].current_action.target_enemy = selected_enemy;
+                    current_screen = SCREEN_COMBAT;
+                    button_pressed_attack = 0;
+                    // === Apply attack/skill BEFORE changing player turn ===
+                    int base_damage = 20;
+                    int skill_damage = 50;
 
-                            if (is_previous_screen_skill_menu == 1) {
-                                if (protagonists[current_player_turn].current_hp >= 12) {
-                                    protagonists[current_player_turn].current_hp -= 12;
-                                    deal_damage(selected_enemy, skill_damage);
-                                    if(enemy[selected_enemy].current_hp <= 0){
-                                        for (int i = selected_enemy; i < num_enemies - 1; i++) {
-                                            enemy[i] = enemy[i + 1];
-                                            enemy_sprites[i] = enemy_sprites[i + 1];
-                                            enemy_sprites[i].enemy = &enemy[i];  
-                                        } 
-                                        num_enemies--;
-                                    }
-
-                                    if (selected_enemy >= num_enemies && num_enemies > 0) {
-                                        selected_enemy = num_enemies - 1;
-                                    }
-                                    redraw_combat_screen(current_player_turn, selected_enemy);
-                                    redraw_combat_screen(current_player_turn, selected_enemy);
-                                } else {
-                                    uart_puts("[DEBUG] Not enough HP for Skill 1, fallback to normal attack\n");
-                                    deal_damage(selected_enemy, base_damage);
-                                }
-                                is_previous_screen_skill_menu = 0;
-                            } else {
-                                deal_damage(selected_enemy, base_damage);
-                                if(enemy[selected_enemy].current_hp <= 0){
-                                    for (int i = selected_enemy; i < num_enemies - 1; i++) {
-                                        enemy[i] = enemy[i + 1];
-                                        enemy_sprites[i] = enemy_sprites[i + 1];
-                                        enemy_sprites[i].enemy = &enemy[i];  
-                                    } 
-                                    num_enemies--;
-
-                                    if (selected_enemy >= num_enemies && num_enemies > 0) {
-                                        selected_enemy = num_enemies - 1;
-                                    }
-                                }
-                                redraw_combat_screen(current_player_turn, selected_enemy);
-                                redraw_combat_screen(current_player_turn, selected_enemy);
+                    if (is_previous_screen_skill_menu == 1) {
+                        if (protagonists[current_player_turn].current_hp >= 12) {
+                            protagonists[current_player_turn].current_hp -= 12;
+                            deal_damage(selected_enemy, skill_damage);
+                            if(enemy[selected_enemy].current_hp <= 0){
+                                for (int i = selected_enemy; i < num_enemies - 1; i++) {
+                                    enemy[i] = enemy[i + 1];
+                                    enemy_sprites[i] = enemy_sprites[i + 1];
+                                    enemy_sprites[i].enemy = &enemy[i];  
+                                } 
+                                num_enemies--;
                             }
 
-                            protagonists[current_player_turn].has_acted = 1;  
-                            current_player_turn = (current_player_turn + 1) % num_protagonists;
-                            if (all_characters_have_acted(protagonists, num_protagonists)) {
-                                current_screen = SCREEN_ENEMY_COUNTER_ATTACK;
-                            } else {
-                                current_screen = SCREEN_COMBAT;
+                            if (selected_enemy >= num_enemies && num_enemies > 0) {
+                                selected_enemy = num_enemies - 1;
                             }
-                            
-                            // Redraw the screen
                             redraw_combat_screen(current_player_turn, selected_enemy);
                             redraw_combat_screen(current_player_turn, selected_enemy);
-                            // uart_puts("[DEBUG] Attack target confirmed\n");
-                        } else if (input == KEY_ESC) {
-                            current_screen = SCREEN_COMBAT;
-                            button_pressed_attack = 0;
-                            selecting = 0;
-                            redraw_combat_screen(current_player_turn, 0);
-                            redraw_combat_screen(current_player_turn, 0);
-                            // uart_puts("[DEBUG] Attack target cancelled\n");
+                        } else {
+                            uart_puts("[DEBUG] Not enough HP for Skill 1, fallback to normal attack\n");
+                            deal_damage(selected_enemy, base_damage);
                         }
+                        is_previous_screen_skill_menu = 0;
+                    } else {
+                        deal_damage(selected_enemy, base_damage);
+                        if(enemy[selected_enemy].current_hp <= 0){
+                            for (int i = selected_enemy; i < num_enemies - 1; i++) {
+                                enemy[i] = enemy[i + 1];
+                                enemy_sprites[i] = enemy_sprites[i + 1];
+                                enemy_sprites[i].enemy = &enemy[i];  
+                            } 
+                            num_enemies--;
+
+                            if (selected_enemy >= num_enemies && num_enemies > 0) {
+                                selected_enemy = num_enemies - 1;
+                            }
+                        }
+                        redraw_combat_screen(current_player_turn, selected_enemy);
+                        redraw_combat_screen(current_player_turn, selected_enemy);
                     }
+
+                    protagonists[current_player_turn].has_acted = 1;  
+                    current_player_turn = (current_player_turn + 1) % num_protagonists;
+                    if (all_characters_have_acted(protagonists, num_protagonists)) {
+                        current_screen = SCREEN_ENEMY_COUNTER_ATTACK;
+                    } else {
+                        current_screen = SCREEN_COMBAT;
+                    }
+                    
+                    // Redraw the screen
+                    redraw_combat_screen(current_player_turn, selected_enemy);
+                    redraw_combat_screen(current_player_turn, selected_enemy);
+                    // uart_puts("[DEBUG] Attack target confirmed\n");
+                } else if (input == KEY_ESC) {
+                    current_screen = SCREEN_COMBAT;
+                    button_pressed_attack = 0;
+                    redraw_combat_screen(current_player_turn, 0);
+                    redraw_combat_screen(current_player_turn, 0);
+                    // uart_puts("[DEBUG] Attack target cancelled\n");
                 }
             }
             else if (current_screen == SCREEN_ENEMY_COUNTER_ATTACK)
