@@ -291,6 +291,8 @@ int exit_ui = 0;  // <-- Flag to exit loop
 void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyModel enemy[], int num_enemies) {
     redraw_combat_screen(current_player_turn, 0);
     redraw_combat_screen(current_player_turn, 0);
+    current_player_turn = 0;
+    reset_player_turns(protagonists, num_protagonists);
     int button_pressed_attack = 0;
     int button_pressed_item = 0;
     int button_pressed_persona = 0;

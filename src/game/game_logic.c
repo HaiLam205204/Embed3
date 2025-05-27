@@ -136,6 +136,7 @@ void enemy_turn(Character *protagonists, int num_protagonists) {
 void reset_player_turns(Character *protagonists, int num_protagonists) {
     for (int i = 0; i < num_protagonists; ++i) {
         protagonists[i].has_acted = 0;
+        current_player_turn = 0;
     }
 }
 

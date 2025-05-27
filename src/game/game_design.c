@@ -70,6 +70,8 @@ void design_screen_loop()
     reset_ally_sprites();
     init_enemies();
     reset_enemy_sprites();
+    current_player_turn = 0;
+    reset_player_turns(protagonists, num_protagonists);
     while (1)
     {
         if (first_frame)
