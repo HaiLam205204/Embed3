@@ -371,7 +371,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                     button_pressed_attack = 1;
                     button_pressed_time = start_time;
                     uart_puts("YOU SELECT ATTACK\n");
-                    uart_puts("YOU MAY NOW SELECT AN ENEMY TO ATTACK");
+                    uart_puts("YOU MAY NOW SELECT AN ENEMY TO ATTACK\n");
                     selected_enemy = 0;  // Default target
                     current_screen = SCREEN_SELECT_ENEMY;
                     redraw_combat_screen(current_player_turn, 0);
@@ -454,13 +454,13 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                 if (input == 'o' && persona_option > 0)
                 {
                     persona_option--;
-                    uart_puts("Yoou select Orpheuse");
+                    uart_puts("Yoou select Orpheuse\n");
                     draw_persona_option_screen(persona_option);
                 }
                 else if (input == 'l' && persona_option < 1)
                 {
                     persona_option++;
-                    uart_puts("Yoou select Pixie");
+                    uart_puts("Yoou select Pixie\n");
                     draw_persona_option_screen(persona_option);
                 }
                 else if (input == KEY_ENTER)
