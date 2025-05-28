@@ -20,25 +20,11 @@ void draw_item_button(int is_pressed, Character *ch);
 void draw_persona_button(int is_pressed);
 void draw_run_button(int is_pressed);
 void draw_skill_button(int is_pressed);
-void action_button();
-void show_persona_selection_screen();
-void screen_combat_loop();
-void draw_all_buttons();
-void combat_utility_UI();
-void clear_persona_option_screen(); 
 void build_item_text(char *item_text, int quantity);
 void draw_persona_option_screen(int selected_option);
-// void draw_skill_option_screen(int persona, int option);
-
-// void draw_skill_option_screen(Character character, int option, int character_index);
-
 void draw_skill_option_screen(Character character, int option);
 
-void wait_for_button_release_animation();
-
-int get_enemy_x_position(int index);
-int get_enemy_y_position(int index);
-void draw_attack_target_screen(int target_index);
+void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyModel enemy[], int num_enemies);
 
 void draw_turn_indicator(CharacterSprite* sprite, int triangle_x, int triangle_y);
 void draw_enemy_selected(EnemySprite *sprite, int triangle_x, int triangle_y );

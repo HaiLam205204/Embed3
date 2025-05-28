@@ -405,17 +405,6 @@ void updateRewardPanel(int isSelected){
     drawString_double_buffering(700, bottom_btn_y + 10, bottom_btn, TEXT_COLOR, TEXT_ZOOM);
 }
 
-void clear_screen_buffer()
-{
-    for (int y = 0; y < SCREEN_HEIGHT; y++)
-    {
-        for (int x = 0; x < SCREEN_WIDTH; x++)
-        {
-            drawPixelARGB32_double_buffering(x, y, 0xFF000000); // black
-        }
-    }
-}
-
 void displayRewardScreen()
 {
 

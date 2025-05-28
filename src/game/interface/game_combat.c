@@ -5,7 +5,6 @@
 #include "../../../include/renderFrame.h"
 #include "../../../include/uart0.h"
 #include "../../../include/utils.h"
-#include "../../../include/display_skill.h"
 #include "../../../include/bitmaps/display_persona.h"
 #include "../../../include/framebf.h"
 #include "../../../include/game_design.h"

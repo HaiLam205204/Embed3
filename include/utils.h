@@ -28,9 +28,3 @@ uint64_t get_arm_system_time(void);
 
 // Busy wait for specified microseconds (you provide implementation)
 void wait_us(uint64_t usVal);
-
-// // Print a number (you provide implementation)
-// void print_number(uint64_t n);
-
-// // Run the sequence: print random number 3 times every 2 seconds
-// void run_random_prints(void);

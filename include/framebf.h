@@ -9,7 +9,6 @@ void drawImage(int x, int y, const unsigned long *image, int image_width, int im
 void drawImageScaled(int x, int y, const unsigned long *image, int src_width, int src_height, int dest_width, int dest_height);
 void drawImageScaledAspect(int x, int y, const unsigned long *image, int src_width, int src_height, int max_width, int max_height);
 void swap_buffers();
-void clear_screen(unsigned long color);
 unsigned char *get_drawing_buffer();
 void drawPixelARGB32_double_buffering(int x, int y, unsigned int attr);
 void drawImage_double_buffering(int x, int y, const unsigned long *image, int image_width, int image_height);

@@ -195,16 +195,6 @@ void swap_buffers()
     // uart_puts("\n");
 }
 
-// Clear entire back buffer
-void clear_screen(unsigned long color)
-{
-    unsigned long *buf = (unsigned long *)get_drawing_buffer();
-    for (int i = 0; i < (pitch / 4) * height; i++)
-    {
-        buf[i] = color;
-    }
-}
-
 /**
  * Get pointer to the NOT currently displayed drawing at (back) buffer
  */
