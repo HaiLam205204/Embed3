@@ -146,7 +146,6 @@ void draw_item_panel(Character *ch)
 {
     char item_text[20];
     build_item_text(item_text, ch->healing_item_quantity);
-    const char *line1 = "ITEM";
     const char *line2 = "Function: healing 25% the maximun HP";
     const char *line3 = "Objective: Only for the main Character";
 
