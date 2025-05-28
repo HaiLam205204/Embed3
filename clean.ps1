@@ -1,9 +1,9 @@
 $basePath = '.\build'
 
-# Get all immediate subdirectories inside .\build
-$subDirs = Get-ChildItem -Path $basePath -Directory | Select-Object -ExpandProperty FullName
+# Get all subdirectories recursively inside .\build
+$subDirs = Get-ChildItem -Path $basePath -Directory -Recurse | Select-Object -ExpandProperty FullName
 
-# Base patterns to delete
+# Base patterns to delete in the base directory
 $patterns = @(
     "$basePath\kernel8.elf",
     "$basePath\*.o",
@@ -24,4 +24,3 @@ foreach ($pattern in $patterns) {
         Write-Host "[MAKE] No files found matching pattern: [$pattern] -> Skip"
     }
 }
-
