@@ -287,10 +287,6 @@ int current_player_turn = 0; // 0 to 3 for 4 characters
 int selected_enemy = 0;
 int is_previous_screen_skill_menu = 0;
 int exit_ui = 0;  // <-- Flag to exit loop
-int display_one_time_screen_combat = 1;
-int display_one_time_persona_menu = 1;
-int display_one_time_skill_menu = 1;
-int display_one_time_select_enemy_menu = 1;
 
 void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyModel enemy[], int num_enemies) {
     redraw_combat_screen(current_player_turn, 0);
@@ -304,8 +300,6 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
     int button_pressed_skill = 0;
     // Time the last button was pressed
     uint64_t button_pressed_time = 0;
-    // turn_index = (turn_index + 1) % num_enemies;
-    // current_player_turn = (current_player_turn + 1) % 4;
 
     uart_puts("[PLAYERS]\n");
     for (int i = 0; i < num_protagonists; ++i)
@@ -313,9 +307,9 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
         uart_puts(" - ");
         uart_puts(protagonists[i].name);
         uart_puts(": ");
-        uart_putint(protagonists[i].current_hp);
+        uart_dec(protagonists[i].current_hp);
         uart_puts("/");
-        uart_putint(protagonists[i].max_hp);
+        uart_dec(protagonists[i].max_hp);
         uart_puts(" HP\n");
     }
 
@@ -325,15 +319,21 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
         uart_puts(" - ");
         uart_puts(enemy[i].name);
         uart_puts(": ");
-        uart_putint(enemy[i].current_hp);
+        uart_dec(enemy[i].current_hp);
         uart_puts("/");
-        uart_putint(enemy[i].max_hp);
+        uart_dec(enemy[i].max_hp);
         uart_puts(" HP\n");
     }
 
-    // uart_puts(" Current screen: ");
-    // uart_dec(current_screen);
-    // uart_puts("\n");
+    uart_puts("Switched to SCREEN_COMBAT\n");
+    uart_puts("Please select an action you would like ");
+    uart_puts(protagonists[current_player_turn].name);
+    uart_puts(" to perform \n");
+    uart_puts("Press q to attack\n");
+    uart_puts("Press w to select item\n");
+    uart_puts("Press e to select persona (only main character can use this feature)\n");
+    uart_puts("Press r to run \n");
+    uart_puts("Press t to select a skill \n");
 
     while (1)
     {
@@ -345,38 +345,30 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
         draw_persona_button(button_pressed_persona);
         draw_run_button(button_pressed_run);
         draw_skill_button(button_pressed_skill);
-        // first_frame = 0;
+
         // Read input
-        if (uart_input_available())
+        if (uart_isReadByteReady())
         {
-            // uart_puts(" Input detected\n");
             char input = uart_getc();
+            uart_puts("[INPUT] :");
+            uart_sendc(input);
+            uart_puts("\n");
+
             if (current_screen == SCREEN_COMBAT)
-            {
-                // Character *current = &protagonists[current_player_turn];
-                if(display_one_time_screen_combat){
-                    uart_puts("Switched to SCREEN_COMBAT\n");
-                    uart_puts("Please select an action you would like ");
-                    uart_puts(protagonists[current_player_turn].name);
-                    uart_puts(" to perform \n");
-                    uart_puts("Press q to attack\n");
-                    uart_puts("Press w to select item\n");
-                    uart_puts("Press e to select persona (only main character can use this feature)\n");
-                    uart_puts("Press r to run \n");
-                    uart_puts("Press t to select a skill \n");
-                    display_one_time_screen_combat = 0;
-                }
-                
+            {    
                 if (input == ATTACK) {
                     button_pressed_attack = 1;
                     button_pressed_time = start_time;
                     uart_puts("YOU SELECT ATTACK\n");
                     uart_puts("YOU MAY NOW SELECT AN ENEMY TO ATTACK\n");
+                    uart_puts("Press P to move to the next enemy\n");
+                    uart_puts("Press I to move to the previous enemy\n");
+                    uart_puts("Press Enter to confirm\n");
+                    uart_puts("Press Esc to escape the enemy select screen\n");
                     selected_enemy = 0;  // Default target
                     current_screen = SCREEN_SELECT_ENEMY;
                     redraw_combat_screen(current_player_turn, 0);
                     redraw_combat_screen(current_player_turn, 0);
-                    // exit_ui = 0;
                 }
                 if (input == ITEM)
                 {
@@ -394,6 +386,10 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                 {
                     uart_puts("YOU SELECT PERSONA\n");
                     uart_puts("PLEASE CHOOSE A PERSONA\n");
+                    uart_puts("Press O to scroll up\n");
+                    uart_puts("Press L to scroll down\n");
+                    uart_puts("Press Enter to confirm\n");
+                    uart_puts("Press Esc to escape the select screen\n");
                     if (protagonists[current_player_turn].is_main_character)
                     {
                         button_pressed_persona = 1;
@@ -401,7 +397,7 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                         persona_option = protagonists[current_player_turn].current_persona;
                         draw_persona_option_screen(persona_option);
                         current_screen = SCREEN_PERSONA_MENU;
-                        // uart_puts("PERSONA\n");
+                        
                     }
                     else
                     {
@@ -423,6 +419,10 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                 {
                     uart_puts("YOU SELECT SKILL\n");
                     uart_puts("PLEASE CHOOSE A SKILL TO USE\n");
+                    uart_puts("Press O to scroll up\n");
+                    uart_puts("Press L to scroll down\n");
+                    uart_puts("Press Enter to confirm\n");
+                    uart_puts("Press Esc to escapt the skill select screen\n");
                     button_pressed_skill = 1;
                     button_pressed_time = start_time;
                     skill_option = 0; // Start at top
@@ -434,22 +434,13 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                 }
                 if (current_player_turn >= num_protagonists)
                 {
-                    uart_putint(current_player_turn);
+                    uart_dec(current_player_turn);
                     current_player_turn = 0;
                     current_screen = SCREEN_ENEMY_COUNTER_ATTACK;
                 }
             }
             else if (current_screen == SCREEN_PERSONA_MENU)
-            {
-                if(display_one_time_persona_menu){
-                    uart_puts("Switched to SCREEN_PERSONA_MENU\n");
-                    uart_puts("Press O to scroll up\n");
-                    uart_puts("Press L to scroll down\n");
-                    uart_puts("Press Enter to confirm\n");
-                    uart_puts("Press Esc to escapt the select screen\n");
-                    display_one_time_persona_menu = 0;
-                }
-                
+            {        
                 draw_persona_option_screen(persona_option);
                 if (input == 'o' && persona_option > 0)
                 {
@@ -486,16 +477,6 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
             }
             else if (current_screen == SCREEN_SKILL_MENU)
             {
-                // int max_skills = (selected_persona == 0) ? orpheus_skill_bitmap_allArray_LEN : pixie_skill_bitmap_allArray_LEN;
-                if(display_one_time_skill_menu){
-                    uart_puts("Switched to SCREEN_SKILL_MENU\n");
-                    uart_puts("Press O to scroll up\n");
-                    uart_puts("Press L to scroll down\n");
-                    uart_puts("Press Enter to confirm\n");
-                    uart_puts("Press Esc to escapt the skill select screen\n");
-                    display_one_time_skill_menu = 0;
-                }
-                
                 int is_main = protagonists[current_player_turn].is_main_character;
                 int max_skills = 2;
 
@@ -575,14 +556,6 @@ void combat_utility_UI(Character protagonists[], int num_protagonists, EnemyMode
                 }
             }
             else if (current_screen == SCREEN_SELECT_ENEMY && selected_enemy >= 0) {
-                if(display_one_time_select_enemy_menu){
-                    uart_puts("Switched to SCREEN_SELECT_ENEMY\n");
-                    uart_puts("Press P to move to the next enemy\n");
-                    uart_puts("Press I to move to the previous enemy\n");
-                    uart_puts("Press Enter to confirm\n");
-                    uart_puts("Press Esc to escape the enemy select screen\n");
-                    display_one_time_select_enemy_menu = 0;
-                }
                 
                 redraw_combat_screen(current_player_turn, selected_enemy);
                 redraw_combat_screen(current_player_turn, selected_enemy);

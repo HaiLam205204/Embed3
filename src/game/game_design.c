@@ -63,7 +63,6 @@ EnemySprite enemy_sprites[MAX_ENEMIES] = {
 void design_screen_loop()
 {
     char input;
-    uart_puts("[DESIGN_SCREEN] Entering Design Screen...\n");
     int first_frame = 1;
 
     init_protagonists();
@@ -76,7 +75,6 @@ void design_screen_loop()
     {
         if (first_frame)
         {
-            uart_puts("[FRAME] Draw background\n");
             for (int i = 0; i < 2; i++)
             {
                 drawImage_double_buffering(MAP_START_X, MAP_START_Y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
@@ -145,7 +143,6 @@ void init_enemies()
 {
     num_enemies = 3; // or however many you want
 
-    uart_puts("[DEBUG] init_enemies called\n");
     strcpy(enemy[0].name, "Enemy1");
     enemy[0].current_hp = 100;
     enemy[0].max_hp = 100;
@@ -164,9 +161,6 @@ void init_enemies()
 
 void redraw_combat_screen(int current_player_turn, int selected_enemy_index)
 {
-    // uart_putint(current_player_turn);
-    //uart_puts("\n");
-    // Draw background
     drawImage_double_buffering(MAP_START_X, MAP_START_Y, game_map, GAME_MAP_WIDTH, GAME_MAP_HEIGHT);
 
     for (int i = 0; i < num_protagonists; ++i)
@@ -230,20 +224,10 @@ void reset_enemy_sprites()
         }
         else
         {
-            uart_puts("[RESET_ENEMY_SPRITES] Unknown enemy type: ");
-            uart_dec(enemy[i].enemy_type);
-            uart_puts("\n");
-
             enemy_sprites[i].bitmap = shadow1; // fallback
             enemy_sprites[i].width = 136;
             enemy_sprites[i].height = 88;
         }
-
-        uart_puts("[RESET_ENEMY_SPRITES] Enemy sprite reset for type ");
-        uart_dec(enemy[i].enemy_type);
-        uart_puts(" at index ");
-        uart_dec(i);
-        uart_puts("\n");
     }
 }
 
@@ -282,14 +266,6 @@ void reset_ally_sprites()
             sprites[i].width = PROTAG_WIDTH;
             sprites[i].height = PROTAG_HEIGHT;
         }
-
-        uart_puts("[RESET_ALLY_SPRITES] Ally sprite reset for ");
-        uart_puts(protagonists[i].name);
-        uart_puts(" at (");
-        uart_dec(sprites[i].pos_x);
-        uart_puts(", ");
-        uart_dec(sprites[i].pos_y);
-        uart_puts(")\n");
     }
 }
 void heal_character_25_percent(Character *ch)

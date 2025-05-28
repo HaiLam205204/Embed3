@@ -172,10 +172,6 @@ void draw_enemy_sprite(EnemySprite *sprite)
 {
     if (!sprite || !sprite->enemy || !sprite->bitmap) return;
 
-    // uart_puts("[DEBUG] Enemy type: ");
-    // uart_dec(sprite->enemy->enemy_type);
-    // uart_puts("\n");
-
     if (sprite->enemy->enemy_type == 1) {
         draw_combat_enemies1(sprite->pos_x, sprite->pos_y, sprite->bitmap, sprite->width, sprite->height);
     } 

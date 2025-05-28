@@ -67,10 +67,6 @@ Enemy level3_enemies[MAX_ENEMIES] = {
 
 // --- Level 1 Walls ---
 Wall level1_walls[MAX_WALLS] = {
-    // {WALL1_START_X, WALL1_START_Y, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1}, 
-    // {WALL2_START_X, WALL2_START_Y, wall2, WALL2_WIDTH, WALL2_HEIGHT, 1}, 
-    // {WALL1_START_X, WALL1_START_Y + 768*2 - 63, wall1, WALL1_WIDTH, WALL1_HEIGHT, 1}, 
-    // {WALL2_START_X + 1024*2 - 63, WALL2_START_Y, wall2, WALL2_WIDTH, WALL2_HEIGHT, 1},
     {WALL3_START_X, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
     {WALL3_START_X + 342, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
     {WALL3_START_X + 342*2, WALL3_START_Y, wall3, WALL3_WIDTH, WALL3_HEIGHT, 1},
@@ -195,15 +191,11 @@ void game_loop() {
     char input;
 
     uart_puts("\n[GAME_LOOP] Starting game loop");
-    uart_puts("\n[GAME_LOOP] Initial position: (");
-    uart_dec(protag_world_x);
-    uart_puts(",");
-    uart_dec(protag_world_y);
-    uart_puts(")");
+    uart_puts("\n");
+    uart_puts("Press W A S D to move around");
 
     while (1) {
         uint64_t start_time = get_arm_system_time();
-        // uart_puts("\n[FRAME] ---- NEW FRAME ----");
 
         if (first_frame) {
             //Display first frame (double buffered)
@@ -251,6 +243,9 @@ void game_loop() {
             int collided_index = check_enemy_collision_index();
             if (collided_index != -1) {
                 uart_puts("\n[COMBAT] Enemy contact!");
+                uart_puts("\n");
+                uart_puts("If nothing is shown, press any key once");
+                uart_puts("\n");
                 design_screen_loop();
 
                 current_level->enemies[collided_index].active = 0;
@@ -277,12 +272,8 @@ void game_loop() {
 
         if (render_time_us < GAME_FRAME_US) {
             uint64_t wait_time = GAME_FRAME_US - render_time_us;
-            // uart_puts("\n[TIMING] Waiting (us): ");
-            // uart_dec(wait_time);
             wait_us(wait_time);
-        } //else {
-        //     uart_puts("\n[WARNING] Frame took too long!");
-        // }
+        } 
     }
 }
 

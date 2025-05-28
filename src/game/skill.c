@@ -16,7 +16,7 @@ void apply_skill_effect(SkillSelectionResult result) {
         uart_puts("[SKILL] Firebolt hits ");
         uart_puts(enemy[idx].name);
         uart_puts(" for ");
-        uart_putint(FIREBOLT_DAMAGE);
+        uart_dec(FIREBOLT_DAMAGE);
         uart_puts(" damage!\n");
         enemy[idx].current_hp -= FIREBOLT_DAMAGE;
         if (enemy[idx].current_hp < 0) enemy[idx].current_hp = 0;
@@ -24,12 +24,12 @@ void apply_skill_effect(SkillSelectionResult result) {
         uart_puts("[ENEMY] ");
         uart_puts(enemy[idx].name);
         uart_puts(" HP is now ");
-        uart_putint(enemy[idx].current_hp);
+        uart_dec(enemy[idx].current_hp);
         uart_puts("\n");
     }
     } else if (result.action == ATTACK_ALL) {
         uart_puts("[SKILL] Earthquake hits all enemies for ");
-        uart_putint(EARTHQUAKE_DAMAGE);
+        uart_dec(EARTHQUAKE_DAMAGE);
         uart_puts(" damage!\n");
 
         for (int i = 0; i < MAX_ENEMIES; ++i) {
@@ -39,7 +39,7 @@ void apply_skill_effect(SkillSelectionResult result) {
             uart_puts("[ENEMY] ");
             uart_puts(enemy[i].name);
             uart_puts(" HP is now ");
-            uart_putint(enemy[i].current_hp);
+            uart_dec(enemy[i].current_hp);
             uart_puts("\n");
         }
     }
@@ -72,10 +72,6 @@ SkillSelectionResult handle_skill_selection() {
             } else if (k == '\n' || k == '\r') {
                 break;
             }
-
-            uart_puts("Selected enemy index: ");
-            uart_putint(selected);
-            uart_puts("\n");
         }
 
         result.selected_enemy = selected;
@@ -86,49 +82,3 @@ SkillSelectionResult handle_skill_selection() {
 
     return result;
 }
-
-// void draw_skill_option_terminal(int skill_index){
-//     uart_puts("\n=== Skill Menu ===\n");
-//     for (int i = 0; i < MAX_SKILLS; ++i) {
-//         if (i == skill_index) uart_puts("-> ");
-//         else uart_puts(" ");
-//         uart_puts(skills[i].name);
-//         uart_puts("\n");
-//     }
-//     uart_puts("==================\n");
-// }
-
-// void use_skill(Character* user, Skill skill) {
-//     if (skill.type == SKILL_ALL_ENEMIES) {
-//     for (int i = 0; i < 3; ++i) {
-//     enemy[i].current_hp -= skill.damage;
-//     if (enemy[i].current_hp < 0) enemy[i].current_hp = 0;
-
-//             uart_puts("[SKILL] ");
-//             uart_puts(user->name);
-//             uart_puts(" hit ");
-//             uart_puts(enemy[i].name);
-//             uart_puts(" for ");
-//             uart_putint(skill.damage);
-//             uart_puts(" damage! New HP: ");
-//             uart_putint(enemy[i].current_hp);
-//             uart_puts("\n");
-//         }
-//     } else {
-//         // For now, we will just hit enemy[0]
-//         enemy[0].current_hp -= skill.damage;
-//         if (enemy[0].current_hp < 0) enemy[0].current_hp = 0;
-
-//         uart_puts("[SKILL] ");
-//         uart_puts(user->name);
-//         uart_puts(" used ");
-//         uart_puts(skill.name);
-//         uart_puts(" on ");
-//         uart_puts(enemy[0].name);
-//         uart_puts(" for ");
-//         uart_putint(skill.damage);
-//         uart_puts(" damage! New HP: ");
-//         uart_putint(enemy[0].current_hp);
-//         uart_puts("\n");
-//     }
-// }

@@ -34,22 +34,10 @@ void deal_damage(int index, int amount) {
         draw_enemy_sprite(&enemy_sprites[i]);
         draw_enemy_sprite(&enemy_sprites[i]);
     }
-
-    // for (int i = 0; i < num_enemies; i++) {
-    // uart_puts("[DEBUG] Enemy: ");
-    // uart_puts(enemy[i].name);
-    // uart_puts(" Sprite pos_x: ");
-    // uart_dec(enemy_sprites[i].pos_x); 
-    // uart_puts("\n");
-    // }
 }
 
 void remove_enemy(int index) {
     if (index < 0 || index >= num_enemies) return;
-
-    // uart_puts("[DEBUG] Removing enemy: ");
-    // uart_puts(enemy[index].name);
-    // uart_puts("\n");
 
     // Shift enemy data
     for (int i = index; i < num_enemies - 1; i++) {
@@ -61,7 +49,7 @@ void remove_enemy(int index) {
     num_enemies--;
 
     uart_puts("Number of enemy: ");
-    uart_putint(num_enemies);
+    uart_dec(num_enemies);
     uart_puts("\n");
 
     if (num_enemies == 0) {
